@@ -28,7 +28,7 @@ export default {
     },
     "experimental_router": "browser"
   },
-  "url": "https://fabricehategekimana.github.io",
+  "url": "https://we-data.github.io",
   "baseUrl": "/typr.github.io/build/",
   "organizationName": "facebook",
   "projectName": "typr",
