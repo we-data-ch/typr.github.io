@@ -1,0 +1,20 @@
+{
+  "id": "typr-start/getting-started",
+  "title": "Getting started",
+  "description": "",
+  "source": "@site/docs/typr-start/getting-started.md",
+  "sourceDirName": "typr-start",
+  "slug": "/typr-start/getting-started",
+  "permalink": "/typr.github.io/build/docs/typr-start/getting-started",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/typr-start/getting-started.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "intro",
+    "permalink": "/typr.github.io/build/docs/intro"
+  }
+}
