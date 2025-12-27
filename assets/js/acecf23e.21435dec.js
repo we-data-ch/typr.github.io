@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkmy_website=self.webpackChunkmy_website||[]).push([[1903],{1912:t=>{t.exports=JSON.parse('{"blogBasePath":"/typr.github.io/blog","blogTitle":"Blog","authorsListPath":"/typr.github.io/blog/authors"}')}}]);
