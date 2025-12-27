@@ -22,7 +22,7 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
+  organizationName: 'fabricehategekimana', // Usually your GitHub org/user name.
   projectName: 'typr', // Usually your repo name.
 
   onBrokenLinks: 'throw',
