@@ -1,5 +1,0 @@
-# TypR
-
-- Hello world
-
-Wow
