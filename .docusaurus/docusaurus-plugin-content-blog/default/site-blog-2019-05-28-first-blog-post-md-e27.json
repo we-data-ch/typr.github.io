@@ -1,5 +1,5 @@
 {
-  "permalink": "/typr.github.io/build/blog/first-blog-post",
+  "permalink": "/typr.github.io/blog/first-blog-post",
   "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/blog/2019-05-28-first-blog-post.md",
   "source": "@site/blog/2019-05-28-first-blog-post.md",
   "title": "First Blog Post",
@@ -9,13 +9,13 @@
     {
       "inline": false,
       "label": "Hola",
-      "permalink": "/typr.github.io/build/blog/tags/hola",
+      "permalink": "/typr.github.io/blog/tags/hola",
       "description": "Hola tag description"
     },
     {
       "inline": false,
       "label": "Docusaurus",
-      "permalink": "/typr.github.io/build/blog/tags/docusaurus",
+      "permalink": "/typr.github.io/blog/tags/docusaurus",
       "description": "Docusaurus tag description"
     }
   ],
@@ -27,7 +27,7 @@
       "title": "Docusaurus maintainer",
       "url": "https://sebastienlorber.com",
       "page": {
-        "permalink": "/typr.github.io/build/blog/authors/all-sebastien-lorber-articles"
+        "permalink": "/typr.github.io/blog/authors/all-sebastien-lorber-articles"
       },
       "socials": {
         "x": "https://x.com/sebastienlorber",
@@ -43,7 +43,7 @@
       "title": "Ex-Meta Staff Engineer, Co-founder GreatFrontEnd",
       "url": "https://linkedin.com/in/yangshun",
       "page": {
-        "permalink": "/typr.github.io/build/blog/authors/yangshun"
+        "permalink": "/typr.github.io/blog/authors/yangshun"
       },
       "socials": {
         "x": "https://x.com/yangshunz",
@@ -70,6 +70,6 @@
   "unlisted": false,
   "prevItem": {
     "title": "Long Blog Post",
-    "permalink": "/typr.github.io/build/blog/long-blog-post"
+    "permalink": "/typr.github.io/blog/long-blog-post"
   }
 }

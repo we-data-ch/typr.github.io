@@ -97,15 +97,16 @@ const styles: Styles = {
 };
 
 const Home: React.FC = () => {
-	const logoUrl = useBaseUrl('/logo.png');
+	const logoUrl = useBaseUrl('/img/typr_carre.png');
+	const docsUrl = useBaseUrl('/docs/intro');
+	const philosophyUrl = useBaseUrl('/docs/philosophy');
   return (
     <main style={styles.page}>
       <div style={styles.container}>
         <img src={logoUrl} alt="Typed R logo" style={styles.logo} />
 
         <h1 style={styles.title}>
-          Types for R,
-          <span style={styles.subtitle}>built for robustness</span>
+          R's types for data sciences
         </h1>
 
         <p style={styles.tagline}>
@@ -115,33 +116,33 @@ const Home: React.FC = () => {
 
         <div style={styles.grid}>
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Safety by default</h3>
+            <h3 style={styles.cardTitle}>Build faster. Maintain longer.</h3>
             <p style={styles.cardText}>
-              Catch errors earlier. Types document intent and prevent silent bugs
-              in analyses and R packages.
+              Evolve your packages with confidence thanks to powerful tools 
+			  that support code reuse and long-term evolution.
             </p>
           </div>
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Explicit modeling</h3>
+            <h3 style={styles.cardTitle}>Data modeling</h3>
             <p style={styles.cardText}>
               Clearly express data structures, invariants, and contracts for R
               code that is easier to read, reason about, and trust.
             </p>
           </div>
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Designed for maintenance</h3>
+            <h3 style={styles.cardTitle}>Safety by default</h3>
             <p style={styles.cardText}>
-              Evolve your packages with confidence thanks to static guarantees
-              that support refactoring and long-term evolution.
+              Catch errors earlier. Types document intent and prevent silent bugs
+              in analyses and R packages.
             </p>
           </div>
         </div>
 
         <div style={styles.ctaRow}>
-          <a href="/docs/intro" style={styles.primaryButton}>
+          <a href={docsUrl} style={styles.primaryButton}>
             Read the documentation
           </a>
-          <a href="/docs/philosophy" style={styles.secondaryButton}>
+          <a href={philosophyUrl} style={styles.secondaryButton}>
             Explore the philosophy
           </a>
         </div>

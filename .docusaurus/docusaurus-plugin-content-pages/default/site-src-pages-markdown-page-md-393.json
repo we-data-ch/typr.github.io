@@ -1,6 +1,6 @@
 {
   "type": "mdx",
-  "permalink": "/typr.github.io/build/markdown-page",
+  "permalink": "/typr.github.io/markdown-page",
   "source": "@site/src/pages/markdown-page.md",
   "title": "Markdown page example",
   "description": "You don't need React to write simple standalone pages.",

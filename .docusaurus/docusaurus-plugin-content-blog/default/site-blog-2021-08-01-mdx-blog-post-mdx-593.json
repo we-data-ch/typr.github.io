@@ -1,5 +1,5 @@
 {
-  "permalink": "/typr.github.io/build/blog/mdx-blog-post",
+  "permalink": "/typr.github.io/blog/mdx-blog-post",
   "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/blog/2021-08-01-mdx-blog-post.mdx",
   "source": "@site/blog/2021-08-01-mdx-blog-post.mdx",
   "title": "MDX Blog Post",
@@ -9,7 +9,7 @@
     {
       "inline": false,
       "label": "Docusaurus",
-      "permalink": "/typr.github.io/build/blog/tags/docusaurus",
+      "permalink": "/typr.github.io/blog/tags/docusaurus",
       "description": "Docusaurus tag description"
     }
   ],
@@ -21,7 +21,7 @@
       "title": "Docusaurus maintainer",
       "url": "https://sebastienlorber.com",
       "page": {
-        "permalink": "/typr.github.io/build/blog/authors/all-sebastien-lorber-articles"
+        "permalink": "/typr.github.io/blog/authors/all-sebastien-lorber-articles"
       },
       "socials": {
         "x": "https://x.com/sebastienlorber",
@@ -46,10 +46,10 @@
   "unlisted": false,
   "prevItem": {
     "title": "Welcome",
-    "permalink": "/typr.github.io/build/blog/welcome"
+    "permalink": "/typr.github.io/blog/welcome"
   },
   "nextItem": {
     "title": "Long Blog Post",
-    "permalink": "/typr.github.io/build/blog/long-blog-post"
+    "permalink": "/typr.github.io/blog/long-blog-post"
   }
 }

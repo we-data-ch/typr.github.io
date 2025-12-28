@@ -28,10 +28,10 @@ export default {
     },
     "experimental_router": "browser"
   },
-  "url": "https://fabricehategekimana.github.io",
-  "baseUrl": "/typr.github.io/build/",
+  "url": "https://we-data-ch.github.io",
+  "baseUrl": "/typr.github.io/",
   "organizationName": "we-data-ch",
-  "projectName": "typr",
+  "projectName": "typr.github.io",
   "onBrokenLinks": "throw",
   "onBrokenMarkdownLinks": "warn",
   "i18n": {

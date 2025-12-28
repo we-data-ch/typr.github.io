@@ -18,12 +18,12 @@ const config: Config = {
   url: 'https://we-data-ch.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/typr.github.io/build',
+  baseUrl: '/typr.github.io/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'we-data-ch', // Usually your GitHub org/user name.
-  projectName: 'typr', // Usually your repo name.
+  projectName: 'typr.github.io', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',

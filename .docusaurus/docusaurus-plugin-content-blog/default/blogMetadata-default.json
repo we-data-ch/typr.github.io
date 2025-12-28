@@ -1,5 +1,5 @@
 {
-  "blogBasePath": "/typr.github.io/build/blog",
+  "blogBasePath": "/typr.github.io/blog",
   "blogTitle": "Blog",
-  "authorsListPath": "/typr.github.io/build/blog/authors"
+  "authorsListPath": "/typr.github.io/blog/authors"
 }
