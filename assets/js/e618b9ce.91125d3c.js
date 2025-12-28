@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmy_website=self.webpackChunkmy_website||[]).push([[50],{7656:e=>{e.exports=JSON.parse('{"tags":[{"label":"TypR","permalink":"/typr.github.io/blog/tags/typr","description":"TypR tag description","count":1}]}')}}]);
