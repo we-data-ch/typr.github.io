@@ -2,22 +2,22 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://we-data-ch.github.io/typr.github.io/blog</id>
     <title>TypR Blog</title>
-    <updated>2025-12-28T00:00:00.000Z</updated>
+    <updated>2025-12-30T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://we-data-ch.github.io/typr.github.io/blog"/>
     <subtitle>TypR Blog</subtitle>
     <icon>https://we-data-ch.github.io/typr.github.io/img/typr.ico</icon>
     <entry>
-        <title type="html"><![CDATA[Redesigning the documentation]]></title>
-        <id>https://we-data-ch.github.io/typr.github.io/blog/redesign-doc</id>
-        <link href="https://we-data-ch.github.io/typr.github.io/blog/redesign-doc"/>
-        <updated>2025-12-28T00:00:00.000Z</updated>
+        <title type="html"><![CDATA[TypR's new official documentation]]></title>
+        <id>https://we-data-ch.github.io/typr.github.io/blog/new-official-documentation</id>
+        <link href="https://we-data-ch.github.io/typr.github.io/blog/new-official-documentation"/>
+        <updated>2025-12-30T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[After some adventures, the official documentation will soon be open.]]></summary>
         <content type="html"><![CDATA[<p>After some adventures, the official documentation will soon be open.</p>
 <p>Documentation is sometimes hard to maintain because it is an independent entity to the code base. It's even created in a separate github repository.</p>]]></content>
         <author>
-            <name>Hategekimana Fabrice</name>
-            <uri>https://www.linkedin.com/in/fabrice-hategekimana-495b42155/</uri>
+            <name>Sébastien Lorber</name>
+            <uri>https://sebastienlorber.com</uri>
         </author>
         <category label="TypR" term="TypR"/>
     </entry>

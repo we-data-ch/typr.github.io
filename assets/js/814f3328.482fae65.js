@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmy_website=self.webpackChunkmy_website||[]).push([[472],{5513:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"TypR\'s new official documentation","permalink":"/typr.github.io/blog/new-official-documentation","unlisted":false,"date":"2025-12-30T00:00:00.000Z"}]}')}}]);

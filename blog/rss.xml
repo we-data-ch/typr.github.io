@@ -4,15 +4,15 @@
         <title>TypR Blog</title>
         <link>https://we-data-ch.github.io/typr.github.io/blog</link>
         <description>TypR Blog</description>
-        <lastBuildDate>Sun, 28 Dec 2025 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 30 Dec 2025 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
         <item>
-            <title><![CDATA[Redesigning the documentation]]></title>
-            <link>https://we-data-ch.github.io/typr.github.io/blog/redesign-doc</link>
-            <guid>https://we-data-ch.github.io/typr.github.io/blog/redesign-doc</guid>
-            <pubDate>Sun, 28 Dec 2025 00:00:00 GMT</pubDate>
+            <title><![CDATA[TypR's new official documentation]]></title>
+            <link>https://we-data-ch.github.io/typr.github.io/blog/new-official-documentation</link>
+            <guid>https://we-data-ch.github.io/typr.github.io/blog/new-official-documentation</guid>
+            <pubDate>Tue, 30 Dec 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[After some adventures, the official documentation will soon be open.]]></description>
             <content:encoded><![CDATA[<p>After some adventures, the official documentation will soon be open.</p>
 <p>Documentation is sometimes hard to maintain because it is an independent entity to the code base. It's even created in a separate github repository.</p>]]></content:encoded>
