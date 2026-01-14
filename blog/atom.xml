@@ -2,11 +2,112 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://we-data-ch.github.io/typr.github.io/blog</id>
     <title>TypR Blog</title>
-    <updated>2026-01-02T00:00:00.000Z</updated>
+    <updated>2026-01-14T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://we-data-ch.github.io/typr.github.io/blog"/>
     <subtitle>TypR Blog</subtitle>
     <icon>https://we-data-ch.github.io/typr.github.io/img/typr.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[R and TypR]]></title>
+        <id>https://we-data-ch.github.io/typr.github.io/blog/r-and-typr</id>
+        <link href="https://we-data-ch.github.io/typr.github.io/blog/r-and-typr"/>
+        <updated>2026-01-14T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[When people first hear about TypR, a very common question comes up:]]></summary>
+        <content type="html"><![CDATA[<p>When people first hear about TypR, a very common question comes up:</p>
+<blockquote>
+<p>“Is TypR meant to replace R?”</p>
+</blockquote>
+<p>The short answer is no.
+The more interesting answer is: TypR is designed to live next to R, not instead of it.</p>
+<p>TypR is not a new platform, a new runtime, or a new ecosystem that forces you to rewrite everything. It is a typed language that transpiles to R, and integrates directly into the existing R ecosystem.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="a-typr-package-is-just-an-r-package">A TypR package is just an R package<a href="https://we-data-ch.github.io/typr.github.io/blog/r-and-typr#a-typr-package-is-just-an-r-package" class="hash-link" aria-label="Direct link to A TypR package is just an R package" title="Direct link to A TypR package is just an R package">​</a></h2>
+<p>Structurally, nothing exotic is happening.</p>
+<p>A TypR package is simply a normal R package with one additional convention:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#F8F8F2"><span class="token plain">myPackage/</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  DESCRIPTION</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  NAMESPACE</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  R/</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  TypR/</span><br></span></code></pre></div></div>
+<p>The TypR/ folder contains files written in TypR.
+The R/ folder contains the R code that will actually be executed.</p>
+<p>When you transpile TypR, you are not producing a special artifact —
+you are simply generating R code into the package’s R/ directory.</p>
+<p>To R, CRAN, devtools, pkgdown, testthat, and everything else,
+this is just a regular R package.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="typr-introduces-no-new-runtime">TypR introduces no new runtime<a href="https://we-data-ch.github.io/typr.github.io/blog/r-and-typr#typr-introduces-no-new-runtime" class="hash-link" aria-label="Direct link to TypR introduces no new runtime" title="Direct link to TypR introduces no new runtime">​</a></h2>
+<p>TypR does not require:</p>
+<ul>
+<li>a VM</li>
+<li>a native compiler</li>
+<li>a special version of R</li>
+<li>system-level dependencies</li>
+</ul>
+<p>Once transpiled, the result is plain R.
+It is parsed, interpreted, and executed by R exactly like any other R code.</p>
+<p>TypR only exists at development time.
+At runtime, it disappears.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="you-can-freely-mix-typr-and-r">You can freely mix TypR and R<a href="https://we-data-ch.github.io/typr.github.io/blog/r-and-typr#you-can-freely-mix-typr-and-r" class="hash-link" aria-label="Direct link to You can freely mix TypR and R" title="Direct link to You can freely mix TypR and R">​</a></h2>
+<p>Inside the same package, you can:</p>
+<ul>
+<li>write some functions in TypR</li>
+<li>keep others in regular R</li>
+<li>call R code from TypR</li>
+<li>call TypR-generated code from R</li>
+</ul>
+<p>TypR is not an “all or nothing” mode.
+It is just an alternative source language that produces R.
+You can migrate gradually, file by file, function by function.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="the-only-possible-point-of-friction">The only possible point of friction<a href="https://we-data-ch.github.io/typr.github.io/blog/r-and-typr#the-only-possible-point-of-friction" class="hash-link" aria-label="Direct link to The only possible point of friction" title="Direct link to The only possible point of friction">​</a></h2>
+<p>There is only one situation where TypR can collide with R:</p>
+<blockquote>
+<p>When TypR transpiles into a file that already exists in R/.</p>
+</blockquote>
+<p>For example:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#F8F8F2"><span class="token plain">R/</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  model.R</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">TypR/</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  model.typr</span><br></span></code></pre></div></div>
+<p>If model.typr generates R/model.R,
+then yes — there is a collision. But that is just two tools writing to the same file.</p>
+<p>This is not a conceptual conflict between R and TypR.
+It is simply a file-level conflict, easy to avoid through conventions or configuration.</p>
+<p>Other than that, TypR and R do not step on each other.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="the-right-mental-model">The right mental model<a href="https://we-data-ch.github.io/typr.github.io/blog/r-and-typr#the-right-mental-model" class="hash-link" aria-label="Direct link to The right mental model" title="Direct link to The right mental model">​</a></h2>
+<p>TypR is not a new language that replaces R.
+It is much closer to things like:</p>
+<ul>
+<li>TypeScript for JavaScript</li>
+<li>Cython for Python</li>
+<li>Scala.js for JavaScript</li>
+</ul>
+<p>You write in a more structured, safer, more expressive language…
+and you get standard R code at the end.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="why-this-matters">Why this matters<a href="https://we-data-ch.github.io/typr.github.io/blog/r-and-typr#why-this-matters" class="hash-link" aria-label="Direct link to Why this matters" title="Direct link to Why this matters">​</a></h2>
+<p>This changes the real question.</p>
+<p>You don’t have to ask:</p>
+<blockquote>
+<p>“Should I leave R for TypR?”</p>
+</blockquote>
+<p>But rather:</p>
+<blockquote>
+<p>“Would this part of my code benefit from types?”</p>
+</blockquote>
+<p>You can keep:</p>
+<ul>
+<li>tidyverse</li>
+<li>data.table</li>
+<li>CRAN</li>
+<li>your existing code</li>
+<li>your team</li>
+</ul>
+<p>…and add where it makes sense:</p>
+<ul>
+<li>static typing</li>
+<li>richer data structures</li>
+<li>compile-time guarantees</li>
+<li>safer refactoring</li>
+</ul>
+<p>TypR does not compete with R.
+It amplifies R.</p>]]></content>
+        <author>
+            <name>Hategekimana Fabrice</name>
+            <uri>https://www.linkedin.com/in/fabrice-hategekimana-495b42155/</uri>
+        </author>
+        <category label="TypR" term="TypR"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Vectorization by design]]></title>
         <id>https://we-data-ch.github.io/typr.github.io/blog/vectorization-by-design</id>
