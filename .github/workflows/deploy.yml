@@ -1,0 +1,52 @@
+name: Deploy documentation
+
+# Trois déclencheurs :
+#   - un push sur main (édition de la doc) ;
+#   - un repository_dispatch émis par la release du compilateur, pour que la
+#     doc soit reconstruite quand une nouvelle version de TypR sort ;
+#   - manuellement.
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [typr-release]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: >-
+            Deploy ${{ github.event_name == 'repository_dispatch'
+              && format('for TypR {0}', github.event.client_payload.version)
+              || github.sha }}

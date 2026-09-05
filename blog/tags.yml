@@ -17,3 +17,33 @@ hola:
   label: Hola
   permalink: /hola
   description: Hola tag description
+
+typr:
+  label: TypR
+  permalink: /typr
+  description: TypR tag description
+
+vectorization:
+  label: Vectorization
+  permalink: /vectorization
+  description: Vectorization tag description
+
+array:
+  label: Array
+  permalink: /array
+  description: Array tag description
+
+javascript:
+  label: Javascript
+  permalink: /javascript
+  description: Javascript tag description
+
+oop:
+  label: OOP
+  permalink: /oop
+  description: OOP tag description
+
+tdd:
+  label: TDD
+  permalink: /tdd
+  description: TDD tag description

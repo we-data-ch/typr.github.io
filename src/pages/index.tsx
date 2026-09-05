@@ -99,12 +99,14 @@ const styles: Styles = {
 const Home: React.FC = () => {
 	const logoUrl = useBaseUrl('/img/typr_carre.png');
 	const docsUrl = useBaseUrl('/docs/intro');
-	const philosophyUrl = useBaseUrl('/docs/philosophy');
+	const philosophyUrl = useBaseUrl('/docs/philosophy/intro');
+	const playgroundUrl = 'https://we-data-ch.github.io/typr-playground.github.io/';
   return (
     <main style={styles.page}>
       <div style={styles.container}>
         <img src={logoUrl} alt="Typed R logo" style={styles.logo} />
 
+		<p>version 0.4.17 (alpha)</p>
         <h1 style={styles.title}>
           R's types for data sciences
         </h1>
@@ -139,7 +141,10 @@ const Home: React.FC = () => {
         </div>
 
         <div style={styles.ctaRow}>
-          <a href={docsUrl} style={styles.primaryButton}>
+          <a href={playgroundUrl} style={styles.primaryButton}>
+            Try the playground
+          </a>
+          <a href={docsUrl} style={styles.secondaryButton}>
             Read the documentation
           </a>
           <a href={philosophyUrl} style={styles.secondaryButton}>

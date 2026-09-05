@@ -1,0 +1,261 @@
+# Compatibility with R
+ 
+## TypR Is Not a Replacement for R — It’s a Companion to R
+
+When people first hear about TypR, a very common question comes up:
+
+> “Is TypR meant to replace R?”
+
+The short answer is no. The more interesting answer is: TypR is designed to live next to R, not instead of it.
+
+TypR is not a new platform, a new runtime, or a new ecosystem that forces you to rewrite everything. It is a typed language that transpiles to R, and integrates directly into the existing R ecosystem.
+
+<!-- truncate -->
+
+I will use an example to illustrate this concept. We will assume we already have an existing package named `along` with a file `along/R/hello.R`: 
+
+```r
+# along/R/hello.R
+#' @export
+hello <- function() {
+	print("Hello wolrd")
+}
+```
+
+## A TypR package is just an R package
+
+Someone might ask:
+
+> How to create an TypR package from an R package? 
+ 
+Simple answer: Just add one folder!
+ 
+Indeed, structurally, nothing exotic is happening. A TypR package is simply a normal R package with one additional folder:
+
+```
+along/
+  DESCRIPTION
+  NAMESPACE
+  R/
+  TypR/ <- A new folder for TypR's code
+  along.Rproj
+  man
+```
+
+And voila!
+
+The `TypR/` folder contains files written in TypR, while the R/ folder contains the R code that will actually be executed.
+
+Let's create a file named `main.ty` (mandatory). Inside that file, we will create a type `Person` with a name and an age.
+
+```julia
+type Person <- list {
+	name: char,
+	age: int	
+};
+
+let new_person <- fn(name: char, age: int): Person {
+	list(name = name, age = age)
+};
+```
+
+Let's also create a `get_info` that will return a string with the information of the person.
+
+```julia
+let get_info <- fn(p: Person): char {
+	paste(p$name, " is ", p$age, " years old")
+		|> as__character() #for compatibility
+};
+```
+
+Then we can transpile our code with the terminal command `typr build` at the root of the project.
+
+```
+typr build
+```
+
+When you transpile TypR, you are not producing a special artifact. You are simply generating R code into the package’s R/ directory. In this case, it will produce the content of the main file `main.ty` and other helper files in alphabetical order:
+
+```
+along/
+  R/
+    a_std.R   <-- generated helper file
+    b_generic_functions.R   <-- generated helper file
+    c_types.R  <-- generated generated helper file
+    d_main.R   <-- generated entry point to TypR's code
+    hello.R    <-- default file
+```
+
+To R, CRAN, devtools, pkgdown, testthat, and everything else,
+this is just a regular R package.
+
+It's now possible to call the functions from `hello.R`.
+
+```r
+#' @export
+hello <- function() {
+	person <- new_person("John", 27)
+	get_info(person)
+}
+```
+
+If we try to load the function with the R console we get the expected result:
+
+```r
+# In the R console
+> devtools::install()
+> library(along)
+> hello()
+[1] "John is 27 years old"
+attr(,"class")
+[1] "Character" "character" "any"   
+```
+
+## TypR introduces no new runtime
+
+TypR does not require:
+
+- a VM
+- a native compiler
+- a special version of R
+- system-level dependencies
+
+Just the `typr` binary file. Once transpiled, the result is plain R.
+It is parsed, interpreted, and executed by R exactly like any other R code.
+
+TypR only exists at development time. At runtime, it disappears.
+
+## You can freely mix TypR and R
+
+Inside the same package, you can:
+
+- write some functions in TypR
+- keep others in regular R
+- call TypR-generated code from R
+- call R code from TypR
+
+We have already shown all except the last one, so let's try it. We will start by creating a `along/R/utils.R` file with an example function:
+
+```r
+# along/R/utils.R
+
+example <- function() {
+	print("This is an example function!");
+}
+```
+
+Now we can use it from TypR within our `get_info()` function. The key mechanism here is the **signature annotation** (`@`), which tells TypR the types of an existing R function without modifying it:
+
+```julia
+# along/TypR/person.ty
+# example is a function which take nothing and return nothing
+@example: () -> Empty
+
+let get_info <- fn(p: Person): char {
+	example(); # <--- Using the R function here
+	paste(p$name, " is ", p$age, " years old")
+		|> as__character() #for compatibility
+};
+```
+
+#### How signatures work
+
+By default, untyped R functions accept `Any` and return `Empty`, which means the compiler can't verify your usage. The `@` annotation fixes this by declaring the expected types:
+
+```julia
+# Without signature: toupper takes Any, returns Empty
+toupper("Hi"); # works, but no type checking
+
+# With signature: toupper takes char, returns char
+@toupper: (char) -> char;
+
+toupper("Hi"); # now fully type-checked!
+# toupper(7);  # would now fail at compile time instead of runtime
+```
+
+This is particularly useful when you want to use base R functions or functions from external packages with full type safety, without having to wrap them in TypR functions.
+
+Now `get_info()` also call `example()` and is integrated into our package:
+
+```r
+> devtools::install()
+> library(along)
+> hello()
+[1] "This is an example function!"
+[1] "John is 27 years old"
+attr(,"class")
+[1] "Character" "character" "any"  
+```
+
+### Best practices
+
+It's better to only use custom R functions from TypR only when using TypR's untyped functions isn't enougth (for some reasons). In all cases, interoperability exists.
+
+TypR is not an “all or nothing” mode. It is just an alternative source language that produces R.
+You can migrate gradually, file by file, function by function.
+
+## The only possible point of friction
+
+There is only one situation where TypR can collide with R:
+
+> When TypR transpiles into a file that already exists in R/.
+
+For instance, if you create a `hello.ty` into the `TypR/` folder, it will rewrite the `hello.R` in the `R/` folder, then yes — there is a collision. But that is just two tools writing to the same file.
+
+This is not a conceptual conflict between R and TypR.
+It is simply a file-level conflict, easy to avoid through conventions or configuration.
+
+Other than that, TypR and R do not step on each other.
+
+### Best practice
+
+A good practice is to use `main.ty` as an aggregation module and create one file per type.
+
+In our case, we should put the content of `main.ty` into the `person.ty` file, then import it within the main file with the `mod` keyword:
+
+```julia
+mod person;
+```
+
+TypR will understand that it should find un file named "person.ty", parse, type check and transpile it into a `person.R` file within the `R/` folder. This practice will bring the same result but with a cleaner code.
+
+## The right mental model
+
+TypR is not a new language that replaces R.
+It is much closer to things like:
+
+- TypeScript for JavaScript
+- Cython for Python
+- Scala.js for JavaScript
+
+You write in a more structured, safer, more expressive language…
+and you get standard R code at the end.
+
+## Why this matters
+
+This changes the real question.
+
+You don’t have to ask:
+
+> “Should I leave R for TypR?”
+
+But rather:
+
+> “Would this part of my code benefit from types?”
+
+You can keep:
+
+- tidyverse
+- data.table
+- CRAN
+- your existing code
+- your team
+
+…and add where it makes sense:
+
+- static typing
+- richer data structures
+- compile-time guarantees
+- safer refactoring
+
+TypR does not compete with R. It amplifies R with software engineering good practices.
