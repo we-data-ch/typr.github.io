@@ -8,6 +8,8 @@ name: Deploy documentation
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   repository_dispatch:
     types: [typr-release]
   workflow_dispatch:
@@ -39,7 +41,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Sur une PR on s'arrête ici : le build a validé les liens et le MDX,
+      # mais rien n'est publié tant que ce n'est pas fusionné.
       - name: Deploy to gh-pages
+        if: github.event_name != 'pull_request'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
