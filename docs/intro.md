@@ -2,7 +2,7 @@
 
 ## 1. Why this language
 
-**TypR** is a powerfull datascience/software engeneering programming language and a typed version of the R language that introduces an optional static type system, while preserving the flexibility and expressiveness that make R a powerful tool for data analysis and statistics.
+**TypR** is a powerful data-science/software-engineering programming language and a typed version of the R language that introduces an optional static type system, while preserving the flexibility and expressiveness that make R a powerful tool for data analysis and statistics.
 
 Its main goals are:
 
@@ -13,7 +13,7 @@ Its main goals are:
 
 TypR aims to strike a balance: more rigor when needed, without sacrificing productivity.
 
-You can read more about this topic with it's [core philosophy](philosophy/intro.md).
+You can read more about this topic with its [core philosophy](philosophy/intro.md).
 
 ## 2. What TypR is not
 
@@ -182,6 +182,7 @@ To deepen your use of TypR, you can:
 - Explore **[advanced types](reference/types.md)** (unions, interfaces, aliases, generics)
 - Learn about **[signatures](reference/functions.md)** to type existing R functions
 - Discover **[integration with the existing R ecosystem](reference/r-typr.md)** (packages, scripts, notebooks)
+- Read the **[FAQ](faq.md)** for common questions and comparisons
 
 TypR is designed to evolve alongside its users and their needs.
 

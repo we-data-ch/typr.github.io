@@ -91,6 +91,12 @@ const config: Config = {
         },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
+          type: 'doc',
+          docId: 'faq',
+          position: 'left',
+          label: 'FAQ',
+        },
+        {
           href: 'https://github.com/we-data-ch/typr',
           label: 'GitHub',
           position: 'right',
@@ -106,6 +112,10 @@ const config: Config = {
             {
               label: 'Tutorial',
               to: '/docs/intro',
+            },
+            {
+              label: 'FAQ',
+              to: '/docs/faq',
             },
             {
               label: 'Youtube',
