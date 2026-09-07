@@ -93,7 +93,7 @@ For more details, see the [installation guide](reference/installation.md).
 
 Very close to R. The design principle is that typed code should still look like R, with minimal syntactic overhead:
 
-```julia
+```typr
 # Hello World in TypR
 let message: char <- "Hello, TypR!";
 
@@ -124,7 +124,7 @@ Semicolons disambiguate statements for the current parser. They may become optio
 
 No. TypR is **gradually typed**, like Python with type hints or TypeScript with `any`. Both of these are valid TypR:
 
-```julia
+```typr
 # Strong on safety
 let my_addition <- fn(a: int, b: int): int { a + b };
 
@@ -155,7 +155,7 @@ See the [types reference](reference/types.md) for the full list and examples.
 
 With a `type` declaration:
 
-```julia
+```typr
 type Person <- list {
   name: char,
   age: int
@@ -170,7 +170,7 @@ Subtle but important: `type X <- ...` creates a *distinct* new type, while `type
 
 Use **tagged unions** and **pattern matching**. This is the safe way to handle optionals and error cases:
 
-```julia
+```typr
 type Option<T> <- .Some(T) | .None;
 
 let val: Option<bool> <- .None;
@@ -189,7 +189,7 @@ In most typed languages, a type must be *declared* to belong somewhere (nominal 
 
 For example, **row polymorphism** lets functions declare only the columns they touch:
 
-```julia
+```typr
 let get_age <- fn(p: { age: int }): int {
   p$age
 };
@@ -223,7 +223,7 @@ See [Working with R and TypR](reference/r-typr.md).
 
 Out of the box, most base R functions arrive in TypR as accepting `Any` and returning `Empty`, so `toupper(7)` still only fails at runtime. The fix is a **signature annotation**, which types an existing function without touching it:
 
-```julia
+```typr
 @toupper: (char) -> char;
 
 toupper("Hi");   # fully type-checked
@@ -246,7 +246,7 @@ TypR can also target other languages: **JavaScript and WebAssembly** are transpi
 
 Every TypR function can be called in **three equivalent ways**, thanks to the [uniform function call syntax](https://en.wikipedia.org/wiki/Uniform_function_call_syntax) inspired by Nim:
 
-```julia
+```typr
 add(5, 3)          # classic
 (5) |> add(3)      # pipe
 (5).add(3)         # method-call style
@@ -260,7 +260,7 @@ No. All you need are **types and functions**. Instead of picking an OOP system, 
 
 When you need polymorphism, TypR offers **interfaces**—ad-hoc polymorphism in the spirit of Rust traits or Haskell type classes:
 
-```julia
+```typr
 # Signature for an existing R function
 @paste: (Any, Any) -> char;
 
@@ -291,7 +291,7 @@ TypR keeps vectorization, but rethought: **lifting-based vectorization**. You wr
 
 Native R vectors handle atoms well but fall apart around custom objects. In TypR, arrays are vectorized by default:
 
-```julia
+```typr
 type Point <- { x: int, y: int };
 
 let new_point <- fn(x: int, y: int): Point {
@@ -310,7 +310,7 @@ points * 3;         # works: via operator overloading
 
 Reductions come along for the ride. If your type implements `+`, `sum()` works on the vector:
 
-```julia
+```typr
 let `+` <- fn(p1: Point, p2: Point): Point {
   new_point(p1$x + p2$x, p1$y + p2$y)
 };
@@ -330,7 +330,7 @@ From the thesis heritage, **multidimensional arrays are first-class**: `[[1, 2, 
 
 You can also export constructors compactly with the `@export` decorator:
 
-```julia
+```typr
 type Button <- list {
   color: char
 };
@@ -381,7 +381,7 @@ There is strong industry evidence that static typing reduces defect rates. TypeS
 
 Inline `Test { }` blocks sit right next to the code they validate. During transpilation, they are extracted into standard **testthat** files (`tests/testthat/test-<filename>.R`). Logic and tests stay side by side, while the resulting package remains fully conventional.
 
-```julia
+```typr
 type Person <- list {
   name: char,
   age: int

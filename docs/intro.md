@@ -1,189 +1,160 @@
 # Getting started
 
-## 1. Why this language
+This is a tutorial. You will learn TypR by writing and running small programs,
+step by step. It takes about ten minutes.
 
-**TypR** is a powerful data-science/software-engineering programming language and a typed version of the R language that introduces an optional static type system, while preserving the flexibility and expressiveness that make R a powerful tool for data analysis and statistics.
+> This page is not a reference — it does not list every construct or all types.
+> When you want the details, follow the links to the [reference](/docs/reference/intro)
+> at the end of each section.
 
-Its main goals are:
+TypR is a typed version of R that transpiles into plain `.R` files. It is aimed
+at developers who write R code that must survive in production: packages,
+libraries, and applications. You write code that looks almost identical to R,
+a compiler checks your types, and the output is ordinary R.
 
-- **Reduce runtime errors** through early detection (at writing or compilation time).
-- **Improve readability and maintainability** of medium- to large-scale R projects.
-- **Facilitate teamwork** by making function contracts and data structures explicit.
-- **Prepare R code for production use**, without giving up the existing ecosystem.
+## Before you begin
 
-TypR aims to strike a balance: more rigor when needed, without sacrificing productivity.
+You need:
 
-You can read more about this topic with its [core philosophy](philosophy/intro.md).
+- **A basic knowledge of R** — syntax, functions, the `<-` assignment.
+- **A recent version of R** installed.
+- **The `typr` compiler.** Head to the [installation guide](reference/installation.md)
+  and come back once `typr --version` prints a version number.
 
-## 2. What TypR is not
+Everything else — IDE, editor, RStudio — is optional.
 
-### Not a R's replacement
-R is a powerful programming language for research, exploration, experimentation and visual production for data analysis and statistics. TypR is there to handle another set of activity going from package production/maintenance to live application scalability in production.
+## 1. Say hello
 
-See [working with typr along r](reference/r-typr.md)
+Create a file called `hello.ty` in an empty folder:
 
-### Not a low level R
-Even though, in the future types will help building faster code, their goal is more about data modeling and safety.
-
-## Target audience
-
-This language is primarily intended for:
-
-- **Data scientists and statisticians** who use R and want more reliable analyses.
-- **Developers** working on complex or mission-critical R projects.
-- **Data teams** in organizations seeking to standardize and secure their codebases.
-- **Researchers and educators** who want to introduce sound software engineering practices into their work.
-
-It is especially well suited for projects that go beyond simple exploratory scripts.
-
-## 3. Prerequisites
-
-To use TypR, it is recommended to:
-
-- Have a **basic knowledge of the R language** (syntax, functions, data frames).
-- Understand fundamental **programming concepts** (functions, variables, modules).
-
-Experience in data science or statistics is a plus, but not strictly required.
-
-## 4. Installation
-
-Check the [installation page](reference/installation.md).
-
-## 5. First program
-
-Here is a simple first example in TypR:
-
-```julia
-print("Hello world")
+```typr
+# hello.ty
+print("Hello, TypR!");
 ```
 
-You can also store values in typed variables using the `let` keyword and a type annotation. The following example declares a `char` variable and prints it:
+Transpile it from the terminal:
 
-```julia
-# Hello World in TypR
+```bash
+typr build
+```
+
+TypR generates plain R code. If you look at the files produced, you will see
+ordinary `.R` files — nothing exotic. That generated code is what runs, anywhere
+R runs.
+
+## 2. Store a value
+
+In TypR, you declare a name with `let` and assign it with `<-`, like in R. A
+type annotation, written `name: type`, tells the compiler what the value should be:
+
+```typr
 let message: char <- "Hello, TypR!";
-
-message
+print(message);
 ```
 
-And here is a more complete version using a typed function to print the message:
+The compiler now checks that `message` is always used as a character string.
 
-```julia
-let hello: char <- "Hello world";
+The four primitive types are `int`, `num`, `bool`, and `char`. See the
+[types reference](reference/types.md) for the full type table.
 
-let my_print <- fn(msg: char): Empty {
-	print(msg)
-};
+## 3. Write a typed function
 
-my_print(hello)
-```
+A typed function declares the type of each parameter and of its return value.
+The compiler uses these declarations to catch mistakes before the code runs:
 
-## Core concepts
-
-### Primitive types
-
-TypR introduces explicit types for basic values. Here is a complete overview of the four primitive types available:
-
-```julia
-# Basic type annotations
-let x: int <- 42;
-print(x);
-
-let pi: num <- 3.14159;
-print(pi);
-
-let name: char <- "TypR";
-print(name);
-
-let is_valid: bool <- true;
-print(is_valid);
-```
-
-- `int` -- integers (whole numbers like `42`)
-- `num` -- numbers (floating-point values like `3.14159`)
-- `bool` -- booleans (`true` or `false`)
-- `char` -- character strings (text like `"TypR"`)
-
-These types allow the compiler to check code consistency and catch type mismatches before runtime.
-
-### Typed functions
-
-Functions in TypR can declare the type of their parameters and their return value. This makes developer intent explicit and prevents many classes of errors:
-
-```julia
-# Function with type annotations
+```typr
 let add <- fn(a: int, b: int): int {
   a + b
 };
 
-# Using the function normally
 print(add(5, 3));
 ```
 
-TypR also supports **pipe syntax** and **method-call syntax**, giving you multiple ways to call the same function:
+You did not have to annotate `add` itself: the compiler infers it. You only
+annotate what matters for clarity or safety. For example, swapping `b` for a
+string would now fail at compile time instead of at runtime.
 
-```julia
-# Using pipes
-(5) |> add(3)
-	|> print();
+## 4. Call the same function three ways
 
-# Using method calling
-(5).add(3)
-   .print();
+TypR functions are first-class values, and their first argument can become a
+"receiver". Thanks to uniform function call syntax, the three calls below are
+strictly equivalent:
+
+```typr
+add(5, 3);        # classic call
+(5) |> add(3);    # pipe
+(5).add(3);       # method-call style
 ```
 
-All three calling styles are equivalent -- choose whichever reads best in context.
+Pick whichever reads best. See the [functions reference](reference/functions.md)
+for more on function types and higher-order functions.
 
-### Untyped functions
+## 5. Model your data
 
-To keep a flexible way to interop with raw R code, you can also use R-style untyped functions:
+To work with structured data, define a type and a constructor for it:
 
-```julia
-function(a, b) {
-	a + b
+```typr
+type Person <- list {
+  name: char,
+  age: int
+};
+
+let new_person <- fn(name: char, age: int): Person {
+  list(name = name, age = age)
+};
+```
+
+Because TypR uses structural types, a function that needs only the `age` field
+accepts *any* value that has one — including data frames and lists with extra
+fields. See the [types reference](reference/types.md) for structural subtyping.
+
+## 6. Write a function on your type
+
+```typr
+let is_adult <- fn(p: Person): bool {
+  p$age >= 18
+};
+
+let alice <- new_person("Alice", 25);
+
+alice.is_adult();   # true
+```
+
+Note the method-call style: `alice.is_adult()` is `is_adult(alice)`. Because
+`alice` is a `Person`, and `is_adult` expects a `Person`, the compiler knows the
+types all the way through.
+
+## 7. Add a test right next to the code
+
+With an inline `Test` block, logic and tests stay side by side. During
+transpilation the block is extracted into a standard testthat file:
+
+```typr
+Test {
+  test_that("is_adult works", {
+    let alice <- new_person("Alice", 25);
+    let bob <- new_person("Bob", 15);
+    expect_true(alice.is_adult());
+    expect_false(bob.is_adult());
+  })
 }
 ```
 
-### Data structures
+To R, devtools, testthat, and CRAN, the result is just a regular R package.
 
-#### Vectors and Arrays
+## 8. From script to package
 
-Vectors use the classic `c()` constructor, while arrays use a bracket notation:
+A TypR package is a normal R package with one extra `TypR/` folder. Put your
+`.ty` files there, run `typr build`, and TypR generates the R code into `R/`.
 
-```julia
-# Creating typed vectors and arrays
-let v1 <- c(1, 2, 3, 4, 5);
-print(2*v1+3);
+You can migrate any existing R package gradually: file by file, function by
+function. TypR never forces an all-or-nothing choice.
 
-let a1 <- [1, 2, 3, 4, 5];
-print(2*a1+3);
-```
+See [Working with R and TypR](reference/r-typr.md) for the full walkthrough.
 
-Both support vectorized operations out of the box. See [Vectorization by design](philosophy/vectorization_by_design.md) for more details.
+## Where to go next
 
-#### Lists
-
-Lists can be created with the standard `list()` constructor or with a more concise object-like notation:
-
-```julia
-# Standard notation
-list(name = "Anna", age = 56)
-
-# Object-like notation
-:{name: "Anna", age: 56}
-```
-
-Lists are also compatible with structural subtyping, meaning a function that expects a list with an `age` field will accept any list that contains that field. See the [types reference](reference/types.md) for more details.
-
-## Going further
-
-To deepen your use of TypR, you can:
-
-- Explore **[advanced types](reference/types.md)** (unions, interfaces, aliases, generics)
-- Learn about **[signatures](reference/functions.md)** to type existing R functions
-- Discover **[integration with the existing R ecosystem](reference/r-typr.md)** (packages, scripts, notebooks)
-- Read the **[FAQ](faq.md)** for common questions and comparisons
-
-TypR is designed to evolve alongside its users and their needs.
-
-
+- **[FAQ](faq.md)** — common questions, comparisons, and practical answers
+- **[Reference](/docs/reference/intro)** — types, functions, control flow
+- **[Philosophy](philosophy/intro.md)** — why TypR is designed this way
+- **[Blog](/blog)** — R and TypR, vectorization, testing, OOP

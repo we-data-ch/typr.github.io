@@ -48,7 +48,7 @@ The `TypR/` folder contains files written in TypR, while the R/ folder contains 
 
 Let's create a file named `main.ty` (mandatory). Inside that file, we will create a type `Person` with a name and an age.
 
-```julia
+```typr
 type Person <- list {
 	name: char,
 	age: int	
@@ -61,7 +61,7 @@ let new_person <- fn(name: char, age: int): Person {
 
 Let's also create a `get_info` that will return a string with the information of the person.
 
-```julia
+```typr
 let get_info <- fn(p: Person): char {
 	paste(p$name, " is ", p$age, " years old")
 		|> as__character() #for compatibility
@@ -146,7 +146,7 @@ example <- function() {
 
 Now we can use it from TypR within our `get_info()` function. The key mechanism here is the **signature annotation** (`@`), which tells TypR the types of an existing R function without modifying it:
 
-```julia
+```typr
 # along/TypR/person.ty
 # example is a function which take nothing and return nothing
 @example: () -> Empty
@@ -162,7 +162,7 @@ let get_info <- fn(p: Person): char {
 
 By default, untyped R functions accept `Any` and return `Empty`, which means the compiler can't verify your usage. The `@` annotation fixes this by declaring the expected types:
 
-```julia
+```typr
 # Without signature: toupper takes Any, returns Empty
 toupper("Hi"); # works, but no type checking
 
@@ -213,7 +213,7 @@ A good practice is to use `main.ty` as an aggregation module and create one file
 
 In our case, we should put the content of `main.ty` into the `person.ty` file, then import it within the main file with the `mod` keyword:
 
-```julia
+```typr
 mod person;
 ```
 

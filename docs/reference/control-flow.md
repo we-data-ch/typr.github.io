@@ -4,7 +4,7 @@
 
 Conditional expressions in Typed R behave like in standard R, with additional type safety.
 
-```julia
+```typr
 if (4 == 4) {
 	print("It works!")
 } 
@@ -35,9 +35,9 @@ This makes iterative algorithms more robust without changing their familiar stru
 
 The `match` expression provides exhaustive pattern matching on tagged unions. It is the idiomatic way to handle values that can take one of several forms:
 
-```julia
+```typr
 # Define an Option type with generics
-type Option<T> <- .Some(T) | .None;
+type Option`<T>` <- .Some(T) | .None;
 
 # Create a value of type Option<bool>
 let val: Option<bool> <- .None;

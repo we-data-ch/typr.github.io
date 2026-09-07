@@ -10,7 +10,7 @@ This same trade-off exists in programming languages. Consider R and Rust, two of
 
 Between strict and permissive languages lies a category of gradually typed languages. These languages allow developers to add types progressively, defining them only when needed. Python (with type hints) and TypeScript exemplify this flexibility. TypR also possesses this property, giving developers the capacity to adjust the balance between freedom and safety. Of course, this doesn't mean TypR is intended to replace R, but rather to work alongside it.
 
-```julia
+```typr
 # a valid TypR code: strong on safety, weak on freedom
 let num1: int <- 3;
 let num2: int <- 7;
@@ -22,7 +22,7 @@ let my_addition <- fn(a: int, b: int): int {
 my_addition(num1, num2)
 ```
 
-```julia
+```typr
 # Also a valid TypR code: weak on safety, strong on freedom
 let num1 <- 3;
 let num2 <- 7;

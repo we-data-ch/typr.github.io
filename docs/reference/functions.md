@@ -1,143 +1,168 @@
-## Functions
+# Functions
 
-### Typing functions
+This page covers function definitions, calling conventions, signatures, and advanced patterns in TypR.
 
-Functions in Typed R can explicitly declare:
+<!-- truncate -->
 
-* the type of each parameter,
-* the return type.
+## Defining typed functions
 
-Typed function signatures act as clear contracts, improving readability and tooling support, and enabling early error detection.
+The `fn` keyword defines a typed function. Parameter types use `: type`, and the return type appears after the closing parenthesis:
 
-```julia
-# Function with type annotations
+```typr
 let add <- fn(a: int, b: int): int {
-  a + b
+    a + b
 };
 
-# Using the function normally
 print(add(5, 3));
 ```
 
-The `fn` keyword defines a typed function. The parameter types are declared with `: type` after the parameter name, and the return type appears after the closing parenthesis with `: return_type`.
+:::caution
+`fn(...)` **always** requires a return type — omitting it triggers an explicit panic ("You forgot to specify the function return type").
+:::
 
 ---
 
-### Calling conventions
+## Default parameters
 
-TypR supports three equivalent ways to call a function, thanks to the **uniform function call** syntax:
+Default values are supported for the **final parameter(s)**:
 
-```julia
+```typr
+let greet <- fn(name: char, greeting: char = "Hello"): char {
+    greeting
+};
+
+greet("World");        # "Hello"
+greet("World", "Hi");  # "Hi"
+```
+
+---
+
+## Variadic functions
+
+```typr
+let sum_all <- fn(...xs: int): int {
+    /* ... */
+};
+```
+
+The `...` prefix makes a parameter accept any number of arguments.
+
+---
+
+## Calling conventions
+
+TypR supports three equivalent ways to call a function, thanks to the **uniform function call syntax** (UFCS):
+
+```typr
 # Classic call
 print(add(5, 3));
 
 # Pipe syntax (|>)
 (5) |> add(3)
-	|> print();
+    |> print();
 
 # Method call syntax (.)
 (5).add(3)
    .print();
 ```
 
-All three styles produce the same result. The first argument of the function can be "pulled out" and used as the receiver in the pipe or method-call notation. This makes chaining operations very readable and natural, without needing to define methods on a class.
+All three styles produce the same result. The first argument can be "pulled out" as the receiver in pipe or method-call notation — making operation chaining readable and natural.
 
 ---
 
-### Signatures: typing existing R functions
+## Lambdas
 
-By default, most base R functions are untyped in TypR. They accept `Any` and return `Empty`. This means the compiler can't catch type errors when you use them:
+Lambdas use `\` without type annotations:
 
-```julia
-# Working with untyped functions
-
-# By default, most base R functions are untyped
-toupper("Hi"); # takes Any, returns Empty
-
-# toupper(7); will return an error at runtime, not compile time
+```typr
+let sq <- \(x) x * x;
 ```
 
-The `@` (signature) annotation allows you to declare the type of an existing R function without modifying it. This gives the compiler the information it needs to check your code:
+:::info
+`\(...)` (lambda) has no declared parameter types or return type. Use `fn(...)` when types are needed.
+:::
 
-```julia
-# Declare the type of toupper
+---
+
+## Partial application
+
+The `\` symbol also supports **partial application** of functions:
+
+```typr
+let add5 <- \add(a = 5);                         # partial application of a function
+let origin <- \Point:{ x = 0, y = 0 };           # partial application of a record constructor
+```
+
+:::note
+**Lambda vs partial application**: both use `\`, disambiguating by what follows — `\(` → lambda, `\identifier(` → partial application. `PartialApp` is desugared into `Lang::Function` during type-checking and never reaches transpilation.
+:::
+
+---
+
+## Higher-order functions
+
+Functions are first-class values in TypR. They can be passed as arguments and returned as values:
+
+```typr
+type Function <- (int) -> bool;
+
+let function0 <- fn(a: int): bool {
+    true
+};
+```
+
+The type system tracks function types using `(T1, T2) -> T3` syntax, ensuring composition and callbacks are type-safe.
+
+---
+
+## Closures
+
+Functions can capture variables from their surrounding environment. The type system ensures captured variables and returned functions remain type-safe:
+
+```typr
+let make_adder <- fn(n: int): (int) -> int {
+    fn(x: int): int { x + n }
+};
+
+let add5 <- make_adder(5);
+add5(3);   # 8
+```
+
+---
+
+## Signatures: typing existing R functions
+
+By default, most base R functions accept `Any` and return `Empty`. The `@` annotation declares the type of an existing R function without modifying it:
+
+```typr
 @toupper: (char) -> char;
 
 toupper("Hi"); # now takes char, returns char
-
-# toupper(7); will now return an error at compile time!
+# toupper(7);  # would now fail at compile time
 ```
 
-Signatures are particularly useful for:
-- typing base R functions (`paste`, `cat`, `toupper`, etc.),
-- typing functions from external packages,
-- providing type safety when calling R code from TypR.
+See [Signatures, @extern & Foreign](signatures.md) for overloading, `@extern`, and `@importFrom`.
 
 ---
 
-### Higher-order functions
+## Interfaces: polymorphic functions
 
-Typed R fully supports **higher-order functions**, meaning functions can:
+Interfaces enable **ad-hoc polymorphism** — write functions that work across multiple types:
 
-* be passed as arguments,
-* be returned as values.
-
-The type system tracks function types using the `(T1, T2) -> T3` syntax, ensuring that function composition and callbacks are used correctly.
-
-```julia
-# A function type
-type Function <- (int) -> bool;
-
-# Using a function as a value
-let function0 <- fn(a: int): bool {
-	true
-};
-```
-
----
-
-### Closures and lambdas
-
-Typed R supports:
-
-* **anonymous functions (lambdas)** for concise functional programming,
-* **closures**, where functions capture variables from their surrounding environment.
-
-The type system ensures that captured variables and returned functions remain type-safe, even in advanced functional patterns.
-
----
-
-### Interfaces: polymorphic functions
-
-Interfaces allow you to write functions that work across multiple types, as long as those types implement a set of required functions. This is TypR's approach to **ad-hoc polymorphism** (similar to type classes in Haskell or traits in Rust):
-
-```julia
-# Signature for an existing R function
+```typr
 @paste: (Any, Any) -> char;
 
-# Define an interface
 type Viewable <- interface {
-	view: (Self) -> char
+    view: (Self) -> char
 };
 
-# Create a function for all Viewable types
 let double <- fn(a: Viewable): char {
-	paste(view(a), view(a))
-};
-```
-
-To make a type part of an interface, you simply define the required function for it:
-
-```julia
-# Include bool in the Viewable interface by implementing 'view'
-let view <- fn(a: bool): char {
-	"bool"
+    paste(view(a), view(a))
 };
 
-# Now bool inherits the 'double' function
-true.double()
+let view <- fn(a: bool): char { "bool" };
+
+true.double()   # works because bool implements Viewable
 ```
 
-This pattern is very powerful: you can define interfaces once and extend them to new types without modifying the original code. Combined with method-call syntax, it provides a clean, extensible way to build libraries.
-
----
+See [Interfaces & Structural Validation](interfaces.md) for details.
