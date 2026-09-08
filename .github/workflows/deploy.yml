@@ -35,6 +35,16 @@ jobs:
 
       - run: npm ci
 
+      - name: Fetch TypR version from develop
+        run: |
+          VERSION=$(curl -sf https://raw.githubusercontent.com/we-data-ch/typr/develop/Cargo.toml \
+            | grep '^version = ' | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "TYPR_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Sync version in homepage
+        run: |
+          sed -i "s/version [0-9]*\.[0-9]*\.[0-9]*/version $TYPR_VERSION/" src/pages/index.tsx
+
       - name: Typecheck
         run: npm run typecheck
 
