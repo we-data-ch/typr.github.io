@@ -106,7 +106,7 @@ const Home: React.FC = () => {
       <div style={styles.container}>
         <img src={logoUrl} alt="Typed R logo" style={styles.logo} />
 
-		<p>version 0.4.17 (alpha)</p>
+		<p>version 0.5.10 (alpha)</p>
         <h1 style={styles.title}>
           R's types for data sciences
         </h1>
