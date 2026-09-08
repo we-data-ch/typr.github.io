@@ -137,7 +137,6 @@ transpilation the block is extracted into a standard testthat file:
 ```typr
 # --- setup, from the previous steps ---
 type Person <- list { name: char, age: int };
-let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
 let is_adult <- fn(p: Person): bool { p$age >= 18 };
 # --------------------------------------
 
