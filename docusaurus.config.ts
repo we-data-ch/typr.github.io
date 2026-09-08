@@ -46,7 +46,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/we-data-ch/typr.github.io/tree/main/',
+            'https://github.com/we-data-ch/typr.github.io/edit/main/',
         },
         blog: {
           beforeDefaultRehypePlugins: [rehypeShikiTypR],
@@ -58,7 +58,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/we-data-ch/typr.github.io/tree/main/',
+            'https://github.com/we-data-ch/typr.github.io/edit/main/',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
