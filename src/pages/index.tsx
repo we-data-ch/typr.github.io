@@ -1,4 +1,4 @@
-import React, { CSSProperties } from "react";
+import React, { CSSProperties, useState, useEffect } from "react";
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 interface Styles {
@@ -94,6 +94,27 @@ const styles: Styles = {
     fontSize: "0.9rem",
     color: "#6b7280",
   },
+  badgeRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "1rem",
+    marginBottom: "1.5rem",
+    fontSize: "0.95rem",
+    color: "#9ca3af",
+  },
+  badge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.35rem",
+    padding: "0.3rem 0.75rem",
+    borderRadius: "999px",
+    border: "1px solid #3b3b3f",
+    backgroundColor: "#232326",
+    fontSize: "0.85rem",
+    color: "#e5e7eb",
+    textDecoration: "none",
+  },
 };
 
 const Home: React.FC = () => {
@@ -101,12 +122,33 @@ const Home: React.FC = () => {
 	const docsUrl = useBaseUrl('/docs/intro');
 	const philosophyUrl = useBaseUrl('/docs/philosophy/intro');
 	const playgroundUrl = 'https://we-data-ch.github.io/typr-playground.github.io/';
+	const [stars, setStars] = useState<number | null>(null);
+
+	useEffect(() => {
+		fetch("https://api.github.com/repos/we-data-ch/typr")
+			.then((res) => res.json())
+			.then((data) => setStars(data.stargazers_count))
+			.catch(() => {});
+	}, []);
+
   return (
     <main style={styles.page}>
       <div style={styles.container}>
         <img src={logoUrl} alt="Typed R logo" style={styles.logo} />
 
-		<p>version 0.5.10 (alpha)</p>
+		<div style={styles.badgeRow}>
+			<span>version 0.5.10 (alpha)</span>
+			{stars !== null && (
+				<a
+					href="https://github.com/we-data-ch/typr/stargazers"
+					style={styles.badge}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					⭐ {stars.toLocaleString()}
+				</a>
+			)}
+		</div>
         <h1 style={styles.title}>
           R's types for data sciences
         </h1>
