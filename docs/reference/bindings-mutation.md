@@ -31,13 +31,20 @@ Destructuring is desugared into a temporary variable + positional access via dot
 
 ## Reassignment & mutation
 
-```typr noplayground
+```typr
+# --- setup ---
+let x <- 0;
+let f <- fn(a: int): int { a + 1 };
+let g <- fn(a: int): int { a * 2 };
+# ---------------
+
 x <- 10;         # reassign an already-bound variable
 x <- x + 1;
 
 # "implicit mutation" sugar: x!; reassigns x to the result of the expression
 x |> f() |> g()!;         # ≡  x <- x |> f() |> g();
-obj.method()!;            # ≡  obj <- obj.method();
+
+print(x);
 ```
 
 The `expr!;` form requires the head of the `.`/`|>` chain to be an assignable variable — `3!;` is rejected at parse time.

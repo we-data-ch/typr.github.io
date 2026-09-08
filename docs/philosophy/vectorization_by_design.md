@@ -203,9 +203,9 @@ The developer just has to write their functions for scalar values and TypR will 
 ### Point construction
 Let's build our `Point` type and a constructor with TypR:
 
-```typr noplayground
+```typr
 # Type definition
-type Point <- {
+type Point <- list {
 	x: int,
 	y: int
 };
@@ -218,54 +218,85 @@ let new_point <- fn(x: int, y: int): Point {
 
 We will also define a `print` function for points:
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+# ---------------------------------------
+
 # print function
 let print <- fn(p: Point): Empty {
   cat("Point<", p$x, ",", p$y, ">", sep="");
-  invisible(p);
 };
+
+print(new_point(3, 4));
 ```
 
 Now we can build a point like before:
 
-```typr noplayground
-new_point(3, 4)
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+# ---------------------------------------
+
+new_point(3, 4);
 #Point<3,4>
 ```
 
 We won't forget to implement the `scale` function.
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+# ---------------------------------------
+
 let scale <- fn(p: Point, n: int): Point {
 	new_point(p$x * n, p$y * n)
 };
 
 new_point(3, 4) 
-	|> scale(2)
+	|> scale(2);
 #Point<6,8>
 ```
 
 Of course, we also have the capability of implementing the `*` operator:
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let scale <- fn(p: Point, n: int): Point { new_point(p$x * n, p$y * n) };
+# ---------------------------------------
+
 let `*` <- fn(p: Point, n: int): Point {
 	scale(p, n)
 };
 
-new_point(3, 4) * 2
+new_point(3, 4) * 2;
 #Point<6,8>
 ```
 
 ### Point vectorization
 Now what about vectors? TypR has its own way to deal with them. For better understanding, let's make a vector of points:
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+# ---------------------------------------
+
 # creating a vector of points in TypR
 let points <- [new_point(1, 2), 
 			new_point(3, 4), 
 			new_point(5, 6)];
 
-points
+points;
 #typed_vec [3]
 #[1] Point<1,2>
 #[2] Point<3,4>
@@ -276,9 +307,18 @@ We have an array notation syntax like other programming languages. This kind of 
 
 What's the best part? *TypR's arrays are vectorized by default*! So these operations work:
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let scale <- fn(p: Point, n: int): Point { new_point(p$x * n, p$y * n) };
+let `*` <- fn(p: Point, n: int): Point { scale(p, n) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
 # scaling a group of point with one number
-scale(points, 2)
+scale(points, 2);
 #typed_vec [3]
 #[1] Point<2,4>
 #[2] Point<6,8>
@@ -286,14 +326,14 @@ scale(points, 2)
 
 # same but with pipe
 points 
-	|> scale([1, 2, 3])
+	|> scale([1, 2, 3]);
 #typed_vec [3]
 #[1] Point<1,2>
 #[2] Point<6,8>
 #[3] Point<15,18>
 
 # same but with the "*" operator
-points * 3
+points * 3;
 #typed_vec [3]
 #[1] Point<3,6>
 #[2] Point<9,12>
@@ -302,21 +342,28 @@ points * 3
 
 We also have the possibility to work with types by themselves. Let's define the `+` operator that will help adding two points by adding their respective fields.
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
 # Definition of the "+" operator
 let `+` <- fn(p1: Point, p2: Point): Point {
 	new_point(p1$x + p2$x, p1$y + p2$y)
 };
 
 # adding a group of point with a scalar
-points + new_point(1, 1)
+points + new_point(1, 1);
 #typed_vec [3]
 #[1] Point<2,3>
 #[2] Point<4,5>
 #[3] Point<6,7>
 
 # adding two group of point of the same type
-points + points
+points + points;
 #typed_vec [3]
 #[1] Point<2,4>
 #[2] Point<6,8>
@@ -325,17 +372,33 @@ points + points
 
 And what about reduction functions? One can use the `reduce` function to reduce the elements of the array.
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let `+` <- fn(p1: Point, p2: Point): Point { new_point(p1$x + p2$x, p1$y + p2$y) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
 # will add all the points
-reduce(points, `+`<Point>)
+reduce(points, `+`<Point>);
 #Point<9,12>
 ```
 
 We specify the type \<Point\> for the `+` operator because TypR's type system isn't doing this kind of inference yet. But as you can see, it summed all elements of points. One can also use a shortcut by using the `sum` function:
 
-```typr noplayground
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let `+` <- fn(p1: Point, p2: Point): Point { new_point(p1$x + p2$x, p1$y + p2$y) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
 points
-	|> sum()
+	|> sum();
 #Point<9,12>
 ```
 

@@ -31,26 +31,26 @@ it.
 For typed interop with dplyr, use `@extern` to declare the types of functions
 you want to call with type safety:
 
-```typr noplayground
-@extern dplyr::filter: (data: Foreign<Any>, ...) -> Foreign<Any>;
-@extern dplyr::mutate: (data: Foreign<Any>, ...) -> Foreign<Any>>;
-@extern dplyr::select: (data: Foreign<Any>, ...) -> Foreign<Any>>;
-@extern dplyr::summarise: (data: Foreign<Any>, ...) -> Foreign<Any>>;
-@extern dplyr::arrange: (data: Foreign<Any>, ...) -> Foreign<any>;
+```typr
+@extern dplyr::filter: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::mutate: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::select: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::summarise: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::arrange: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 ```
 
 With these declarations, `dplyr::filter(df, .data$x > 1)` is partially checked —
-the compiler verifies the first argument is a dataframe, but `...` is
-intentionally untyped to allow NSE.
+the compiler verifies the first argument is a dataframe, but the variadic
+`...args: Any` tail is intentionally untyped to allow NSE.
 
 ## Mixing typed and untyped code
 
 The best pattern is to do data preparation in `R {}` blocks and business
 logic in typed functions:
 
-```typr noplayground
-@extern dplyr::filter: (data: Foreign<Any>, ...) -> Foreign<Any>;
-@extern dplyr::mutate: (data: Foreign<Any>, ...) -> Foreign<Any>;
+```typr
+@extern dplyr::filter: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::mutate: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 
 # Typed business logic
 let compute_score <- fn(row: Foreign<Any>): num {
@@ -84,10 +84,11 @@ package is built.
 
 TypR supports dataframe types for typed access:
 
-```typr noplayground
+```typr
 type PersonRow <- df[1]{ name: char, age: int };
 
-let process <- fn(df: PersonRow): char {
+# a dataframe column is a vector, so `df$name` is `[1, char]`, not `char`
+let process <- fn(df: PersonRow): [1, char] {
   df$name
 };
 ```
@@ -100,9 +101,9 @@ specific dataframe types.
 
 ### Typed wrapper around dplyr
 
-```typr noplayground
-@extern dplyr::group_by: (data: Foreign<Any>, ...) -> Foreign<Any>>;
-@extern dplyr::summarise: (data: Foreign<Any>, ...) -> Foreign<Any>>;
+```typr
+@extern dplyr::group_by: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::summarise: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 
 let summarize_by_group <- fn(
   df: Foreign<Any>,
@@ -118,11 +119,11 @@ let summarize_by_group <- fn(
 
 ### Type-safe column access
 
-```typr noplayground
+```typr
 @extern dplyr::pull: (data: Foreign<Any>, var: char) -> Foreign<Any>;
 
 let get_column <- fn(df: Foreign<Any>, col: char): Foreign<Any> {
-  dplyr::pull(df, col)
+  pull(df, col)
 };
 ```
 

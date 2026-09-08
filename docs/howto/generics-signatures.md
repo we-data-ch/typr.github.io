@@ -13,11 +13,11 @@ type safety when working with R's object-oriented systems.
 S3 is R's simplest OOP system — a generic function dispatches on the class of
 its first argument. Declare S3 generics with `@` signatures:
 
-```typr noplayground
+```typr
 @print: (x: Foreign<Any>) -> Empty;
 @summary: (object: Foreign<Any>) -> Foreign<Any>;
-@plot: (x: Foreign<Any>, ...) -> Empty;
-@format: (x: Foreign<Any>, ...) -> char;
+@plot: (x: Foreign<Any>, ...args: Any) -> Empty;
+@format: (x: Foreign<Any>, ...args: Any) -> char;
 ```
 
 The `Foreign<Any>` type is used because S3 dispatch is dynamic — the actual
@@ -37,8 +37,8 @@ my_generic <- function(x, ...) {
 
 Declare it in TypR:
 
-```typr noplayground
-@my_generic: (x: Foreign<Any>, ...) -> Foreign<Any>;
+```typr
+@my_generic: (x: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 ```
 
 Then implement methods in `R/` as usual — TypR does not need to know about
@@ -48,30 +48,30 @@ the individual S3 methods.
 
 S4 generics are more structured. Use `@extern` to declare them:
 
-```typr noplayground
+```typr
 @extern stats::coef: (object: Foreign<Any>) -> Foreign<Any>;
-@extern stats::confint: (object: Foreign<Any>, ...) -> Foreign<Any>;
+@extern stats::confint: (object: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 @extern stats::fitted: (object: Foreign<Any>) -> Foreign<Any>;
-@extern stats::residuals: (object: Foreign<Any>, ...) -> Foreign<Any>;
+@extern stats::residuals: (object: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 ```
 
 For your own S4 generics, declare them with `@extern` pointing to the package:
 
-```typr noplayground
-@extern mypackage::my_generic: (x: Foreign<Any>, ...) -> Foreign<Any>;
+```typr
+@extern mypackage::my_generic: (x: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 ```
 
 ## Using generics in typed code
 
 Once declared, generics work naturally in typed functions:
 
-```typr noplayground
+```typr
 @summary: (object: Foreign<Any>) -> Foreign<Any>;
-@plot: (x: Foreign<Any>, ...) -> Empty;
+@plot: (x: Foreign<Any>, ...args: Any) -> Empty;
 
 let analyze <- fn(model: Foreign<Any>): char {
   let s <- summary(model);
-  R { capture.output(plot(model)) }
+  R { capture.output(plot(model)) };
   "Analysis complete"
 };
 ```
@@ -105,7 +105,7 @@ RC generics are handled the same way as S3 — declare with `@` or `@extern`:
 
 ## Practical pattern: typed model interface
 
-```typr noplayground
+```typr
 type Model <- Foreign<Any>;
 
 @extern stats::lm: (formula: char, data: Foreign<Any>) -> Model;
@@ -113,12 +113,13 @@ type Model <- Foreign<Any>;
 @extern stats::coef: (object: Model) -> Foreign<Any>;
 @extern stats::predict: (object: Model, newdata: Foreign<Any>) -> Foreign<Any>;
 
+# an `@extern pkg::name` signature binds the *bare* name in TypR code
 let fit_model <- fn(formula: char, data: Foreign<Any>): Model {
-  stats::lm(formula, data)
+  lm(formula, data)
 };
 
 let get_coefficients <- fn(model: Model): Foreign<Any> {
-  stats::coef(model)
+  coef(model)
 };
 ```
 

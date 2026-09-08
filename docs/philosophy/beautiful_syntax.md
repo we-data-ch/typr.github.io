@@ -47,13 +47,22 @@ data |> f1() |>
 
 With TypR the elegance takes place now one can build more beautiful pipelines like this:
 
-```typr noplayground
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
 data 
 	|> f1()
 	|> f2()
 	|> f3()
 	|> f4()
-	|> f5()
+	|> f5();
 ```
 
 It does exactly the same thing. The difference is the elegance and the readability. 
@@ -80,22 +89,40 @@ Compared to `c()`, one can only put side by side elements of the same type witho
 
 For those who have the nostalgia of the OOP notation. We have the uniform function call.
 
-```typr noplayground
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
 data 
 	|> f1()
 	|> f2()
 	|> f3()
 	|> f4()
-	|> f5()
+	|> f5();
 ```
 
-```typr noplayground
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
 data 
 	.f1()
 	.f2()
 	.f3()
 	.f4()
-	.f5()
+	.f5();
 ```
 
 For some, it's simpler and more ergonomic. It goes along with the philosophy of TypR since each function will become an R S3 method by default (so it is still OOP).
@@ -159,7 +186,7 @@ PersonOrInt.Person:{name: "Bob", age: 12};
 
 Currying is one of the most powerful elements of functional programming. Languages like haskell do it well. But to be more practical, it's better to be able to pick which parameter to fix with a defined value.
 
-```typr noplayground
+```typr
 # Create a function
 let add <- fn(a: int, b: int): int {
 	a + b
@@ -167,11 +194,11 @@ let add <- fn(a: int, b: int): int {
 
 # Create other function from it
 # by fixing some parameters
-let add_b <- \add(a: 10);
-let add_a <- \add(b: 10);
+let add_b <- \add(a = 10);
+let add_a <- \add(b = 10);
 
 # All can be used
 add(3, 5);
 add_b(4);
-add_b(2);
+add_a(2);
 ```

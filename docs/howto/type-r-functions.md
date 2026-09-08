@@ -87,11 +87,12 @@ package and the type:
 Say you call `dplyr::filter` on a dataframe. You can declare its signature and
 use it in typed code:
 
-```typr noplayground
-@extern dplyr::filter: (data: Foreign<Any>, ...) -> Foreign<Any>;
+```typr
+@extern dplyr::filter: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
 
 let filter_adults <- fn(df: Foreign<Any>): Foreign<Any> {
-  df |> filter(.data$age >= 18)
+  # the NSE argument stays inside an R block; the call itself is typed
+  R { dplyr::filter(df, .data$age >= 18) }
 };
 ```
 

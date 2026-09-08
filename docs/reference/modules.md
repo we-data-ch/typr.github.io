@@ -20,10 +20,23 @@ A module compiles to an R environment. Members without `@pub` remain invisible f
 
 ## Importing from modules
 
-```typr noplayground
-use Math::pi_approx;           # import a single member
-use Math::{pi_approx, sin as s};  # import multiple, with alias
-use Math::*;                   # import all @pub members
+```typr
+# --- setup ---
+module Math {
+    @pub let pi_approx <- 3.14;
+    @pub let sin <- fn(x: num): num { x };
+};
+
+module Stats {
+    @pub let mean_of <- fn(x: num): num { x };
+};
+# ---------------
+
+use Math::pi_approx;              # import a single member
+use Math::{sin as s};             # import several, with an alias
+use Stats::*;                     # import all @pub members
+
+print(pi_approx);
 ```
 
 ---

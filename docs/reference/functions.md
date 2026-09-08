@@ -39,10 +39,12 @@ greet("World", "Hi");  # "Hi"
 
 ## Variadic functions
 
-```typr noplayground
+```typr
 let sum_all <- fn(...xs: int): int {
-    /* ... */
+    sum(xs)
 };
+
+print(sum_all(1, 2, 3));
 ```
 
 The `...` prefix makes a parameter accept any number of arguments.
@@ -88,9 +90,16 @@ let sq <- \(x) x * x;
 
 The `\` symbol also supports **partial application** of functions:
 
-```typr noplayground
+```typr
+# --- setup ---
+let add <- fn(a: int, b: int): int { a + b };
+type Point <- list { x: int, y: int };
+# -------------
+
 let add5 <- \add(a = 5);                         # partial application of a function
 let origin <- \Point:{ x = 0, y = 0 };           # partial application of a record constructor
+
+print(add5(3));
 ```
 
 :::note
@@ -149,7 +158,7 @@ See [Signatures, @extern & Foreign](signatures.md) for overloading, `@extern`, a
 
 Interfaces enable **ad-hoc polymorphism** — write functions that work across multiple types:
 
-```typr noplayground
+```typr
 @paste: (Any, Any) -> char;
 
 type Viewable <- interface {
@@ -162,7 +171,7 @@ let double <- fn(a: Viewable): char {
 
 let view <- fn(a: bool): char { "bool" };
 
-true.double()   # works because bool implements Viewable
+true.double();  # works because bool implements Viewable
 ```
 
 See [Interfaces & Structural Validation](interfaces.md) for details.

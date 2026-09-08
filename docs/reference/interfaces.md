@@ -16,7 +16,13 @@ An interface describes a **structural capability**: any type whose free function
 
 ## Using an interface as a validator
 
-```typr noplayground
+```typr
+# --- setup ---
+type Point <- list { x: int, y: int };
+type Movable <- interface { mv: (Self, int, int) -> Self };
+let mv <- fn(p: Point, dx: int, dy: int): Point { Point:{ x = p$x + dx, y = p$y + dy } };
+# -------------
+
 let p <- Point:{ x = 1, y = 2 };
 let q <- Movable(p);   # compile-time validator — transpiles to `q <- p`, never a real call
 ```
@@ -44,13 +50,19 @@ let double <- fn(a: Viewable): char {
 
 To make a type part of an interface, simply define the required function for it:
 
-```typr noplayground
+```typr
+# --- setup, from the previous block ---
+@paste: (Any, Any) -> char;
+type Viewable <- interface { view: (Self) -> char };
+let double <- fn(a: Viewable): char { paste(view(a), view(a)) };
+# --------------------------------------
+
 let view <- fn(a: bool): char {
     "bool"
 };
 
 # bool now inherits 'double'
-true.double()
+true.double();
 ```
 
 This pattern is powerful for building extensible libraries where users can plug in their own types without modifying the original code.

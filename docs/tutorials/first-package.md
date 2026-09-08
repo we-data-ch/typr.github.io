@@ -61,36 +61,42 @@ tempscale/
 
 Create `TypR/main.ty` with a type definition, a constructor, and two functions:
 
-```typr noplayground
+```typr
 # main.ty — entry point of the package
+
+type Unit <- .Celsius | .Fahrenheit | .Kelvin;
 
 type Temp <- list {
   value: num,
-  unit: char
+  unit: Unit
 };
 
-let new_temp <- fn(value: num, unit: char): Temp {
-  list(value = value, unit = unit)
+let new_temp <- fn(value: num, unit: Unit): Temp {
+  Temp:{ value = value, unit = unit }
 };
 
 let to_celsius <- fn(t: Temp): num {
-  match t$unit {
-    "C" => t$value,
-    "F" => (t$value - 32.0) * 5.0 / 9.0,
-    "K" => t$value - 273.15,
-    _   => { print("Unknown unit"); t$value }
+  let unit <- t$unit;
+  match unit {
+    .Celsius    => t$value,
+    .Fahrenheit => (t$value - 32.0) * 5.0 / 9.0,
+    .Kelvin     => t$value - 273.15
   }
 };
 
 @pub let to_fahrenheit <- fn(t: Temp): num {
   to_celsius(t) * 9.0 / 5.0 + 32.0
 };
+
+let fahrenheit: Unit <- .Fahrenheit;
+let boiling <- new_temp(212.0, fahrenheit);
+print(to_celsius(boiling));
 ```
 
 A few things to notice:
 
 - `Temp` is a **record type** — a named structure with typed fields.
-- `match` gives you exhaustive pattern matching on strings.
+- `Unit` is a **tagged union** — `match` on it is checked for exhaustiveness.
 - `@pub` marks `to_fahrenheit` as **public** — it will be exported in the
   generated NAMESPACE.
 - `new_temp` and `to_celsius` are package-internal by default.
@@ -99,21 +105,39 @@ A few things to notice:
 
 Add a `Test` block at the bottom of `TypR/main.ty`:
 
-```typr noplayground
+```typr
+# --- setup, from step 2 ---
+type Unit <- .Celsius | .Fahrenheit | .Kelvin;
+type Temp <- list { value: num, unit: Unit };
+let new_temp <- fn(value: num, unit: Unit): Temp { Temp:{ value = value, unit = unit } };
+let to_celsius <- fn(t: Temp): num {
+  let unit <- t$unit;
+  match unit {
+    .Celsius    => t$value,
+    .Fahrenheit => (t$value - 32.0) * 5.0 / 9.0,
+    .Kelvin     => t$value - 273.15
+  }
+};
+@pub let to_fahrenheit <- fn(t: Temp): num { to_celsius(t) * 9.0 / 5.0 + 32.0 };
+# --------------------------
+
 Test {
   test_that("to_celsius converts Fahrenheit", {
-    let f <- new_temp(212.0, "F");
-    expect_equal(to_celsius(f), 100.0, tolerance = 1e-10);
-  })
+    let fahrenheit: Unit <- .Fahrenheit;
+    let f <- new_temp(212.0, fahrenheit);
+    expect_equal(to_celsius(f), 100.0);
+  });
 
   test_that("to_celsius converts Kelvin", {
-    let k <- new_temp(373.15, "K");
-    expect_equal(to_celsius(k), 100.0, tolerance = 1e-10);
-  })
+    let kelvin: Unit <- .Kelvin;
+    let k <- new_temp(373.15, kelvin);
+    expect_equal(to_celsius(k), 100.0);
+  });
 
   test_that("to_fahrenheit converts Celsius", {
-    let c <- new_temp(100.0, "C");
-    expect_equal(to_fahrenheit(c), 212.0, tolerance = 1e-10);
+    let celsius: Unit <- .Celsius;
+    let c <- new_temp(100.0, celsius);
+    expect_equal(to_fahrenheit(c), 212.0);
   })
 }
 ```
@@ -179,7 +203,7 @@ The package installs and passes `R CMD check`. CRAN, pkgdown, and
 You have built a complete R package using TypR:
 
 - **Types** — `Temp` is a record type with named, typed fields.
-- **Pattern matching** — `match` on unit strings replaces if/else chains.
+- **Pattern matching** — `match` on a tagged union replaces if/else chains.
 - **Tests** — inline `Test` blocks that extract into testthat.
 - **Documentation** — `@pub` generates roxygen2 exports.
 - **Standard R** — the generated code is plain R that any R tool understands.

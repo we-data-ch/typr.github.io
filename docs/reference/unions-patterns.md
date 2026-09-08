@@ -18,7 +18,12 @@ Each variant is prefixed with a dot (`.`) to distinguish it from regular type na
 
 ## The `match` expression
 
-```typr noplayground
+```typr
+# --- setup, from the previous block ---
+type Shape <- .Circle(num) | .Square(num);
+let s: Shape <- .Circle(3.14);
+# --------------------------------------
+
 match s {
     .Circle(r) => r * 2.0,
     .Square(side) => side,
@@ -41,13 +46,13 @@ match s {
 
 ## Qualified union constructors
 
-```typr noplayground
+```typr
 type Color <- .Red | .Blue;
-Color.Red                       # qualified reference to a tag (bare, no :{...})
+Color.Red;                      # qualified reference to a tag (bare, no :{...})
 
 type Rgb <- list { r: int, g: int, b: int };
 type Palette <- .Red | .Blue | Rgb;
-Palette.Rgb:{ r = 10, g = 20, b = 30 }   # Rgb is a record alias used as a union member
+Palette.Rgb:{ r = 10, g = 20, b = 30 };  # Rgb is a record alias used as a union member
 ```
 
 **Important**: `Union.Variant:{ field = val }` syntax **only** works when `Variant` is a record alias used directly as a union member — never for a real tag `.Variant(...)`. To construct a tag, use `.Variant(value)`, and `.Variant(:{ ... })` when the payload is itself a record.
@@ -58,8 +63,8 @@ Palette.Rgb:{ r = 10, g = 20, b = 30 }   # Rgb is a record alias used as a union
 
 Tagged unions work with generics for reusable patterns:
 
-```typr noplayground
-type Option`<T>` <- .Some(T) | .None;
+```typr
+type Option<T> <- .Some(T) | .None;
 
 let val: Option<int> <- .Some(42);
 let empty: Option<int> <- .None;

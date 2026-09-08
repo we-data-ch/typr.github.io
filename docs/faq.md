@@ -189,10 +189,12 @@ In most typed languages, a type must be *declared* to belong somewhere (nominal 
 
 For example, **row polymorphism** lets functions declare only the columns they touch:
 
-```typr noplayground
-let get_age <- fn(p: { age: int }): int {
+```typr
+let get_age <- fn(p: list { age: int }): int {
   p$age
 };
+
+print(get_age(list(age = 30)));
 ```
 
 That function accepts every value—including data frames—with an integer `age` field, regardless of what other fields are present. See the [types reference](reference/types.md) for more on structural subtyping.
@@ -246,10 +248,14 @@ TypR can also target other languages: **JavaScript and WebAssembly** are transpi
 
 Every TypR function can be called in **three equivalent ways**, thanks to the [uniform function call syntax](https://en.wikipedia.org/wiki/Uniform_function_call_syntax) inspired by Nim:
 
-```typr noplayground
-add(5, 3)          # classic
-(5) |> add(3)      # pipe
-(5).add(3)         # method-call style
+```typr
+# --- setup ---
+let add <- fn(a: int, b: int): int { a + b };
+# -------------
+
+add(5, 3);         # classic
+(5) |> add(3);     # pipe
+(5).add(3);        # method-call style
 ```
 
 Because any function's first argument can become the receiver, you get readable chaining without attaching methods to classes. Function values are first-class citizens with their own type syntax (`(T1, T2) -> T3`), and higher-order functions, lambdas, and closures all work. See the [functions reference](reference/functions.md).
@@ -291,8 +297,8 @@ TypR keeps vectorization, but rethought: **lifting-based vectorization**. You wr
 
 Native R vectors handle atoms well but fall apart around custom objects. In TypR, arrays are vectorized by default:
 
-```typr noplayground
-type Point <- { x: int, y: int };
+```typr
+type Point <- list { x: int, y: int };
 
 let new_point <- fn(x: int, y: int): Point {
   list(x = x, y = y)
@@ -300,6 +306,10 @@ let new_point <- fn(x: int, y: int): Point {
 
 let scale <- fn(p: Point, n: int): Point {
   new_point(p$x * n, p$y * n)
+};
+
+let `*` <- fn(p: Point, n: int): Point {
+  scale(p, n)
 };
 
 let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
@@ -310,7 +320,13 @@ points * 3;         # works: via operator overloading
 
 Reductions come along for the ride. If your type implements `+`, `sum()` works on the vector:
 
-```typr noplayground
+```typr
+# --- setup, from the previous block ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# --------------------------------------
+
 let `+` <- fn(p1: Point, p2: Point): Point {
   new_point(p1$x + p2$x, p1$y + p2$y)
 };
@@ -381,7 +397,7 @@ There is strong industry evidence that static typing reduces defect rates. TypeS
 
 Inline `Test { }` blocks sit right next to the code they validate. During transpilation, they are extracted into standard **testthat** files (`tests/testthat/test-<filename>.R`). Logic and tests stay side by side, while the resulting package remains fully conventional.
 
-```typr noplayground
+```typr
 type Person <- list {
   name: char,
   age: int
@@ -400,7 +416,7 @@ Test {
     let adult <- new_person("Alice", 25);
     let minor <- new_person("Bob", 15);
     expect_true(adult.is_adult());
-    expect_false(minor.is_adult());
+    expect_equal(minor.is_adult(), false);
   })
 }
 ```

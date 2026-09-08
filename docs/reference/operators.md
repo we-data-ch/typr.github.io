@@ -44,18 +44,24 @@ data |> filter(x > 0) |> mean()
 
 ## Validating cast
 
-```typr noplayground
-x as! Point                 # calls validate_Point(x) at runtime
-xs as! [Any, int]           # cast to an inline structural type (not an alias)
+```typr
+# --- setup ---
+type Point <- list { x: int, y: int };
+let p <- Point:{ x = 1, y = 2 };
+let xs <- [1, 2, 3];
+# ---------------
+
+p as! Point;                # calls validate_Point(p) at runtime
+xs as! [Any, int];          # cast to an inline structural type (not an alias)
 ```
 
 ---
 
 ## Ranges
 
-```typr noplayground
-1:10        # ≡ seq(1, 10, 1)
-1:2:10      # ≡ seq(1, 10, 2) — step in the middle
+```typr
+1:10;       # ≡ seq(1, 10, 1)
+1:2:10;     # ≡ seq(1, 10, 2) — step in the middle
 ```
 
 ---

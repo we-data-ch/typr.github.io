@@ -51,10 +51,10 @@ See [Records & Constructors](records.md) for construction, spread, and named emb
 
 Tuples combine values of different types by position:
 
-```typr noplayground
-tuple{int, char}          # explicit
-Tuple[int, char]           # bracket notation
-Tuple[T..., U]             # variadic: T... captures a sequence of types
+```typr
+type Pair    <- tuple{int, char};   # explicit
+type PairAlt <- Tuple[int, char];   # bracket notation
+type Rest    <- Tuple[T..., U];     # variadic: T... captures a sequence of types
 ```
 
 ### Vectors
@@ -82,8 +82,8 @@ let a <- [true, false, false, true];
 
 ### Dataframes
 
-```typr noplayground
-dataframe[N]{ name: char, age: int }
+```typr
+type PersonRows <- dataframe[3]{ name: char, age: int };
 ```
 
 ---
@@ -104,8 +104,8 @@ $T     # "label" generic (field name)
 
 ### Generic type definitions
 
-```typr noplayground
-type Option`<T>` <- .Some(T) | .None;
+```typr
+type Option<T> <- .Some(T) | .None;
 opaque Factor<L> <- int;             # phantom parameter: L appears only in signatures
 ```
 
@@ -115,9 +115,9 @@ opaque Factor<L> <- int;             # phantom parameter: L appears only in sign
 
 Functions are first-class values and have their own type syntax:
 
-```typr noplayground
-(int, char) -> bool                  # anonymous function type
-(a: int, b: int) -> int              # parameter names optional, ignored for typing
+```typr
+type Predicate <- (int, char) -> bool;   # anonymous function type
+type Adder     <- (a: int, b: int) -> int;  # parameter names optional, ignored for typing
 ```
 
 :::caution
@@ -128,8 +128,8 @@ Writing `fn(a: int) -> int` in **type position** (instead of `(int) -> int`) tri
 
 ## Interfaces
 
-```typr noplayground
-interface { view: (Self) -> char }    # structural capability
+```typr
+type Viewable <- interface { view: (Self) -> char };   # structural capability
 ```
 
 See [Interfaces & Structural Validation](interfaces.md) for details.

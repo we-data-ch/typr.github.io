@@ -112,7 +112,12 @@ fields. See the [types reference](reference/types.md) for structural subtyping.
 
 ## 6. Write a function on your type
 
-```typr noplayground
+```typr
+# --- setup, from the previous step ---
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+# -------------------------------------
+
 let is_adult <- fn(p: Person): bool {
   p$age >= 18
 };
@@ -131,13 +136,19 @@ types all the way through.
 With an inline `Test` block, logic and tests stay side by side. During
 transpilation the block is extracted into a standard testthat file:
 
-```typr noplayground
+```typr
+# --- setup, from the previous steps ---
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+let is_adult <- fn(p: Person): bool { p$age >= 18 };
+# --------------------------------------
+
 Test {
   test_that("is_adult works", {
     let alice <- new_person("Alice", 25);
     let bob <- new_person("Bob", 15);
     expect_true(alice.is_adult());
-    expect_false(bob.is_adult());
+    expect_equal(bob.is_adult(), false);
   })
 }
 ```

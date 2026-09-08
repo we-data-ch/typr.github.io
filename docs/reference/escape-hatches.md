@@ -16,8 +16,8 @@ extern (x: int, y: char) -> char r#"paste0(x, y)"#;   # raw R body, typed input/
 
 ## Untyped R functions
 
-```typr noplayground
-function(x, y) { x + y }     # raw R function (RFunction), body captured as-is
+```typr
+let add <- function(x, y) { x + y };   # raw R function (RFunction), body captured as-is
 ```
 
 Any `function(...)` expression is captured as an untyped R function — no type checking on the body.

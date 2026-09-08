@@ -40,9 +40,9 @@ Opaque types enforce a boundary: code outside the module where the alias is defi
 
 Both `type` and `opaque` support generic parameters using angle brackets `<T>`:
 
-```typr noplayground
-type Option`<T>` <- .Some(T) | .None;
-opaque Factor`<L>` <- int;
+```typr
+type Option<T> <- .Some(T) | .None;
+opaque Factor<L> <- int;
 ```
 
 :::note
@@ -53,8 +53,8 @@ Generic parameters use `<T>` (angle brackets), not `[T]` (square brackets). Squa
 
 A **phantom parameter** appears in the type definition but not in its body. It exists only for type-level tracking:
 
-```typr noplayground
-opaque Factor`<L>` <- int;   # L never appears in the right-hand side
+```typr
+opaque Factor<L> <- int;   # L never appears in the right-hand side
 ```
 
 Phantom parameters are useful when you need to distinguish between values that have the same runtime representation but different semantic meanings. The constraint is enforced at compile time through [signatures](../reference/signatures.md).

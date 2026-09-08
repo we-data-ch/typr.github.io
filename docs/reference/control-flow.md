@@ -35,9 +35,9 @@ This makes iterative algorithms more robust without changing their familiar stru
 
 The `match` expression provides exhaustive pattern matching on tagged unions. It is the idiomatic way to handle values that can take one of several forms:
 
-```typr noplayground
+```typr
 # Define an Option type with generics
-type Option`<T>` <- .Some(T) | .None;
+type Option<T> <- .Some(T) | .None;
 
 # Create a value of type Option<bool>
 let val: Option<bool> <- .None;
@@ -48,7 +48,7 @@ let res = match val {
 	_ => false
 };
 
-res
+res;
 ```
 
 Each branch of a `match` expression uses the `=>` arrow to map a pattern to its result. The patterns can:

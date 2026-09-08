@@ -32,7 +32,10 @@ The `TypR/` folder is the only addition. Everything else — `DESCRIPTION`,
 
 Write your typed code in `TypR/main.ty`:
 
-```typr noplayground
+```typr
+# a signature types the base-R `paste` so the call below is checked
+@paste: (...values: Any) -> char;
+
 type Person <- list {
   name: char,
   age: int
@@ -45,6 +48,8 @@ let new_person <- fn(name: char, age: int): Person {
 let greet <- fn(p: Person): char {
   paste("Hello,", p$name)
 };
+
+print(greet(new_person("Alice", 25)));
 ```
 
 Run the build from the package root:
@@ -70,13 +75,20 @@ The naming convention (`a_`, `b_`, `c_`, `d_`) ensures correct load order.
 TypR has a built-in `Test` block that extracts into standard testthat files
 during transpilation:
 
-```typr noplayground
+```typr
+# --- setup, from step 1 ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+let greet <- fn(p: Person): char { paste("Hello,", p$name) };
+# --------------------------
+
 Test {
   test_that("new_person creates a valid person", {
     let p <- new_person("Alice", 25);
     expect_equal(p$name, "Alice");
     expect_equal(p$age, 25);
-  })
+  });
 
   test_that("greet returns a greeting string", {
     let p <- new_person("Bob", 30);
@@ -105,7 +117,12 @@ TypR generates roxygen2-compatible comments from your type annotations. The
 transpiler infers `@param`, `@return`, and `@export` directives from the
 function signatures:
 
-```typr noplayground
+```typr
+# --- setup, from step 1 ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+# --------------------------
+
 @pub let greet <- fn(p: Person): char {
   paste("Hello,", p$name)
 };

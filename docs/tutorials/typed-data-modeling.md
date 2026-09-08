@@ -42,7 +42,7 @@ type Email <- list {
 
 type Phone <- list {
   number: char,
-  country_code: char
+  country: char
 };
 
 type Contact <- list {
@@ -60,18 +60,27 @@ has a name and a type. The compiler will check that you use them correctly.
 Records in TypR are plain lists at runtime. Write constructor functions to
 create them:
 
-```typr noplayground
+```typr
+# --- setup, from the previous steps ---
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+# --------------------------------------
+
 let new_email <- fn(address: char): Email {
   list(address = address, verified = false)
 };
 
 let new_phone <- fn(number: char, country: char): Phone {
-  list(number = number, country_code = country)
+  list(number = number, country = country)
 };
 
 let new_contact <- fn(name: char, email: Email, phone: Phone): Contact {
-  list(name = name, email = email, phone = phone)
+  Contact:{ name = name, email = email, phone = phone }
 };
+
+let alice <- new_contact("Alice", new_email("alice@example.com"), new_phone("0600000000", "+33"));
+print(alice$name);
 ```
 
 Notice that the return type `Contact` tells the compiler exactly what structure
@@ -81,7 +90,17 @@ the function returns. You get type checking on the fields without extra work.
 
 Now write functions that operate on contacts:
 
-```typr noplayground
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+let new_phone <- fn(number: char, country: char): Phone { list(number = number, country = country) };
+let new_contact <- fn(name: char, email: Email, phone: Phone): Contact { Contact:{ name = name, email = email, phone = phone } };
+# --------------------------------------
+
 let is_verified <- fn(c: Contact): bool {
   c$email$verified
 };
@@ -91,8 +110,12 @@ let display_name <- fn(c: Contact): char {
 };
 
 let full_info <- fn(c: Contact): char {
-  paste(c$name, "<", c$email$address, ">", c$phone$country_code, c$phone$number)
+  paste(c$name, "<", c$email$address, ">", c$phone$country, c$phone$number)
 };
+
+let alice <- new_contact("Alice", new_email("alice@example.com"), new_phone("0600000000", "+33"));
+print(full_info(alice));
+print(is_verified(alice));
 ```
 
 Because `c` is typed as `Contact`, the compiler knows that `c$email` is an
@@ -104,14 +127,28 @@ fail at compile time.
 Not all data fits neatly into a single record. Use **tagged unions** for
 values that can be one of several things:
 
-```typr noplayground
+```typr
+# --- setup, from the previous steps ---
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+# --------------------------------------
+
 type VerificationStatus <- .Unverified | .Pending | .Verified(char);
 
-type ContactV2 <- list {
+type ContactWithStatus <- list {
   name: char,
   email: Email,
   status: VerificationStatus
 };
+
+let bob <- ContactWithStatus:{
+  name = "Bob",
+  email = new_email("bob@example.com"),
+  status = .Pending
+};
+print(bob$name);
 ```
 
 Each variant is prefixed with a dot (`.`). A tag can carry data —
@@ -121,14 +158,34 @@ Each variant is prefixed with a dot (`.`). A tag can carry data —
 
 Use `match` to handle each variant:
 
-```typr noplayground
-let get_status_label <- fn(c: ContactV2): char {
-  match c$status {
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+type VerificationStatus <- .Unverified | .Pending | .Verified(char);
+type ContactWithStatus <- list { name: char, email: Email, status: VerificationStatus };
+# --------------------------------------
+
+let get_status_label <- fn(c: ContactWithStatus): char {
+  let status <- c$status;
+  let label <- match status {
     .Unverified       => "Not verified",
     .Pending          => "Verification in progress",
     .Verified(code)   => paste("Verified with code:", code)
-  }
+  };
+  # each arm carries its own literal type; as__character widens them to `char`
+  as__character(label)
 };
+
+let bob <- ContactWithStatus:{
+  name = "Bob",
+  email = new_email("bob@example.com"),
+  status = .Verified("abc123")
+};
+print(get_status_label(bob));
 ```
 
 `match` is exhaustive — if you forget a variant, the compiler tells you. The
@@ -141,14 +198,14 @@ A common pattern in typed languages is `Option<T>` — a value that might not
 exist. TypR does not have a built-in `Option`, but you can define one:
 
 ```typr noplayground
-type Option`<T>` <- .Some(T) | .None;
+type Option<T> <- .Some(T) | .None;
 
-let find_contact <- fn(contacts: [Any, ContactV2], name: char): Option<ContactV2> {
+let find_contact <- fn(contacts: [Any, ContactWithStatus], name: char): Option<ContactWithStatus> {
   # Simplified: in real code you would iterate
   .None
 };
 
-let greet <- fn(opt: Option<ContactV2>): char {
+let greet <- fn(opt: Option<ContactWithStatus>): char {
   match opt {
     .Some(c) => paste("Hello,", c$name),
     .None    => "Contact not found"
@@ -174,28 +231,59 @@ implements `Displayable`. No `impl` keyword needed.
 
 Now write a function that works for any `Displayable`:
 
-```typr noplayground
+```typr
+# --- setup, from the previous steps ---
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+type Displayable <- interface { display: (Self) -> char };
+# --------------------------------------
+
+let display <- fn(e: Email): char { e$address };
+
 let print_item <- fn(item: Displayable): Empty {
   print(display(item))
 };
+
+print_item(new_email("alice@example.com"));
 ```
 
 ## Step 8: Make your types implement the interface
 
 Define `display` for each type:
 
-```typr noplayground
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+type VerificationStatus <- .Unverified | .Pending | .Verified(char);
+type ContactWithStatus <- list { name: char, email: Email, status: VerificationStatus };
+type Displayable <- interface { display: (Self) -> char };
+# --------------------------------------
+
 let display <- fn(e: Email): char {
   e$address
 };
 
 let display <- fn(p: Phone): char {
-  paste(p$country_code, p$number)
+  paste(p$country, p$number)
 };
 
-let display <- fn(c: ContactV2): char {
+let display <- fn(c: ContactWithStatus): char {
   paste(c$name, "<", display(c$email), ">")
 };
+
+let bob <- ContactWithStatus:{
+  name = "Bob",
+  email = new_email("bob@example.com"),
+  status = .Pending
+};
+print(display(bob));
+print(display(Phone:{ number = "0600000000", country = "+33" }));
 ```
 
 Now `print_item` works with emails, phones, and contacts — the compiler
@@ -205,13 +293,25 @@ verifies that each type satisfies the `Displayable` interface.
 
 Add a `Test` block to verify your data model:
 
-```typr noplayground
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+let new_phone <- fn(number: char, country: char): Phone { list(number = number, country = country) };
+let new_contact <- fn(name: char, email: Email, phone: Phone): Contact { Contact:{ name = name, email = email, phone = phone } };
+type VerificationStatus <- .Unverified | .Pending | .Verified(char);
+type ContactWithStatus <- list { name: char, email: Email, status: VerificationStatus };
+# --------------------------------------
+
 Test {
   test_that("new_email creates an unverified email", {
     let e <- new_email("alice@example.com");
     expect_equal(e$address, "alice@example.com");
-    expect_false(e$verified);
-  })
+    expect_equal(e$verified, false);
+  });
 
   test_that("match handles all variants", {
     let v <- .Verified("abc123");

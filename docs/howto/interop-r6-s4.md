@@ -67,9 +67,10 @@ The `r#"..."#` raw R string is emitted verbatim into the generated `.R` file.
 S4 classes follow the same pattern — wrap the object in `Foreign<Any>` and use
 `@extern` for the generic functions:
 
-```typr noplayground
+```typr
 type S4Model <- Foreign<Any>;
 
+@readRDS: (path: char) -> S4Model;
 @extern stats::coef: (object: S4Model) -> Foreign<Any>;
 @extern stats::summary: (object: S4Model) -> Foreign<Any>;
 
@@ -79,8 +80,8 @@ let s <- summary(m);
 
 For creating S4 objects, use `@extern` with the constructor:
 
-```typr noplayground
-@extern methods::new: (Class: char, ...) -> Foreign<Any>;
+```typr
+@extern methods::new: (Class: char, ...args: Any) -> Foreign<Any>;
 ```
 
 ## Working with Reference Classes (RC)

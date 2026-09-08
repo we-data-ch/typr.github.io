@@ -61,11 +61,20 @@ let new_person <- fn(name: char, age: int): Person {
 
 Let's also create a `get_info` that will return a string with the information of the person.
 
-```typr noplayground
+```typr
+# --- setup, from the previous block ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+# --------------------------------------
+
 let get_info <- fn(p: Person): char {
+	# as__character() is there for compatibility
 	paste(p$name, " is ", p$age, " years old")
-		|> as__character() #for compatibility
+		|> as__character()
 };
+
+print(get_info(new_person("John", 27)));
 ```
 
 Then we can transpile our code with the terminal command `typr build` at the root of the project.
@@ -146,15 +155,22 @@ example <- function() {
 
 Now we can use it from TypR within our `get_info()` function. The key mechanism here is the **signature annotation** (`@`), which tells TypR the types of an existing R function without modifying it:
 
-```typr noplayground
+```typr
 # along/TypR/person.ty
+# --- setup, from the previous blocks ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+# ---------------------------------------
+
 # example is a function which take nothing and return nothing
-@example: () -> Empty
+@example: () -> Empty;
 
 let get_info <- fn(p: Person): char {
 	example(); # <--- Using the R function here
+	# as__character() is there for compatibility
 	paste(p$name, " is ", p$age, " years old")
-		|> as__character() #for compatibility
+		|> as__character()
 };
 ```
 

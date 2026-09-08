@@ -21,10 +21,18 @@ Equivalent record literal forms: `record{...}`, `object{...}`, `list{...}`, `:{.
 
 ## Spread — two distinct mechanisms
 
-```typr noplayground
-Point:{ ..source }     # "static" spread (nominal) — one per call
-Point:{ ...source }    # "runtime" spread (structural) — one per constructor, several in a record literal
-:{ ...a, ...b, z = 1 } # record literal: multiple runtime spreads allowed, merged in order then overridden
+```typr
+# --- setup ---
+type Point <- list { x: int, y: int };
+type Tag <- list { z: int };
+let source <- Point:{ x = 1, y = 2 };
+let a <- source;
+let b <- Tag:{ z = 3 };
+# -------------
+
+Point:{ ..source };     # "static" spread (nominal) — one per call
+Point:{ ...source };    # "runtime" spread (structural) — one per constructor, several in a record literal
+:{ ...a, ...b, z = 1 }; # record literal: multiple runtime spreads allowed, merged in order then overridden
 ```
 
 | Form | Name | Allowed in | Behavior |
@@ -36,7 +44,11 @@ Point:{ ...source }    # "runtime" spread (structural) — one per constructor, 
 
 ## Named type embedding
 
-```typr noplayground
+```typr
+# --- setup ---
+type Position <- list { x: int, y: int };
+# -------------
+
 type Widget <- list { embed coords: Position, label: char };
 ```
 

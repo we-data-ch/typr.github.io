@@ -129,9 +129,9 @@ The signature enforces that `map` preserves array length while allowing element 
 
 Generics also appear in type aliases and opaque types:
 
-```typr noplayground
-type Option`<T>` <- .Some(T) | .None;   # free generic
-opaque Factor`<L>` <- int;               # phantom parameter — L is never used in the body
+```typr
+type Option<T> <- .Some(T) | .None;   # free generic
+opaque Factor<L> <- int;               # phantom parameter — L is never used in the body
 ```
 
 A **phantom parameter** (like `L` above) exists only for type-level tracking — it appears in signatures but has no runtime representation. This pattern is useful for encoding constraints that are checked at compile time only.
