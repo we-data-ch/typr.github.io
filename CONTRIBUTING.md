@@ -19,6 +19,42 @@ déploiement n'a lieu qu'après la fusion.
 construction**. C'est volontaire — mais ça veut dire qu'un lien cassé bloque
 aussi tout déploiement ultérieur. Lance `npm run build` avant de pousser.
 
+## Éditer depuis un navigateur (ou un téléphone)
+
+Deux chemins, sans rien installer.
+
+**Le lien « Edit this page ».** En bas de chaque page du site, il ouvre le
+fichier directement dans l'éditeur web de GitHub (`editUrl` pointe sur
+`/edit/main/` dans `docusaurus.config.ts`). Suffisant pour une correction de
+typo depuis un mobile — demander « site pour ordinateur » si le clavier se
+comporte mal.
+
+**Pages CMS.** `.pages.yml` à la racine configure https://pagescms.org, une
+interface d'édition hébergée : on s'y connecte avec son compte GitHub, on
+autorise l'app sur le dépôt, et les pages apparaissent dans une liste éditable.
+Rien à héberger, rien à ajouter au build — l'outil ne fait que committer, et
+c'est `deploy.yml` qui reconstruit.
+
+Ce que la configuration expose :
+
+| Entrée | Contenu | Mode d'édition |
+|---|---|---|
+| Documentation | `docs/**.md` | markdown brut, frontmatter compris |
+| Blog | `blog/*.md` | champs (titre, slug, auteurs, tags, image) + corps markdown |
+| Blog (MDX) | `blog/*.mdx` | markdown brut — ces billets contiennent du JSX |
+| Blog — tags / auteurs | `blog/tags.yml`, `blog/authors.yml` | YAML brut |
+
+`docs/` est volontairement édité **en brut** : la majorité des pages n'ont pas
+de frontmatter, et un éditeur WYSIWYG reformaterait les blocs ` ```typr `. Ne
+pas ajouter de `fields:` à cette collection sans mesurer cet effet.
+
+Deux réflexes depuis un téléphone :
+
+- committer sur une branche et ouvrir une PR plutôt que d'écrire sur `main` —
+  la CI construit la PR, donc un lien cassé est vu avant d'atteindre le site ;
+- un nouveau tag de billet doit d'abord exister dans `blog/tags.yml`, sinon le
+  build émet un avertissement (`onInlineTags: 'warn'`).
+
 ## Structure
 
 Le site suit le cadre Diátaxis : une page ne mélange pas les genres.
