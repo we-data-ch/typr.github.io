@@ -16,7 +16,7 @@ An interface describes a **structural capability**: any type whose free function
 
 ## Using an interface as a validator
 
-```typr
+```typr noplayground
 let p <- Point:{ x = 1, y = 2 };
 let q <- Movable(p);   # compile-time validator — transpiles to `q <- p`, never a real call
 ```
@@ -44,7 +44,7 @@ let double <- fn(a: Viewable): char {
 
 To make a type part of an interface, simply define the required function for it:
 
-```typr
+```typr noplayground
 let view <- fn(a: bool): char {
     "bool"
 };

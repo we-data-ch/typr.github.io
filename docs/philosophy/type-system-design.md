@@ -18,7 +18,7 @@ let y <- x * 2;
 
 …or add as much precision as a given piece of code needs:
 
-```typr
+```typr noplayground
 let x: int <- 3;
 let scale <- fn(p: Point, factor: num): Point { ... };
 ```
@@ -51,7 +51,7 @@ Generic parameters in many languages are uniform symbols — `T`, `U`, `K`. TypR
 them by *kind* with leading sigils, so the intent is visible even without reading the
 implementation:
 
-```typr
+```typr noplayground
 let id <- fn(x: T): T { x };       # T    free type variable
 #N   # "index" generic — an array dimension
 $T   # "label" generic — a field name
@@ -63,7 +63,7 @@ $T   # "label" generic — a field name
 
 Sigils turn a design conversation into code:
 
-```typr
+```typr noplayground
 type Tibble[N] record;                    # N is a dimension
 let  first_col <- fn(df: df[#N]{ ... }): Vec[#N, ^S] { ... };   # column of characters
 ```
@@ -76,7 +76,7 @@ self-documenting, and it lets the parser/type-checker reject nonsensical instant
 TypR uses structural interfaces instead of a mandatory nominal class hierarchy. Anything that
 has the required shape satisfies the interface:
 
-```typr
+```typr noplayground
 interface { view: (Self) -> char };
 type Drawable <- @I;
 

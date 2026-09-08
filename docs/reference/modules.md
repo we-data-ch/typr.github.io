@@ -20,7 +20,7 @@ A module compiles to an R environment. Members without `@pub` remain invisible f
 
 ## Importing from modules
 
-```typr
+```typr noplayground
 use Math::pi_approx;           # import a single member
 use Math::{pi_approx, sin as s};  # import multiple, with alias
 use Math::*;                   # import all @pub members
@@ -30,7 +30,7 @@ use Math::*;                   # import all @pub members
 
 ## Module-level imports
 
-```typr
+```typr noplayground
 import Math;                   # import the module itself
 import Math as M;              # with an alias
 ```
@@ -39,7 +39,7 @@ import Math as M;              # with an alias
 
 ## Legacy forms
 
-```typr
+```typr noplayground
 mod Utils;                     # historical import form (equivalent to import)
 library(dplyr);               # classic R dependency
 use("dplyr", c("filter", "select"));   # legacy adapter
@@ -51,7 +51,7 @@ use("dplyr", c("filter", "select"));   # legacy adapter
 
 A common pattern is to use `main.ty` as an aggregation entry point and create one file per type or concept:
 
-```typr
+```typr noplayground
 # main.ty
 mod person;
 mod utils;

@@ -24,7 +24,7 @@ Typed R provides explicit basic (primitive) types:
 
 Literals can appear as **types** (singleton types), providing more precise type information than their base type:
 
-```typr
+```typr noplayground
 let x: 3 = 3;          # x is exactly 3, not just int
 let flag: true = true;  # flag is exactly true, not just bool
 let name: "hello" = "hello";  # name is exactly "hello", not just char
@@ -51,7 +51,7 @@ See [Records & Constructors](records.md) for construction, spread, and named emb
 
 Tuples combine values of different types by position:
 
-```typr
+```typr noplayground
 tuple{int, char}          # explicit
 Tuple[int, char]           # bracket notation
 Tuple[T..., U]             # variadic: T... captures a sequence of types
@@ -82,7 +82,7 @@ let a <- [true, false, false, true];
 
 ### Dataframes
 
-```typr
+```typr noplayground
 dataframe[N]{ name: char, age: int }
 ```
 
@@ -92,7 +92,7 @@ dataframe[N]{ name: char, age: int }
 
 ### Generics and kind sigils
 
-```typr
+```typr noplayground
 let id <- fn(x: T): T { x };         # T uppercase = free generic
 #N     # "index" generic (array dimension)
 $T     # "label" generic (field name)
@@ -104,7 +104,7 @@ $T     # "label" generic (field name)
 
 ### Generic type definitions
 
-```typr
+```typr noplayground
 type Option`<T>` <- .Some(T) | .None;
 opaque Factor<L> <- int;             # phantom parameter: L appears only in signatures
 ```
@@ -115,7 +115,7 @@ opaque Factor<L> <- int;             # phantom parameter: L appears only in sign
 
 Functions are first-class values and have their own type syntax:
 
-```typr
+```typr noplayground
 (int, char) -> bool                  # anonymous function type
 (a: int, b: int) -> int              # parameter names optional, ignored for typing
 ```
@@ -128,7 +128,7 @@ Writing `fn(a: int) -> int` in **type position** (instead of `(int) -> int`) tri
 
 ## Interfaces
 
-```typr
+```typr noplayground
 interface { view: (Self) -> char }    # structural capability
 ```
 

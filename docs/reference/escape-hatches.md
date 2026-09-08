@@ -16,7 +16,7 @@ extern (x: int, y: char) -> char r#"paste0(x, y)"#;   # raw R body, typed input/
 
 ## Untyped R functions
 
-```typr
+```typr noplayground
 function(x, y) { x + y }     # raw R function (RFunction), body captured as-is
 ```
 
@@ -42,7 +42,7 @@ This is the preferred form for idiomatic R that is difficult to type (pipes `%>%
 
 ## `JS { }` blocks
 
-```typr
+```typr noplayground
 JS { /* ... */ }               # raw JavaScript block (JS target)
 ```
 
@@ -52,7 +52,7 @@ For targeting JavaScript output (when TypR compiles to JS).
 
 ## `Class(...)` — R class denotation
 
-```typr
+```typr noplayground
 Class("data.frame", "tbl")    # denotes an existing R class (RClass)
 ```
 

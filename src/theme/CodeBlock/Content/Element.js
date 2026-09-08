@@ -11,7 +11,12 @@
  *
  * Ce qu'on ne restitue pas, faute d'être exprimable sur des jetons déjà rendus :
  * les numéros de ligne et les magic comments (`// highlight-next-line`). Aucun
- * bloc du site n'en utilise — les 283 fences sont toutes sans metastring.
+ * bloc du site n'en utilise.
+ *
+ * Ce composant est aussi le dernier à voir la metastring de la fence (`autorun`,
+ * `noplayground` — voir `src/playground/meta.tsx`) : `CodeBlockMetadata` ne la
+ * transporte pas, et `@theme/CodeBlock/Buttons` ne reçoit qu'un `className`. Il
+ * la republie donc dans un contexte, pour le bouton « playground ».
  */
 import React from 'react';
 import clsx from 'clsx';
@@ -23,6 +28,7 @@ import {
 } from '@docusaurus/theme-common/internal';
 import Container from '@theme/CodeBlock/Container';
 import Buttons from '@theme/CodeBlock/Buttons';
+import {CodeBlockMetaProvider} from '@site/src/playground/meta';
 import styles from './styles.module.css';
 
 /**
@@ -67,18 +73,20 @@ export default function CodeBlockJSX({
 
   return (
     <CodeBlockContextProvider metadata={metadata} wordWrap={wordWrap}>
-      <Container as="div" className={metadata.className}>
-        <div className={styles.codeBlockContent}>
-          <pre
-            ref={wordWrap.codeBlockRef}
-            /* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */
-            tabIndex={0}
-            className={clsx(styles.codeBlock, 'thin-scrollbar')}>
-            <code className={styles.codeBlockLines}>{children}</code>
-          </pre>
-          <Buttons />
-        </div>
-      </Container>
+      <CodeBlockMetaProvider metastring={metastring}>
+        <Container as="div" className={metadata.className}>
+          <div className={styles.codeBlockContent}>
+            <pre
+              ref={wordWrap.codeBlockRef}
+              /* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */
+              tabIndex={0}
+              className={clsx(styles.codeBlock, 'thin-scrollbar')}>
+              <code className={styles.codeBlockLines}>{children}</code>
+            </pre>
+            <Buttons />
+          </div>
+        </Container>
+      </CodeBlockMetaProvider>
     </CodeBlockContextProvider>
   );
 }

@@ -1,0 +1,16 @@
+/* Le cadre (fond, bordure, opacité au survol) vient de `.buttonGroup` dans
+   ../styles.module.css, qui vise aussi bien les <button> du thème que ce
+   lien-ci. Il ne reste ici que ce qu'un <a> ne partage pas avec un <button>. */
+
+.playgroundButton {
+  text-decoration: none;
+}
+
+.playgroundButton:hover {
+  text-decoration: none;
+}
+
+.playgroundButtonIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+}

@@ -9,7 +9,7 @@ The `;` is now mandatory so people can have a better syntax. It can look painful
 There is no more `.` in the naming convention.
 People could no more use `.` in the name of their types or functions. If you want to reuse existing R function that use `.` you can just replace it with `__`
 
-```typr
+```typr noplayground
 # not allowed
 data.frame(...) 
 
@@ -21,7 +21,7 @@ data__frame(...)
 
 Now `true` and `false` are admitted boolean notations. Of course `TRUE` and `FALSE` still exist with `T` and `F`.
 
-```typr
+```typr noplayground
 # all valid
 TRUE
 T
@@ -47,7 +47,7 @@ data |> f1() |>
 
 With TypR the elegance takes place now one can build more beautiful pipelines like this:
 
-```typr
+```typr noplayground
 data 
 	|> f1()
 	|> f2()
@@ -80,7 +80,7 @@ Compared to `c()`, one can only put side by side elements of the same type witho
 
 For those who have the nostalgia of the OOP notation. We have the uniform function call.
 
-```typr
+```typr noplayground
 data 
 	|> f1()
 	|> f2()
@@ -89,7 +89,7 @@ data
 	|> f5()
 ```
 
-```typr
+```typr noplayground
 data 
 	.f1()
 	.f2()
@@ -144,7 +144,7 @@ Person:{
 
 You can also do the same with union type.
 
-```typr
+```typr noplayground
 # Build an union type
 type PersonOrInt <- Person | int;
 
@@ -159,7 +159,7 @@ PersonOrInt.Person:{name: "Bob", age: 12};
 
 Currying is one of the most powerful elements of functional programming. Languages like haskell do it well. But to be more practical, it's better to be able to pick which parameter to fix with a defined value.
 
-```typr
+```typr noplayground
 # Create a function
 let add <- fn(a: int, b: int): int {
 	a + b

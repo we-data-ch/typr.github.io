@@ -34,9 +34,27 @@ Si une page répond à deux de ces questions, elle doit être coupée en deux.
 
 ## Blocs de code
 
-Les blocs TypR sont actuellement balisés ` ```julia ` faute de grammaire
-dédiée, et **ne sont pas vérifiés contre le compilateur**. Un exemple peut donc
-devenir faux silencieusement quand le langage évolue. Deux conséquences :
+Les blocs TypR se balisent ` ```typr `. La coloration vient de la grammaire
+générée par le compilateur (`syntaxes/typr.tmLanguage.json`, appliquée au build
+par `src/syntax/shiki.ts`) — et c'est aussi cette langue qui décide de l'ajout
+du bouton « playground ».
+
+Deux mots-clés se posent après la langue :
+
+| Mot-clé | Effet |
+|---|---|
+| `autorun` | le playground compile et exécute le bloc dès l'ouverture |
+| `noplayground` | pas de bouton du tout |
+
+`noplayground` sert aux blocs qui ne sont pas des programmes complets : une
+expression de type isolée, un corps remplacé par `/* ... */`, une ligne de
+syntaxe hors contexte. Sans lui, le bouton envoie le lecteur vers une erreur de
+compilation. Le reste de la chaîne est décrit dans `INTEGRATION.md` du dépôt du
+playground.
+
+Les blocs **ne sont pas vérifiés contre le compilateur** au build. Un exemple
+peut donc devenir faux silencieusement quand le langage évolue. Deux
+conséquences :
 
 - vérifie tout exemple que tu ajoutes avec un `typr check` réel ;
 - ne recopie pas un exemple depuis une page ancienne sans le retester.

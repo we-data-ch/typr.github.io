@@ -61,7 +61,7 @@ tempscale/
 
 Create `TypR/main.ty` with a type definition, a constructor, and two functions:
 
-```typr
+```typr noplayground
 # main.ty — entry point of the package
 
 type Temp <- list {
@@ -99,7 +99,7 @@ A few things to notice:
 
 Add a `Test` block at the bottom of `TypR/main.ty`:
 
-```typr
+```typr noplayground
 Test {
   test_that("to_celsius converts Fahrenheit", {
     let f <- new_temp(212.0, "F");

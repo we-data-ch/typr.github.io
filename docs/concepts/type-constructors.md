@@ -25,7 +25,7 @@ Transparent aliases are useful for **documentation** and **clarity** — they gi
 
 An `opaque` alias **hides** the underlying type from external code. This provides stronger encapsulation:
 
-```typr
+```typr noplayground
 opaque Meters <- int;
 
 let d: Meters <- 42;
@@ -40,7 +40,7 @@ Opaque types enforce a boundary: code outside the module where the alias is defi
 
 Both `type` and `opaque` support generic parameters using angle brackets `<T>`:
 
-```typr
+```typr noplayground
 type Option`<T>` <- .Some(T) | .None;
 opaque Factor`<L>` <- int;
 ```
@@ -53,7 +53,7 @@ Generic parameters use `<T>` (angle brackets), not `[T]` (square brackets). Squa
 
 A **phantom parameter** appears in the type definition but not in its body. It exists only for type-level tracking:
 
-```typr
+```typr noplayground
 opaque Factor`<L>` <- int;   # L never appears in the right-hand side
 ```
 
@@ -72,7 +72,7 @@ typeconstructor Matrix[N, M, T] recursive;
 
 Once registered, you can create parameterized records:
 
-```typr
+```typr noplayground
 Tibble[3]{ id: int, active: bool }   # record constructor with 3 columns
 Tibble[8]{ name: char, score: num }  # record constructor with 8 columns
 ```
@@ -94,7 +94,7 @@ See [Records & Constructors](../reference/records.md) for how constructor calls 
 
 A `{ ... }` block following a parameterized type name **always** makes it a record constructor:
 
-```typr
+```typr noplayground
 Tibble[3]{ id: int, active: bool }   # record constructor
 Tibble[3]                             # just a parameterized alias (no braces)
 ```

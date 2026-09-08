@@ -116,7 +116,7 @@ The `__` convention maps to `.` in R output: `as__character` becomes
 
 Now add a typed function that uses the signatures:
 
-```typr
+```typr noplayground
 @normalize: (x: [Any, num], center: bool, scale: bool) -> [Any, num];
 @mean_val: (x: [Any, num]) -> num;
 @as__numeric: (Self) -> num;
@@ -176,7 +176,7 @@ you had before. TypR adds type checking on top — it does not change behavior.
 
 As you convert more functions, add `Test` blocks next to them:
 
-```typr
+```typr noplayground
 @pub let normalize <- fn(x: [Any, num], center: bool, scale: bool): [Any, num] {
   R {
     x <- scale(x, center = center, scale = scale)

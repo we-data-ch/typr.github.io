@@ -112,7 +112,7 @@ fields. See the [types reference](reference/types.md) for structural subtyping.
 
 ## 6. Write a function on your type
 
-```typr
+```typr noplayground
 let is_adult <- fn(p: Person): bool {
   p$age >= 18
 };
@@ -131,7 +131,7 @@ types all the way through.
 With an inline `Test` block, logic and tests stay side by side. During
 transpilation the block is extracted into a standard testthat file:
 
-```typr
+```typr noplayground
 Test {
   test_that("is_adult works", {
     let alice <- new_person("Alice", 25);

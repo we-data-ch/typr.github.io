@@ -190,7 +190,7 @@ The developer just has to write their functions for scalar values and TypR will 
 ### Point construction
 Let's build our `Point` type and a constructor with TypR:
 
-```julia
+```typr noplayground
 # Type definition
 type Point <- {
 	x: int,
@@ -205,7 +205,7 @@ let new_point <- fn(x: int, y: int): Point {
 
 We will also define a `print` function for points:
 
-```julia
+```typr noplayground
 # print function
 let print <- fn(p: Point): Empty {
   cat("Point<", p$x, ",", p$y, ">", sep="");
@@ -215,14 +215,14 @@ let print <- fn(p: Point): Empty {
 
 Now we can build a point like before:
 
-```julia
+```typr noplayground
 new_point(3, 4)
 #Point<3,4>
 ```
 
 We won't forget to implement the `scale` function.
 
-```julia
+```typr noplayground
 let scale <- fn(p: Point, n: int): Point {
 	new_point(p$x * n, p$y * n)
 };
@@ -234,7 +234,7 @@ new_point(3, 4)
 
 Of course, we also have the capability of implementing the `*` operator:
 
-```julia
+```typr noplayground
 let `*` <- fn(p: Point, n: int): Point {
 	scale(p, n)
 };
@@ -246,7 +246,7 @@ new_point(3, 4) * 2
 ### Point vectorization
 Now what about vectors? TypR has its own way to deal with them. For better understanding, let's make a vector of points:
 
-```julia
+```typr noplayground
 # creating a vector of points in TypR
 points <- [new_point(1, 2), 
 			new_point(3, 4), 
@@ -263,7 +263,7 @@ We have an array notation syntax like other programming languages. This kind of 
 
 What's the best part? *TypR's arrays are vectorized by default*! So these operations work:
 
-```julia
+```typr noplayground
 # scaling a group of point with one number
 scale(points, 2)
 #typed_vec [3]
@@ -289,7 +289,7 @@ points * 3
 
 We also have the possibility to work with types by themselves. Let's define the `+` operator that will help adding two points by adding their respective fields.
 
-```julia
+```typr noplayground
 # Definition of the "+" operator
 let `+` <- fn(p1: Point, p2: Point): Point {
 	new_point(p1$x + p2$x, p1$y + p2$y)
@@ -312,7 +312,7 @@ points + points
 
 And what about reduction functions? One can use the `reduce` function to reduce the elements of the array.
 
-```julia
+```typr noplayground
 # will add all the points
 reduce(points, `+`<Point>)
 #Point<9,12>
@@ -320,7 +320,7 @@ reduce(points, `+`<Point>)
 
 We specify the type \<Point\> for the `+` operator because TypR's type system isn't doing this kind of inference yet. But as you can see, it summed all elements of points. One can also use a shortcut by using the `sum` function:
 
-```julia
+```typr noplayground
 points
 	|> sum()
 #Point<9,12>
@@ -335,7 +335,7 @@ And for functions? We can also do function composition powered by vectors. I won
 ### Type specific applications
 I would like to create vectorized field accessors to make it easier to work with a vector of named lists:
 
-```julia
+```typr noplayground
 # will give all the values contained in the x field of each point
 points$x
 # will give all the values contained in the y field of each point
@@ -343,7 +343,7 @@ points$y
 ```
 
 It would also be cool to be able to call similar functions with the same parameters. 
-```julia
+```typr noplayground
 # vector of functions
 let functions <- [`+`, `*`];
 
@@ -360,7 +360,7 @@ It could help with applying a set of statistical models to a specific set of dat
 
 Underneath, TypR's array are using a custom S3 object for data storage and vectorization. This doesn't invalidate native vectors or data.frame from R who will be faster and efficient. I want to create bridge that will help convert them into native types.
 
-```julia
+```typr noplayground
 # In the future, Array -> Vector for performances
 let arr <- [1, 2, 3, 4];
 let vec <- arr |> to_vec();

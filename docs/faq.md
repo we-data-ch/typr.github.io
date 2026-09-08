@@ -189,7 +189,7 @@ In most typed languages, a type must be *declared* to belong somewhere (nominal 
 
 For example, **row polymorphism** lets functions declare only the columns they touch:
 
-```typr
+```typr noplayground
 let get_age <- fn(p: { age: int }): int {
   p$age
 };
@@ -246,7 +246,7 @@ TypR can also target other languages: **JavaScript and WebAssembly** are transpi
 
 Every TypR function can be called in **three equivalent ways**, thanks to the [uniform function call syntax](https://en.wikipedia.org/wiki/Uniform_function_call_syntax) inspired by Nim:
 
-```typr
+```typr noplayground
 add(5, 3)          # classic
 (5) |> add(3)      # pipe
 (5).add(3)         # method-call style
@@ -291,7 +291,7 @@ TypR keeps vectorization, but rethought: **lifting-based vectorization**. You wr
 
 Native R vectors handle atoms well but fall apart around custom objects. In TypR, arrays are vectorized by default:
 
-```typr
+```typr noplayground
 type Point <- { x: int, y: int };
 
 let new_point <- fn(x: int, y: int): Point {
@@ -310,7 +310,7 @@ points * 3;         # works: via operator overloading
 
 Reductions come along for the ride. If your type implements `+`, `sum()` works on the vector:
 
-```typr
+```typr noplayground
 let `+` <- fn(p1: Point, p2: Point): Point {
   new_point(p1$x + p2$x, p1$y + p2$y)
 };
@@ -381,7 +381,7 @@ There is strong industry evidence that static typing reduces defect rates. TypeS
 
 Inline `Test { }` blocks sit right next to the code they validate. During transpilation, they are extracted into standard **testthat** files (`tests/testthat/test-<filename>.R`). Logic and tests stay side by side, while the resulting package remains fully conventional.
 
-```typr
+```typr noplayground
 type Person <- list {
   name: char,
   age: int

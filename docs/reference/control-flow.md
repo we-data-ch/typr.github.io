@@ -35,7 +35,7 @@ This makes iterative algorithms more robust without changing their familiar stru
 
 The `match` expression provides exhaustive pattern matching on tagged unions. It is the idiomatic way to handle values that can take one of several forms:
 
-```typr
+```typr noplayground
 # Define an Option type with generics
 type Option`<T>` <- .Some(T) | .None;
 

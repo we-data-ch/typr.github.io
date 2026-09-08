@@ -31,7 +31,7 @@ it.
 For typed interop with dplyr, use `@extern` to declare the types of functions
 you want to call with type safety:
 
-```typr
+```typr noplayground
 @extern dplyr::filter: (data: Foreign<Any>, ...) -> Foreign<Any>;
 @extern dplyr::mutate: (data: Foreign<Any>, ...) -> Foreign<Any>>;
 @extern dplyr::select: (data: Foreign<Any>, ...) -> Foreign<Any>>;
@@ -48,7 +48,7 @@ intentionally untyped to allow NSE.
 The best pattern is to do data preparation in `R {}` blocks and business
 logic in typed functions:
 
-```typr
+```typr noplayground
 @extern dplyr::filter: (data: Foreign<Any>, ...) -> Foreign<Any>;
 @extern dplyr::mutate: (data: Foreign<Any>, ...) -> Foreign<Any>;
 
@@ -84,7 +84,7 @@ package is built.
 
 TypR supports dataframe types for typed access:
 
-```typr
+```typr noplayground
 type PersonRow <- df[1]{ name: char, age: int };
 
 let process <- fn(df: PersonRow): char {
@@ -100,7 +100,7 @@ specific dataframe types.
 
 ### Typed wrapper around dplyr
 
-```typr
+```typr noplayground
 @extern dplyr::group_by: (data: Foreign<Any>, ...) -> Foreign<Any>>;
 @extern dplyr::summarise: (data: Foreign<Any>, ...) -> Foreign<Any>>;
 
@@ -118,7 +118,7 @@ let summarize_by_group <- fn(
 
 ### Type-safe column access
 
-```typr
+```typr noplayground
 @extern dplyr::pull: (data: Foreign<Any>, var: char) -> Foreign<Any>;
 
 let get_column <- fn(df: Foreign<Any>, col: char): Foreign<Any> {

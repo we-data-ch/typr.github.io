@@ -34,7 +34,7 @@ Kind sigils are prefix characters that **constrain** what a generic parameter ca
 
 The `#N` sigil represents a **dimension** — the size or index of an array. It is used when you need to track or enforce array lengths at the type level:
 
-```typr
+```typr noplayground
 let head <- fn(v: [#1, T]): T { v[0] };
 
 # Here #N is inferred as 3
@@ -44,7 +44,7 @@ let first <- head(arr);   # type-checks: #1 matches the first element
 
 Index generics appear prominently in array and dataframe types:
 
-```typr
+```typr noplayground
 type Vector <- [#N, int];        # vector of ints, length N
 df[N]{ name: char, age: int }    # dataframe with N columns
 ```
@@ -55,7 +55,7 @@ See [Types](../reference/types.md) for more on array and vector syntax.
 
 The `$T` sigil represents a **field name** — a compile-time string literal used as a record key:
 
-```typr
+```typr noplayground
 # $T constrains the generic to a field label
 let get_field <- fn(r: %R, key: $T): Any { r[key] };
 ```
@@ -79,7 +79,7 @@ This is useful when a function needs to operate on any record without caring abo
 
 The `@I` sigil constrains a generic to **any interface type**:
 
-```typr
+```typr noplayground
 type Movable <- interface { mv: (Self, int, int) -> Self };
 
 let move_all <- fn(items: [@I, T], dx: int, dy: int): [@I, T] {
@@ -94,7 +94,7 @@ See [Interfaces & Structural Validation](../reference/interfaces.md) for how int
 
 The `^S` sigil constrains a generic to the `char` type (strings):
 
-```typr
+```typr noplayground
 let repeat <- fn(s: ^S, n: int): ^S { /* ... */ };
 ```
 
@@ -102,7 +102,7 @@ let repeat <- fn(s: ^S, n: int): ^S { /* ... */ };
 
 The `?B` sigil constrains a generic to the `bool` type:
 
-```typr
+```typr noplayground
 let guard <- fn(condition: ?B, value: T): T { /* ... */ };
 ```
 
@@ -129,7 +129,7 @@ The signature enforces that `map` preserves array length while allowing element 
 
 Generics also appear in type aliases and opaque types:
 
-```typr
+```typr noplayground
 type Option`<T>` <- .Some(T) | .None;   # free generic
 opaque Factor`<L>` <- int;               # phantom parameter — L is never used in the body
 ```

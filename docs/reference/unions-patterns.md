@@ -18,7 +18,7 @@ Each variant is prefixed with a dot (`.`) to distinguish it from regular type na
 
 ## The `match` expression
 
-```typr
+```typr noplayground
 match s {
     .Circle(r) => r * 2.0,
     .Square(side) => side,
@@ -41,7 +41,7 @@ match s {
 
 ## Qualified union constructors
 
-```typr
+```typr noplayground
 type Color <- .Red | .Blue;
 Color.Red                       # qualified reference to a tag (bare, no :{...})
 
@@ -58,7 +58,7 @@ Palette.Rgb:{ r = 10, g = 20, b = 30 }   # Rgb is a record alias used as a union
 
 Tagged unions work with generics for reusable patterns:
 
-```typr
+```typr noplayground
 type Option`<T>` <- .Some(T) | .None;
 
 let val: Option<int> <- .Some(42);

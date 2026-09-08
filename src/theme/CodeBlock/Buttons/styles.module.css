@@ -1,0 +1,39 @@
+/* Recopié de `@docusaurus/theme-classic` (CodeBlock/Buttons/styles.module.css),
+   qu'un swizzle ne peut pas importer. Seule modification : chaque sélecteur
+   `button` vise aussi les `a`, pour que le bouton playground — un lien, afin de
+   rester ouvrable dans un nouvel onglet — reçoive le même cadre. */
+
+.buttonGroup {
+  display: flex;
+  column-gap: 0.2rem;
+  position: absolute;
+  /* rtl:ignore */
+  right: calc(var(--ifm-pre-padding) / 2);
+  top: calc(var(--ifm-pre-padding) / 2);
+}
+
+.buttonGroup button,
+.buttonGroup a {
+  display: flex;
+  align-items: center;
+  background: var(--prism-background-color);
+  color: var(--prism-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  padding: 0.4rem;
+  line-height: 0;
+  transition: opacity var(--ifm-transition-fast) ease-in-out;
+  opacity: 0;
+}
+
+.buttonGroup button:focus-visible,
+.buttonGroup button:hover,
+.buttonGroup a:focus-visible,
+.buttonGroup a:hover {
+  opacity: 1 !important;
+}
+
+:global(.theme-code-block:hover) .buttonGroup button,
+:global(.theme-code-block:hover) .buttonGroup a {
+  opacity: 0.4;
+}

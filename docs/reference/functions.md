@@ -39,7 +39,7 @@ greet("World", "Hi");  # "Hi"
 
 ## Variadic functions
 
-```typr
+```typr noplayground
 let sum_all <- fn(...xs: int): int {
     /* ... */
 };
@@ -88,7 +88,7 @@ let sq <- \(x) x * x;
 
 The `\` symbol also supports **partial application** of functions:
 
-```typr
+```typr noplayground
 let add5 <- \add(a = 5);                         # partial application of a function
 let origin <- \Point:{ x = 0, y = 0 };           # partial application of a record constructor
 ```
@@ -119,7 +119,7 @@ The type system tracks function types using `(T1, T2) -> T3` syntax, ensuring co
 
 Functions can capture variables from their surrounding environment. The type system ensures captured variables and returned functions remain type-safe:
 
-```typr
+```typr noplayground
 let make_adder <- fn(n: int): (int) -> int {
     fn(x: int): int { x + n }
 };
@@ -149,7 +149,7 @@ See [Signatures, @extern & Foreign](signatures.md) for overloading, `@extern`, a
 
 Interfaces enable **ad-hoc polymorphism** — write functions that work across multiple types:
 
-```typr
+```typr noplayground
 @paste: (Any, Any) -> char;
 
 type Viewable <- interface {

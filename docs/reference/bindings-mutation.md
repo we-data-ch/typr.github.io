@@ -31,7 +31,7 @@ Destructuring is desugared into a temporary variable + positional access via dot
 
 ## Reassignment & mutation
 
-```typr
+```typr noplayground
 x <- 10;         # reassign an already-bound variable
 x <- x + 1;
 

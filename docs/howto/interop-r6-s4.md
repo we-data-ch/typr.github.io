@@ -45,7 +45,7 @@ Person <- R6::R6Class("Person",
 
 From TypR, declare the constructor and methods as signatures:
 
-```typr
+```typr noplayground
 type R6Person <- Foreign<Any>;
 
 @extern Person$new: (name: char, age: int) -> R6Person;
@@ -67,7 +67,7 @@ The `r#"..."#` raw R string is emitted verbatim into the generated `.R` file.
 S4 classes follow the same pattern — wrap the object in `Foreign<Any>` and use
 `@extern` for the generic functions:
 
-```typr
+```typr noplayground
 type S4Model <- Foreign<Any>;
 
 @extern stats::coef: (object: S4Model) -> Foreign<Any>;
@@ -79,7 +79,7 @@ let s <- summary(m);
 
 For creating S4 objects, use `@extern` with the constructor:
 
-```typr
+```typr noplayground
 @extern methods::new: (Class: char, ...) -> Foreign<Any>;
 ```
 
@@ -87,7 +87,7 @@ For creating S4 objects, use `@extern` with the constructor:
 
 RC objects are handled identically to R6 — they are just R values:
 
-```typr
+```typr noplayground
 type RCLogger <- Foreign<Any>;
 
 @extern Logger$new: () -> RCLogger;
@@ -127,7 +127,7 @@ but it integrates seamlessly with the surrounding typed code.
 
 ## Full example
 
-```typr
+```typr noplayground
 # Type declarations
 type R6Person <- Foreign<Any>;
 @extern Person$new: (name: char, age: int) -> R6Person;

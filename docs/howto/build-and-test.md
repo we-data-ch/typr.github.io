@@ -32,7 +32,7 @@ The `TypR/` folder is the only addition. Everything else — `DESCRIPTION`,
 
 Write your typed code in `TypR/main.ty`:
 
-```typr
+```typr noplayground
 type Person <- list {
   name: char,
   age: int
@@ -70,7 +70,7 @@ The naming convention (`a_`, `b_`, `c_`, `d_`) ensures correct load order.
 TypR has a built-in `Test` block that extracts into standard testthat files
 during transpilation:
 
-```typr
+```typr noplayground
 Test {
   test_that("new_person creates a valid person", {
     let p <- new_person("Alice", 25);
@@ -105,7 +105,7 @@ TypR generates roxygen2-compatible comments from your type annotations. The
 transpiler infers `@param`, `@return`, and `@export` directives from the
 function signatures:
 
-```typr
+```typr noplayground
 @pub let greet <- fn(p: Person): char {
   paste("Hello,", p$name)
 };
@@ -134,7 +134,7 @@ and pkgdown all see regular R code — TypR is invisible at this stage.
 
 As your package grows, split code into one file per type or concept:
 
-```typr
+```typr noplayground
 # main.ty
 mod person;
 mod utils;

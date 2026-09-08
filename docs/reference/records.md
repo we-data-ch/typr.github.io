@@ -21,7 +21,7 @@ Equivalent record literal forms: `record{...}`, `object{...}`, `list{...}`, `:{.
 
 ## Spread — two distinct mechanisms
 
-```typr
+```typr noplayground
 Point:{ ..source }     # "static" spread (nominal) — one per call
 Point:{ ...source }    # "runtime" spread (structural) — one per constructor, several in a record literal
 :{ ...a, ...b, z = 1 } # record literal: multiple runtime spreads allowed, merged in order then overridden
@@ -36,7 +36,7 @@ Point:{ ...source }    # "runtime" spread (structural) — one per constructor, 
 
 ## Named type embedding
 
-```typr
+```typr noplayground
 type Widget <- list { embed coords: Position, label: char };
 ```
 
@@ -48,14 +48,14 @@ type Widget <- list { embed coords: Position, label: char };
 
 A `{ ... }` block following a parameterized type name **always** makes it a record constructor:
 
-```typr
+```typr noplayground
 Tibble[3]{ id: int, active: bool }   # record constructor
 Tibble[3]                             # just a parameterized alias (no braces)
 ```
 
 Two violations are caught explicitly:
 
-```typr
+```typr noplayground
 Df[8, int]{ name: char }        # SyntaxError::RecordConstructorIndex
 Array[5, { a: int }]             # SyntaxError::RecordInRecursiveParams
 ```

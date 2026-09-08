@@ -13,7 +13,7 @@ type safety when working with R's object-oriented systems.
 S3 is R's simplest OOP system — a generic function dispatches on the class of
 its first argument. Declare S3 generics with `@` signatures:
 
-```typr
+```typr noplayground
 @print: (x: Foreign<Any>) -> Empty;
 @summary: (object: Foreign<Any>) -> Foreign<Any>;
 @plot: (x: Foreign<Any>, ...) -> Empty;
@@ -37,7 +37,7 @@ my_generic <- function(x, ...) {
 
 Declare it in TypR:
 
-```typr
+```typr noplayground
 @my_generic: (x: Foreign<Any>, ...) -> Foreign<Any>;
 ```
 
@@ -48,7 +48,7 @@ the individual S3 methods.
 
 S4 generics are more structured. Use `@extern` to declare them:
 
-```typr
+```typr noplayground
 @extern stats::coef: (object: Foreign<Any>) -> Foreign<Any>;
 @extern stats::confint: (object: Foreign<Any>, ...) -> Foreign<Any>;
 @extern stats::fitted: (object: Foreign<Any>) -> Foreign<Any>;
@@ -57,7 +57,7 @@ S4 generics are more structured. Use `@extern` to declare them:
 
 For your own S4 generics, declare them with `@extern` pointing to the package:
 
-```typr
+```typr noplayground
 @extern mypackage::my_generic: (x: Foreign<Any>, ...) -> Foreign<Any>;
 ```
 
@@ -65,7 +65,7 @@ For your own S4 generics, declare them with `@extern` pointing to the package:
 
 Once declared, generics work naturally in typed functions:
 
-```typr
+```typr noplayground
 @summary: (object: Foreign<Any>) -> Foreign<Any>;
 @plot: (x: Foreign<Any>, ...) -> Empty;
 
@@ -98,14 +98,14 @@ Key properties of `Foreign<T>`:
 
 RC generics are handled the same way as S3 — declare with `@` or `@extern`:
 
-```typr
+```typr noplayground
 @Logger$log: (msg: char) -> Empty;
 @Logger$get_entries: () -> Foreign<Any>;
 ```
 
 ## Practical pattern: typed model interface
 
-```typr
+```typr noplayground
 type Model <- Foreign<Any>;
 
 @extern stats::lm: (formula: char, data: Foreign<Any>) -> Model;

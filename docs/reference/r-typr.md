@@ -61,7 +61,7 @@ let new_person <- fn(name: char, age: int): Person {
 
 Let's also create a `get_info` that will return a string with the information of the person.
 
-```typr
+```typr noplayground
 let get_info <- fn(p: Person): char {
 	paste(p$name, " is ", p$age, " years old")
 		|> as__character() #for compatibility
@@ -146,7 +146,7 @@ example <- function() {
 
 Now we can use it from TypR within our `get_info()` function. The key mechanism here is the **signature annotation** (`@`), which tells TypR the types of an existing R function without modifying it:
 
-```typr
+```typr noplayground
 # along/TypR/person.ty
 # example is a function which take nothing and return nothing
 @example: () -> Empty
@@ -213,7 +213,7 @@ A good practice is to use `main.ty` as an aggregation module and create one file
 
 In our case, we should put the content of `main.ty` into the `person.ty` file, then import it within the main file with the `mod` keyword:
 
-```typr
+```typr noplayground
 mod person;
 ```
 

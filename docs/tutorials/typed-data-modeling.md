@@ -60,7 +60,7 @@ has a name and a type. The compiler will check that you use them correctly.
 Records in TypR are plain lists at runtime. Write constructor functions to
 create them:
 
-```typr
+```typr noplayground
 let new_email <- fn(address: char): Email {
   list(address = address, verified = false)
 };
@@ -81,7 +81,7 @@ the function returns. You get type checking on the fields without extra work.
 
 Now write functions that operate on contacts:
 
-```typr
+```typr noplayground
 let is_verified <- fn(c: Contact): bool {
   c$email$verified
 };
@@ -104,7 +104,7 @@ fail at compile time.
 Not all data fits neatly into a single record. Use **tagged unions** for
 values that can be one of several things:
 
-```typr
+```typr noplayground
 type VerificationStatus <- .Unverified | .Pending | .Verified(char);
 
 type ContactV2 <- list {
@@ -121,7 +121,7 @@ Each variant is prefixed with a dot (`.`). A tag can carry data —
 
 Use `match` to handle each variant:
 
-```typr
+```typr noplayground
 let get_status_label <- fn(c: ContactV2): char {
   match c$status {
     .Unverified       => "Not verified",
@@ -140,7 +140,7 @@ payload is automatically destructured: `code` binds to the `char` inside
 A common pattern in typed languages is `Option<T>` — a value that might not
 exist. TypR does not have a built-in `Option`, but you can define one:
 
-```typr
+```typr noplayground
 type Option`<T>` <- .Some(T) | .None;
 
 let find_contact <- fn(contacts: [Any, ContactV2], name: char): Option<ContactV2> {
@@ -174,7 +174,7 @@ implements `Displayable`. No `impl` keyword needed.
 
 Now write a function that works for any `Displayable`:
 
-```typr
+```typr noplayground
 let print_item <- fn(item: Displayable): Empty {
   print(display(item))
 };
@@ -184,7 +184,7 @@ let print_item <- fn(item: Displayable): Empty {
 
 Define `display` for each type:
 
-```typr
+```typr noplayground
 let display <- fn(e: Email): char {
   e$address
 };
@@ -205,7 +205,7 @@ verifies that each type satisfies the `Displayable` interface.
 
 Add a `Test` block to verify your data model:
 
-```typr
+```typr noplayground
 Test {
   test_that("new_email creates an unverified email", {
     let e <- new_email("alice@example.com");

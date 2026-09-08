@@ -6,7 +6,7 @@ This page covers type aliases, opaque types, typeconstructors, and the signature
 
 ## Type aliases and opaque types
 
-```typr
+```typr noplayground
 type Meters <- int;                 # transparent alias
 opaque Meters <- int;               # opaque alias: the underlying type is hidden from external typing
 type Option`<T>` = .Some(T) | .None;  # generic alias — uses `<T>`, not [T]

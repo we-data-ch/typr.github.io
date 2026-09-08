@@ -21,7 +21,7 @@ Precedence from strongest (evaluated first) to weakest. Note that member access 
 
 TypR supports the **Uniform Function Call Syntax**: `x.f(y)` is equivalent to `f(x, y)`.
 
-```typr
+```typr noplayground
 x.f(y)            # ≡ f(x, y) — method-style call
 x |> f() |> g()   # pipe — same desugaring
 t.1                # positional tuple access (1-based index)
@@ -30,7 +30,7 @@ mod$member         # record field / module access — "::" is a historical alias
 
 ### Comparison with R
 
-```typr
+```typr noplayground
 # TypR
 data |> filter(x > 0) |> mean()
 ```
@@ -44,7 +44,7 @@ data |> filter(x > 0) |> mean()
 
 ## Validating cast
 
-```typr
+```typr noplayground
 x as! Point                 # calls validate_Point(x) at runtime
 xs as! [Any, int]           # cast to an inline structural type (not an alias)
 ```
@@ -53,7 +53,7 @@ xs as! [Any, int]           # cast to an inline structural type (not an alias)
 
 ## Ranges
 
-```typr
+```typr noplayground
 1:10        # ≡ seq(1, 10, 1)
 1:2:10      # ≡ seq(1, 10, 2) — step in the middle
 ```
@@ -68,7 +68,7 @@ The following doubled operators were removed from the tokenizer: `++ -- ** // %%
 
 ## Arithmetic on types
 
-```typr
+```typr noplayground
 type Combined <- A + B;      # Type::Operator on indices/dimensions
 T if T1 in T2                 # conditional type (experimental refinement)
 ```

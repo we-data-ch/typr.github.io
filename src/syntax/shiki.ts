@@ -18,6 +18,7 @@ import path from 'node:path';
 import { createHighlighterCoreSync } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import rehypeShikiFromHighlighter from '@shikijs/rehype/core';
+import type { ShikiTransformer } from 'shiki/core';
 import type { RehypeShikiCoreOptions } from '@shikijs/rehype/core';
 import githubLight from '@shikijs/themes/github-light';
 import githubDark from '@shikijs/themes/github-dark';
@@ -51,8 +52,24 @@ const highlighter = createHighlighterCoreSync({
   engine: createJavaScriptRegexEngine(),
 });
 
+// Shiki remplace le noeud <pre> d'origine par le sien : tout ce que Docusaurus
+// avait posé dessus disparaît, la metastring de la fence comprise (elle arrive
+// en propriété du <code> via le remark `codeCompatPlugin`). Sans ce
+// transformer, `` ```typr noplayground `` serait indiscernable de `` ```typr ``
+// dans les composants du thème — voir src/playground/meta.tsx.
+const preserveMetastring: ShikiTransformer = {
+  name: 'typr:preserve-metastring',
+  code(node) {
+    const raw = this.options.meta?.__raw;
+    if (raw) {
+      node.properties.metastring = raw;
+    }
+  },
+};
+
 const options: RehypeShikiCoreOptions = {
   themes: { light: 'github-light', dark: 'github-dark' },
+  transformers: [preserveMetastring],
   // Les deux thèmes en variables CSS (--shiki-light / --shiki-dark) : le
   // basculement clair/sombre de Docusaurus se fait alors en CSS, sans
   // re-rendre les blocs. Voir src/css/custom.css.
