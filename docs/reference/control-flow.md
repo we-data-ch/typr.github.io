@@ -2,7 +2,7 @@
 
 ### if / else
 
-Conditional expressions in Typed R behave like in standard R, with additional type safety.
+Conditional expressions in TypR behave like in standard R, with additional type safety.
 
 ```typr
 if (4 == 4) {

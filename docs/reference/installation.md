@@ -49,4 +49,5 @@ typr [actual version]
 
 Once installed, TypR can be used:
 - from the command line,
-- within a compatible IDE,
+- within a compatible IDE — see [Editor Setup](./editor-setup) for VS Code,
+  RStudio and Vim/Neovim.

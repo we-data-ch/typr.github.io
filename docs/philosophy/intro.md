@@ -38,25 +38,25 @@ my_addition(num1, num2)
 
 > Create clean data science code by design, not by effort.
 
-Creating correct code and creating clean code are independent things. A correct code is a code that fulfill it's purpose while clean code make the project maintainable and scalable for the long run.
+Creating correct code and creating clean code are independent things. Correct code fulfills its purpose while clean code makes the project maintainable and scalable for the long run.
 
-R is great at making correct code for research purpose. But it doesn't give the set of tools needed to make clean code easely, letting package developper holding the responsibility of doing clean code by effort.
+R is great at making correct code for research purpose. But it doesn't give the set of tools needed to make clean code easily, letting package developers hold the responsibility of doing clean code by effort.
 
 "By effort" also mean there is a mental load taking brain resources that could be used for other things directly related to the goal.
 
-That's why TypR deliver a group of tools to make package and app developpment easier. It also tend to make maintenance and scalability painless. That's why it favor clean code by design. 
+That's why TypR delivers a group of tools to make package and app development easier. It also tends to make maintenance and scalability painless. That's why it favors clean code by design. 
 
 ## 1. Smart functions by design
 
-Building package for other users can be hard since we need to know how to expose functionalities to them. Fortunately, with TypR, you don't have to worry wich OO System you want (S3, S4, R6, S7) or if you just want to build vanilla code with functions. The main principle is simple:
+Building packages for other users can be hard since we need to know how to expose functionalities to them. Fortunately, with TypR, you don't have to worry which OO system you want (S3, S4, R6, S7) or if you just want to build vanilla code with functions. The main principle is simple:
 
 > All you need are types and functions.
 
-Coding is now about designing your data types and how you manipulate them with function. TypR will handle the rest.
+Coding is now about designing your data types and how you manipulate them with functions. TypR will handle the rest.
 
-A great example of it's power lies in the capability of simple function to work with vectorized data throug [lifting-based vectorization](https://we-data-ch.github.io/typr.github.io/docs/philosophy/vectorization_by_design).
+A great example of its power lies in the capability of a simple function to work with vectorized data through [lifting-based vectorization](https://we-data-ch.github.io/typr.github.io/docs/philosophy/vectorization_by_design).
 
-Another example that show how function work for us is a concept called [uniform function call](https://en.wikipedia.org/wiki/Uniform_function_call_syntax). You will understand it's power through examples.
+Another example that shows how functions work for us is a concept called [uniform function call](https://en.wikipedia.org/wiki/Uniform_function_call_syntax). You will understand its power through examples.
 
-By using the power of uniform function call, you have different ways to call your functions (classic, piping, method call). This functionality also support single dispatch and transpile to native S3 code.
+By using the power of uniform function call, you have different ways to call your functions (classic, piping, method call). This functionality also supports single dispatch and transpiles to native S3 code.
 

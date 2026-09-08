@@ -18,7 +18,7 @@ I will use an example to illustrate this concept. We will assume we already have
 # along/R/hello.R
 #' @export
 hello <- function() {
-	print("Hello wolrd")
+	print("Hello world")
 }
 ```
 
@@ -26,7 +26,7 @@ hello <- function() {
 
 Someone might ask:
 
-> How to create an TypR package from an R package? 
+> How to create a TypR package from an R package? 
  
 Simple answer: Just add one folder!
  
@@ -81,7 +81,7 @@ along/
   R/
     a_std.R   <-- generated helper file
     b_generic_functions.R   <-- generated helper file
-    c_types.R  <-- generated generated helper file
+    c_types.R  <-- generated helper file
     d_main.R   <-- generated entry point to TypR's code
     hello.R    <-- default file
 ```
@@ -189,7 +189,7 @@ attr(,"class")
 
 ### Best practices
 
-It's better to only use custom R functions from TypR only when using TypR's untyped functions isn't enougth (for some reasons). In all cases, interoperability exists.
+It's better to only use custom R functions from TypR only when using TypR's untyped functions isn't enough (for some reasons). In all cases, interoperability exists.
 
 TypR is not an “all or nothing” mode. It is just an alternative source language that produces R.
 You can migrate gradually, file by file, function by function.

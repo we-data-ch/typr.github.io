@@ -32,14 +32,16 @@ Create a file called `hello.ty` in an empty folder:
 print("Hello, TypR!");
 ```
 
+Note that you need to put a ";" at the end of each expression. It looks like a regression compared to R but it is a way to help the transpiler let us build more elegant code (you can see [beautiful syntax](/docs/philosophy/beautiful_syntax) section).
+
 Transpile it from the terminal:
 
 ```bash
-typr build
+typr build hello.ty
 ```
 
 TypR generates plain R code. If you look at the files produced, you will see
-ordinary `.R` files — nothing exotic. That generated code is what runs, anywhere
+an ordinary `hello.R` file — nothing exotic. That generated code is what runs, anywhere
 R runs.
 
 ## 2. Store a value

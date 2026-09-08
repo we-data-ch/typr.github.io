@@ -1,6 +1,6 @@
-import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import rehypeShikiTypR, {CODE_COLORS} from './src/syntax/shiki';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -42,12 +42,14 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
+          beforeDefaultRehypePlugins: [rehypeShikiTypR],
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/we-data-ch/typr.github.io/tree/main/',
         },
         blog: {
+          beforeDefaultRehypePlugins: [rehypeShikiTypR],
           showReadingTime: true,
           feedOptions: {
             type: ['rss', 'atom'],
@@ -61,6 +63,9 @@ const config: Config = {
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
           onUntruncatedBlogPosts: 'warn',
+        },
+        pages: {
+          beforeDefaultRehypePlugins: [rehypeShikiTypR],
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -152,10 +157,14 @@ const config: Config = {
       ],
       copyright: `Copyright © ${new Date().getFullYear()} TypR, Inc. Built with Docusaurus.`,
     },
+    // Prism ne colore plus rien : Shiki tokenise les blocs au build
+    // (src/syntax/shiki.ts), depuis la grammaire générée par le compilateur.
+    // Il ne reste de ces « thèmes » que `plain`, dont Docusaurus tire le fond
+    // et la couleur de base du conteneur — alignés ici sur github-light et
+    // github-dark pour que le cadre et les jetons soient du même thème.
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
-	  additionalLanguages: ['r'],
+      theme: {plain: CODE_COLORS.light, styles: []},
+      darkTheme: {plain: CODE_COLORS.dark, styles: []},
     },
   } satisfies Preset.ThemeConfig,
 };

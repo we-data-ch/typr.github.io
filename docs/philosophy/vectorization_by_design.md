@@ -45,7 +45,7 @@ v <- c(1, 2, 3, 4)
 But what happens if we define a Point type?
 
 ```r
-# Point type creation with S3 (without valdation for simplicity)
+# Point type creation with S3 (without validation for simplicity)
 Point <- function(x, y) {
   structure(
     list(x = x, y = y),
@@ -369,9 +369,9 @@ functions(3, 4)
 
 It could help with applying a set of statistical models to a specific set of data.
 
-### Compabilities with other system
+### Compatibility with other systems
 
-Underneath, TypR's array are using a custom S3 object for data storage and vectorization. This doesn't invalidate native vectors or data.frame from R who will be faster and efficient. I want to create bridge that will help convert them into native types.
+Underneath, TypR's arrays use a custom S3 object for data storage and vectorization. This doesn't invalidate native vectors or data.frames from R, which are faster and more efficient. I want to create a bridge that will help convert them back into native types.
 
 ```typr
 # In the future, Array -> Vector for performances
@@ -386,4 +386,4 @@ let df <- points |> to_df();
 
 Even though lifting-based vectorization looks like reinventing the wheel, I truly believe it's a true conceptual heir of the classic way of doing vectorization and a logical continuation of it if R was a typed language.
 
-Now the responsibility of vectorizing functions is no more in the hands of the developper who can now focus on solving the problem. TypR offer a flexible interface to works with vectors.
+Now the responsibility of vectorizing functions is no more in the hands of the developer who can now focus on solving the problem. TypR offers a flexible interface to works with vectors.

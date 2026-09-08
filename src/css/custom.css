@@ -28,3 +28,24 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* Blocs de code — Shiki.
+   La coloration est calculée au build (src/syntax/shiki.ts) depuis la grammaire
+   générée par le compilateur. Shiki écrit les deux thèmes sur chaque jeton, en
+   variables CSS, et c'est ici qu'on décide laquelle est rendue : le basculement
+   clair/sombre reste donc du pur CSS, sans re-tokeniser quoi que ce soit.
+   La cible est le contenu du bloc — `code span` — et pas le conteneur entier,
+   pour ne pas repeindre les icônes des boutons copier / retour à la ligne. */
+.theme-code-block code span {
+  color: var(--shiki-light);
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+
+[data-theme='dark'] .theme-code-block code span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}

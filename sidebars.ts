@@ -36,6 +36,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'reference/intro',
         'reference/installation',
+        'reference/editor-setup',
         'reference/lexicon',
         'reference/bindings-mutation',
         'reference/types',
