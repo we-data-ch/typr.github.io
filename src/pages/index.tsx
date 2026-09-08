@@ -94,26 +94,41 @@ const styles: Styles = {
     fontSize: "0.9rem",
     color: "#6b7280",
   },
-  badgeRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "1rem",
-    marginBottom: "1.5rem",
+  versionLine: {
     fontSize: "0.95rem",
     color: "#9ca3af",
+    marginBottom: "0.5rem",
+  },
+  starLine: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: "1.5rem",
   },
   badge: {
     display: "inline-flex",
     alignItems: "center",
-    gap: "0.35rem",
-    padding: "0.3rem 0.75rem",
-    borderRadius: "999px",
-    border: "1px solid #3b3b3f",
-    backgroundColor: "#232326",
-    fontSize: "0.85rem",
-    color: "#e5e7eb",
+    height: "2rem",
+    borderRadius: "6px",
+    border: "1px solid #30363d",
+    backgroundColor: "#21262d",
+    fontSize: "0.8rem",
+    color: "#e6edf3",
     textDecoration: "none",
+    overflow: "hidden",
+  },
+  badgeStart: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.4rem",
+    padding: "0 0.9rem",
+    color: "#e6edf3",
+  },
+  badgeCount: {
+    display: "inline-flex",
+    alignItems: "center",
+    borderLeft: "1px solid #30363d",
+    padding: "0 0.9rem",
+    fontWeight: 600,
   },
 };
 
@@ -136,19 +151,20 @@ const Home: React.FC = () => {
       <div style={styles.container}>
         <img src={logoUrl} alt="Typed R logo" style={styles.logo} />
 
-		<div style={styles.badgeRow}>
-			<span>version 0.5.10 (alpha)</span>
-			{stars !== null && (
+		<div style={styles.versionLine}>version 0.5.10 (alpha)</div>
+		{stars !== null && (
+			<div style={styles.starLine}>
 				<a
 					href="https://github.com/we-data-ch/typr/stargazers"
 					style={styles.badge}
 					target="_blank"
 					rel="noopener noreferrer"
 				>
-					⭐ {stars.toLocaleString()}
+					<span style={styles.badgeStart}>⭐ Star · GitHub</span>
+					<span style={styles.badgeCount}>{stars.toLocaleString()}</span>
 				</a>
-			)}
-		</div>
+			</div>
+		)}
         <h1 style={styles.title}>
           R's types for data sciences
         </h1>
