@@ -93,21 +93,17 @@ for more on function types and higher-order functions.
 
 ## 5. Model your data
 
-To work with structured data, define a type and a constructor for it:
+To work with structured data, define a type:
 
 ```typr
 type Person <- list {
   name: char,
   age: int
 };
-
-let new_person <- fn(name: char, age: int): Person {
-  list(name = name, age = age)
-};
 ```
 
-Because TypR uses structural types, a function that needs only the `age` field
-accepts *any* value that has one — including data frames and lists with extra
+Because TypR uses structural types, a function that only needs the `age` field
+accepts *any* value that has one — including lists with extra
 fields. See the [types reference](reference/types.md) for structural subtyping.
 
 ## 6. Write a function on your type
@@ -115,14 +111,16 @@ fields. See the [types reference](reference/types.md) for structural subtyping.
 ```typr
 # --- setup, from the previous step ---
 type Person <- list { name: char, age: int };
-let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
 # -------------------------------------
 
 let is_adult <- fn(p: Person): bool {
   p$age >= 18
 };
 
-let alice <- new_person("Alice", 25);
+let alice <- Person:{
+    name: "Alice", 
+    age: 25
+};
 
 alice.is_adult();   # true
 ```
