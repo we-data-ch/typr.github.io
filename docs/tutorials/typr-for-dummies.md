@@ -36,7 +36,7 @@ average_height <- mean(heights)
 
 **TypR**
 
-```typr
+```typr noplayground 
 let average_height: num <- mean(heights);
 ```
 
