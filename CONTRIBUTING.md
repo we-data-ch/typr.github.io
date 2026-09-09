@@ -173,6 +173,154 @@ aussi des notes d'implémentation qui n'ont pas leur place dans la doc publique.
 En cas de doute entre une page du site et `syntaxe.md`, c'est `syntaxe.md` qui
 décrit le compilateur.
 
+## Versionnement de la documentation
+
+**État : le site n'est pas versionné.** Il n'existe qu'une documentation, servie
+sous `/docs/`, dont l'oracle d'exemples est la dernière release du compilateur.
+
+Le versionnement est **délibérément différé** (plan-phase2 §2.9) : il double le
+coût de maintenance de chaque page, pour un langage dont la syntaxe bouge
+encore. Ce qui est **décidé dès maintenant**, c'est le schéma d'URL — le changer
+après coup casse tous les liens entrants, et un lien vers une page de doc vit
+plus longtemps que la version qu'elle décrit.
+
+### Le contrat d'URL
+
+| URL | Contenu | Existe |
+|---|---|---|
+| `/docs/<page>` | la **dernière release** | aujourd'hui, et toujours |
+| `/docs/next/<page>` | `develop`, non publié | à partir du jour où l'on versionne |
+| `/docs/<x.y>/<page>` | une release plus ancienne | pas avant 1.0 — voir plus bas |
+| `/llms.txt`, `/llms-full.txt`, `/docs/<page>.md` | la dernière release | aujourd'hui, et toujours |
+
+Une phrase suffit à le résumer : **`/docs/<page>` ne désigne jamais autre chose
+que la dernière release.** Le jour où l'on versionne, aucune URL existante ne
+change de place ; c'est la documentation de `develop` qui déménage vers
+`/docs/next/`, et elle n'a aujourd'hui aucun lien entrant.
+
+C'est exactement le comportement **par défaut** de Docusaurus quand
+`versioned_docs/` existe — vérifié en construisant le site versionné, pas
+supposé. Il n'y a donc rien à configurer pour l'obtenir, seulement des choses à
+ne pas faire.
+
+### Ce qu'il ne faut pas faire
+
+| Tentation | Ce qu'elle casse |
+|---|---|
+| `lastVersion: 'current'` | `/docs/` se met à décrire `develop` : le lecteur lit une syntaxe que son compilateur ne connaît pas, sans que rien ne l'en avertisse |
+| donner à la release un `path` (`/docs/latest/`, `/docs/0.5/`) | tous les liens entrants tombent en 404, et Google met des mois à suivre |
+| une version par patch (`0.5.10`) | dix instantanés pour une seule syntaxe — la granularité est le **`x.y`**, la version exacte reste affichée sur la page d'accueil |
+| renommer `next` en `develop` dans l'URL | `next` est la convention Docusaurus, connue des lecteurs ; c'est l'**étiquette** du menu qui doit dire `develop`, pas le chemin |
+
+### Quand versionner
+
+Le déclencheur n'est pas une date, c'est un fait observable : **le jour où un
+bloc ` ```typr ` ne peut plus être vrai à la fois pour la release et pour
+`develop`.** Le workflow `examples-develop.yml` est précisément là pour le
+signaler la nuit venue — quand son `::warning` ne dénonce plus un bug mais un
+changement de langage assumé, la doc a deux publics et il est temps de couper.
+
+Avant 1.0, **une seule release est publiée à la fois** : au moment de versionner
+pour `0.6`, l'instantané de `0.5` est supprimé, pas archivé. Conséquence
+heureuse : aucune URL de la forme `/docs/<x.y>/` n'est jamais publiée, donc
+aucune ne peut casser plus tard. Les anciens instantanés restent dans l'historique
+git, qui est leur place. On commencera à en garder plusieurs (et à les déclarer
+dans `onlyIncludeVersions`) quand des utilisateurs resteront volontairement sur
+une version ancienne — c'est-à-dire après 1.0.
+
+### Le jour où l'on versionne
+
+Dans l'ordre. Les points 3 et 4 sont ceux qu'on ne voit pas en construisant le
+site : ils échouent en silence.
+
+1. **Figer l'instantané** — `npx docusaurus docs:version 0.5`. Il crée
+   `versioned_docs/version-0.5/`, `versioned_sidebars/` et `versions.json`.
+   Coût mesuré sur le site actuel : +37 pages HTML (62 → 99), 11 → 16 Mo de
+   sortie, et un second index de recherche de 1,4 Mo (chargé paresseusement,
+   et seulement par qui lit cette version-là).
+
+2. **Déclarer le schéma explicitement** dans `docusaurus.config.ts`, même si
+   c'est le défaut — c'est la ligne qu'un futur mainteneur « corrigerait »
+   autrement :
+
+   ```ts
+   docs: {
+     lastVersion: '0.5',
+     versions: {
+       current: {label: 'develop 🚧', path: 'next'},
+       '0.5': {label: '0.5', path: ''},
+     },
+   }
+   ```
+
+   Et un item `{type: 'docsVersionDropdown', position: 'right'}` dans la navbar,
+   sans quoi personne ne peut atteindre `/docs/next/`.
+
+3. **Repointer les fichiers pour LLM sur l'instantané** :
+   `docsDir: 'versioned_docs/version-0.5'` dans `docusaurus-plugin-llms`. Ils
+   décrivent **la release**, pas `develop` — ils existent pour faire écrire du
+   TypR correct à un modèle, et le modèle écrit pour le compilateur que
+   l'utilisateur a installé.
+
+   Deux pièges vérifiés :
+
+   - **Ne pas utiliser `versions: 'auto'`.** Le plugin préfixe les versions à la
+     racine du site là où Docusaurus les préfixe après `/docs` : les fichiers de
+     `current` atterrissent dans `/next/docs/…` alors que les pages sont servies
+     sous `/docs/next/…`, et les liens de `/next/llms.txt` renvoient vers les
+     pages **stables**. Un jeu de fichiers, celui de la release, et le compte est
+     bon.
+   - **L'ordre de lecture doit venir de la barre latérale figée.**
+     `includeOrder` contient des chemins `docs/<id>.md` (voir
+     `src/llms/order.ts`) : aucun ne correspond plus à
+     `versioned_docs/version-0.5/…`, donc toutes les pages basculent dans
+     `includeUnmatchedLast` et `llms.txt` perd l'ordre Diátaxis — silencieusement.
+     Il faut passer un préfixe à `docOrderFromSidebars` et le nourrir de
+     `versioned_sidebars/version-0.5-sidebars.json`, qui a exactement la même
+     forme que `sidebars.ts`.
+
+4. **Inverser les deux vérifications d'exemples**, qui sans cela vérifient
+   toutes les deux le mauvais arbre :
+
+   | Job | Arbre | Oracle |
+   |---|---|---|
+   | `examples` de `deploy.yml`, bloquant | `versioned_docs/version-0.5` + `blog` + `src/pages` | dernière release |
+   | `examples-develop.yml`, nocturne, `::warning` | `docs` | `develop` |
+
+   `blog/` et `src/pages/` ne sont pas versionnés par Docusaurus : ils sont
+   publiés tels quels, donc ils relèvent de l'oracle de la release. Côté script,
+   `SOURCES` est en dur dans `scripts/check-typr-blocks.mjs` — lui ajouter une
+   option `--sources` plutôt que d'abuser de `--only`, dont le motif est un
+   simple `includes()` : `docs/` sélectionnerait aussi `versioned_docs/`.
+
+5. **Laisser `gen-syntax-reference.mjs` tranquille.** Il n'écrit que dans
+   `docs/reference/`, et c'est correct : l'instantané garde les tableaux qu'il
+   avait le jour où il a été figé, ce qui est précisément ce qu'un lecteur de
+   la version 0.5 doit voir. Ne pas le pointer sur `versioned_docs/`.
+
+6. **Pages CMS** — ajouter une collection pour `versioned_docs/version-0.5`.
+   Sans elle, toute correction faite depuis un téléphone atterrit dans `next` et
+   **n'apparaît jamais sur le site publié** : la panne la plus déroutante de la
+   liste.
+
+7. **Corriger deux fois, en connaissance de cause.** Une erreur de doc se
+   corrige dans `docs/` (elle doit survivre à la prochaine release) *et* dans
+   l'instantané si elle concerne la version publiée (c'est celle qu'on lit). Les
+   liens « Edit this page » et « Report an issue » désignent déjà le bon fichier
+   — vérifié : sur une page stable ils pointent sur
+   `versioned_docs/version-0.5/intro.md`, sur `/docs/next/` sur `docs/intro.md`.
+   Rien à changer de ce côté.
+
+8. **À la release suivante** — supprimer `versioned_docs/`, `versioned_sidebars/`
+   et `versions.json`, puis refiger sur le nouveau `x.y`, et mettre à jour les
+   trois occurrences du numéro (config, plugin llms, workflows). Tant qu'on n'en
+   garde qu'une, c'est une commande et un remplacement.
+
+Le numéro de version, lui, ne se saisit nulle part dans ce dépôt : il vient de
+`Cargo.toml [workspace.package].version` du compilateur, que `deploy.yml`
+récupère déjà pour la page d'accueil. La doc **consomme** cette valeur, elle n'en
+définit jamais une.
+
 ## Mesure d'audience
 
 Le site peut compter ses pages vues avec [GoatCounter](https://www.goatcounter.com)
