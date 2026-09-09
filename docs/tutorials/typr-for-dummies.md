@@ -340,8 +340,6 @@ fct_match(statuses[-2], "medium") |> any() # the level exists, not the value
 #> [1] FALSE
 ```
 
----
-
 ## Error messages that don't make you cry
 
 If you are using a recent version of tidyverse for this tutorial or your usual work, you have probably realized that warning and error messages are richer now. This is thanks to the rlang package. Here's what rlang has given us, and it's genuinely great:
@@ -361,8 +359,6 @@ Look at that: **which function failed, which argument, and what you probably mea
 
 Types will lead to even better messages: when the system knows what something *should* be, it can tell you *what it got instead* and *where you made the promise*.
 
----
-
 ## Better design happens whether you plan it or not
 
 Thinking in types isn't just about catching bugs. It forces you to answer three questions before your fingers hit the keyboard:
@@ -374,9 +370,6 @@ Thinking in types isn't just about catching bugs. It forces you to answer three 
 That's designing, not just typing. In our [TypR philosophy](/docs/philosophy/intro) we call this "clean data science code by design, not by effort." 
 
 "By effort" means you're holding all the rules in your head, burning mental energy that could go toward the actual science. "By design" means the language holds the rules for you.
-
-
----
 
 ## So where does this leave us?
 
