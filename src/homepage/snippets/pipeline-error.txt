@@ -1,0 +1,15 @@
+  × Type error: The output type of the function don't match it's type
+  │ annotation
+  │ Expected: num
+  │ Found: char
+   ╭─[pipeline.ty:3:37]
+ 2 │ 
+ 3 │ let report <- fn(sales: [RawSale]): num {
+   ·                                     ▲
+   ·                                     ╰── Expected num
+ 4 │   (sales) |> map(\(s) s$amount)
+ 5 │           |> sum()
+   ·               ┬
+   ·               ╰── Received char
+ 6 │ };
+   ╰────

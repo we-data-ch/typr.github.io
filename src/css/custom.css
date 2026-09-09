@@ -49,3 +49,59 @@
   font-weight: var(--shiki-dark-font-weight);
   text-decoration: var(--shiki-dark-text-decoration);
 }
+
+/* Jetons de la page d'accueil.
+   Ils s'ajoutent à Infima au lieu de le redéfinir : la documentation garde ses
+   couleurs, et la page d'accueil (plus le bouton « Download » de la barre de
+   navigation, qui doit s'accorder avec elle) puise ici.
+
+   L'accent vient du logo, qui est rouge. En thème sombre il est éclairci :
+   le rouge du logo sur le fond sombre du site ne dépasse pas 3:1, ce qui ne
+   suffit pas pour du texte. */
+:root {
+  --typr-accent: #c1173a;
+  --typr-accent-hover: #9e1130;
+  --typr-accent-contrast: #ffffff;
+  --typr-accent-soft: rgba(193, 23, 58, 0.08);
+  --typr-accent-border: rgba(193, 23, 58, 0.35);
+  --typr-border: var(--ifm-color-emphasis-300);
+  --typr-border-strong: var(--ifm-color-emphasis-400);
+  --typr-surface: #ffffff;
+  --typr-surface-alt: var(--ifm-color-emphasis-100);
+  --typr-muted: var(--ifm-color-emphasis-700);
+}
+
+[data-theme='dark'] {
+  --typr-accent: #ff7a8a;
+  --typr-accent-hover: #ff9aa6;
+  --typr-accent-contrast: #1b1b1d;
+  --typr-accent-soft: rgba(255, 122, 138, 0.09);
+  --typr-accent-border: rgba(255, 122, 138, 0.32);
+  --typr-surface: var(--ifm-background-surface-color);
+  --typr-surface-alt: rgba(255, 255, 255, 0.025);
+}
+
+/* « Download » est l'action principale de la barre de navigation : un bouton,
+   pas un lien de plus. La classe est posée sur l'entrée dans
+   docusaurus.config.ts. */
+.navbar__item.navbar-download {
+  margin-left: 0.25rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 8px;
+  background: var(--typr-accent);
+  color: var(--typr-accent-contrast);
+  font-weight: 600;
+}
+
+.navbar__item.navbar-download:hover {
+  background: var(--typr-accent-hover);
+  color: var(--typr-accent-contrast);
+  text-decoration: none;
+}
+
+/* Dans le menu déroulant du mobile, l'aplat n'a plus de sens : la liste est
+   pleine largeur et le bouton s'y étalerait sur toute la ligne. */
+.navbar-sidebar .navbar-download {
+  background: transparent;
+  color: var(--typr-accent);
+}

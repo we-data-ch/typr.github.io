@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import rehypeShikiTypR, {CODE_COLORS} from './src/syntax/shiki';
+import homepageSnippetsPlugin from './src/homepage/plugin';
+import {PLAYGROUND_URL} from './src/playground/url';
 import sidebars from './sidebars';
 import {docOrderFromSidebars} from './src/llms/order';
 
@@ -133,6 +135,9 @@ const config: Config = {
   // ```julia) — les y verser reviendrait à apprendre au modèle une syntaxe
   // périmée. La matière de fond des billets est reprise dans docs/philosophy/.
   plugins: [
+    // Les extraits de code de la page d'accueil, colorés au build par le
+    // surligneur de la doc. Voir src/homepage/plugin.ts pour le pourquoi.
+    homepageSnippetsPlugin,
     [
       'docusaurus-plugin-llms',
       {
@@ -193,6 +198,12 @@ const config: Config = {
 		defaultMode: 'dark',
 	},
 	//main: navbar
+    // La barre de navigation porte les quatre destinations de la page
+    // d'accueil — Documentation, Playground, GitHub, Download — plus les deux
+    // que le site a par ailleurs : le blog, et Discussions, qui est le canal
+    // d'aide canonique (plan-phase2 §2.4) et vaut d'être visible partout.
+    // « Download » est l'action principale : c'est un bouton, habillé dans
+    // src/css/custom.css.
     navbar: {
       title: 'TypR',
       logo: {
@@ -204,19 +215,15 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: 'Documentation',
         },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
-          type: 'doc',
-          docId: 'faq',
-          position: 'left',
-          label: 'FAQ',
+          href: PLAYGROUND_URL,
+          label: 'Playground',
+          position: 'right',
         },
         {
-          // Le canal d'aide canonique (plan-phase2 §2.4). Dans la navbar et pas
-          // seulement dans le pied de page : une question posée est une question
-          // qui ne se perd pas, mais encore faut-il voir où la poser.
           href: 'https://github.com/we-data-ch/typr/discussions',
           label: 'Discussions',
           position: 'right',
@@ -230,25 +237,43 @@ const config: Config = {
           type: 'search',
           position: 'right',
         },
+        {
+          // Vers le guide d'installation, pas vers la page des releases : le
+          // binaire n'est qu'une des trois voies (release, Docker, cargo), et
+          // la page les présente toutes avec la vérification qui suit.
+          to: '/docs/reference/installation',
+          label: 'Download',
+          position: 'right',
+          className: 'navbar-download',
+        },
       ],
     },
+    // Trois colonnes de navigation (TypR / Community / Ecosystem), plus une
+    // quatrième pour ce qui n'est ni l'une ni l'autre et qu'on ne veut pas
+    // perdre : le blog, `llms.txt`, et le lien « Privacy », que l'on vient
+    // chercher ici et qui pointe vers la FAQ plutôt que vers une page dédiée
+    // de quatre lignes que personne ne relirait.
     footer: {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'TypR',
           items: [
             {
-              label: 'Tutorial',
+              label: 'Documentation',
               to: '/docs/intro',
             },
             {
-              label: 'FAQ',
-              to: '/docs/faq',
+              label: 'Playground',
+              href: PLAYGROUND_URL,
             },
             {
-              label: 'Youtube',
-              href: 'https://www.youtube.com/watch?v=GMo20g__nOc&list=PLSYhtt87oGAJH8Pe-VMcoBkQfek7VJ0hM',
+              label: 'Download',
+              to: '/docs/reference/installation',
+            },
+            {
+              label: 'GitHub',
+              href: 'https://github.com/we-data-ch/typr',
             },
           ],
         },
@@ -270,12 +295,33 @@ const config: Config = {
               href: 'https://github.com/we-data-ch/typr/discussions/categories/show-and-tell',
             },
             {
+              label: 'Contributing',
+              href: 'https://github.com/we-data-ch/typr.github.io/blob/main/CONTRIBUTING.md',
+            },
+            {
+              label: 'Issues',
+              href: 'https://github.com/we-data-ch/typr/issues',
+            },
+          ],
+        },
+        {
+          title: 'Ecosystem',
+          items: [
+            {
+              label: 'R',
+              href: 'https://www.r-project.org/',
+            },
+            {
               label: 'R-bloggers',
               href: 'https://www.r-bloggers.com',
             },
             {
-              label: 'GitHub',
-              href: 'https://github.com/we-data-ch/typr',
+              label: 'WeData',
+              href: 'https://github.com/we-data-ch',
+            },
+            {
+              label: 'Youtube',
+              href: 'https://www.youtube.com/watch?v=GMo20g__nOc&list=PLSYhtt87oGAJH8Pe-VMcoBkQfek7VJ0hM',
             },
           ],
         },
@@ -287,8 +333,8 @@ const config: Config = {
               to: '/blog',
             },
             {
-              label: 'GitHub',
-              href: 'https://github.com/we-data-ch/typr.github.io',
+              label: 'FAQ',
+              to: '/docs/faq',
             },
             {
               // `pathname://` : un fichier du dossier de sortie, pas une route
@@ -298,17 +344,13 @@ const config: Config = {
               to: 'pathname:///llms.txt',
             },
             {
-              // Le pied de page est l'endroit où l'on cherche ce lien. Il pointe
-              // vers la FAQ plutôt que vers une page dédiée : la réponse tient en
-              // un paragraphe, et une page « Privacy » de quatre lignes se serait
-              // périmée sans que personne la relise.
               label: 'Privacy',
               to: '/docs/faq#site-analytics',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} TypR, Inc. Built with Docusaurus.`,
+      copyright: `TypR — a typed language for long-lived R software.<br />Copyright © ${new Date().getFullYear()} TypR / WeData. Built with Docusaurus.`,
     },
     // Prism ne colore plus rien : Shiki tokenise les blocs au build
     // (src/syntax/shiki.ts), depuis la grammaire générée par le compilateur.

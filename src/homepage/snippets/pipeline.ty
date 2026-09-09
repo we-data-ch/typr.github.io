@@ -1,0 +1,17 @@
+type RawSale   <- list { region: char, amount: char };
+type CleanSale <- list { region: char, amount: num };
+
+@as__numeric: (x: char) -> num;
+
+let clean <- fn(s: RawSale): CleanSale {
+  CleanSale:{
+    region = s$region,
+    amount = as__numeric(s$amount)
+  }
+};
+
+let report <- fn(sales: [RawSale]): num {
+  (sales) |> map(clean)
+          |> map(\(s) s$amount)
+          |> sum()
+};

@@ -67,8 +67,11 @@ const preserveMetastring: ShikiTransformer = {
   },
 };
 
+/** Les deux thèmes, écrits une fois : rehype et `highlightToHtml` les partagent. */
+const THEMES = { light: 'github-light', dark: 'github-dark' } as const;
+
 const options: RehypeShikiCoreOptions = {
-  themes: { light: 'github-light', dark: 'github-dark' },
+  themes: THEMES,
   transformers: [preserveMetastring],
   // Les deux thèmes en variables CSS (--shiki-light / --shiki-dark) : le
   // basculement clair/sombre de Docusaurus se fait alors en CSS, sans
@@ -91,3 +94,20 @@ const rehypeShikiTypR: Plugin<[], Root> = () =>
   rehypeShikiFromHighlighter(highlighter, options);
 
 export default rehypeShikiTypR;
+
+/**
+ * Le même surligneur, appelé à la main plutôt que par rehype.
+ *
+ * Les blocs de la page d'accueil ne viennent pas d'un Markdown : ce sont de
+ * vrais fichiers (src/homepage/snippets/), lus et colorés au build par
+ * src/homepage/plugin.ts. Ils doivent l'être par *ce* surligneur — même
+ * grammaire générée, mêmes thèmes, mêmes variables CSS — sans quoi la page
+ * d'accueil colorerait le TypR autrement que la documentation.
+ */
+export function highlightToHtml(code: string, lang: string): string {
+  return highlighter.codeToHtml(code, {
+    lang,
+    themes: THEMES,
+    defaultColor: false,
+  });
+}

@@ -1,0 +1,10 @@
+type Order <- list {
+  id: int,
+  total: num
+};
+
+type Customer <- list {
+  id: int,
+  name: char,
+  orders: [Order]
+};

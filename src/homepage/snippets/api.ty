@@ -1,0 +1,13 @@
+type User <- list {
+  id: int,
+  name: char,
+  email: char
+};
+
+let get_user <- fn(id: int): User {
+  User:{
+    id = id,
+    name = "Ada",
+    email = "ada@example.com"
+  }
+};

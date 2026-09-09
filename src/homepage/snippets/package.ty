@@ -1,0 +1,10 @@
+type Sale <- list { region: char, amount: num };
+
+let summarise_sales <- fn(
+  sales: [Sale],
+  region: char
+): num {
+  (sales) |> filter(\(s) s$region == region)
+          |> map(\(s) s$amount)
+          |> sum()
+};

@@ -40,6 +40,22 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const SOURCES = ['docs', 'blog', 'src/pages'];
 const EXTENSIONS = new Set(['.md', '.mdx']);
 
+/**
+ * Les extraits de la page d'accueil, qui ne sont pas du Markdown.
+ *
+ * Ce sont de vrais fichiers `.ty` (src/homepage/snippets/), lus et colorés au
+ * build par src/homepage/plugin.ts. Ils sont vérifiés ici comme les blocs de la
+ * doc, et pour la même raison : la page d'accueil est la première chose qu'un
+ * visiteur lit du langage, un exemple faux y coûte plus cher qu'ailleurs.
+ *
+ * Un nom terminé par `-broken` est un contre-exemple : il DOIT être rejeté par
+ * le compilateur. Le même oracle inversé que `compile_fail` dans le Markdown —
+ * la page d'accueil affiche le diagnostic, il ne doit pas cesser d'exister.
+ */
+const SNIPPETS_DIR = 'src/homepage/snippets';
+const SNIPPETS_EXTENSION = '.ty';
+const BROKEN_SUFFIX = '-broken';
+
 const IN_CI = Boolean(process.env.GITHUB_ACTIONS);
 const RED = IN_CI || process.stdout.isTTY ? '\u001b[31m' : '';
 const GREEN = IN_CI || process.stdout.isTTY ? '\u001b[32m' : '';
@@ -165,12 +181,39 @@ function extractBlocks(file) {
   return blocks;
 }
 
+/**
+ * Les extraits de la page d'accueil, présentés comme des blocs pour que la
+ * suite du script n'ait qu'une seule sorte d'objet à traiter. `fenceLine` vaut
+ * 1 : le fichier *est* le bloc.
+ */
+function collectSnippets() {
+  const dir = path.join(ROOT, SNIPPETS_DIR);
+  let entries;
+  try {
+    entries = fs.readdirSync(dir).sort();
+  } catch {
+    return []; // le dossier peut disparaître sans que ce script soit en cause
+  }
+  return entries
+    .filter((name) => path.extname(name) === SNIPPETS_EXTENSION)
+    .map((name) => ({
+      file: path.join(SNIPPETS_DIR, name),
+      fenceLine: 1,
+      firstCodeLine: 1,
+      meta: [],
+      compileFail: path.basename(name, SNIPPETS_EXTENSION).endsWith(BROKEN_SUFFIX),
+      skipped: false,
+      code: fs.readFileSync(path.join(dir, name), 'utf8'),
+    }));
+}
+
 /** Tous les blocs ```typr du site, vérifiables ou non (`skipped`). */
 function collectBlocks(only) {
   const blocks = [];
   for (const source of SOURCES) {
     for (const file of walk(path.join(ROOT, source))) blocks.push(...extractBlocks(file));
   }
+  blocks.push(...collectSnippets());
   return only ? blocks.filter((b) => b.file.includes(only)) : blocks;
 }
 

@@ -1,221 +1,238 @@
-import React, { CSSProperties, useState, useEffect } from "react";
+// La page d'accueil.
+//
+// Elle raconte une histoire, et l'ordre des sections *est* cette histoire :
+// vos données ont une forme, et elle ne devrait pas vivre dans la tête des gens
+// → voici ce que les types changent au code que vous écrivez déjà → voici les
+// outils → installez TypR.
+//
+// Une section = une question, et une seule. Déplacer une section, c'est
+// déplacer une réponse : le fil se lit du haut vers le bas.
+//
+// Le pourquoi ne fait pas de section à lui seul — un paragraphe sur « quand
+// les scripts deviennent des systèmes » expliquait moins bien que la
+// démonstration qui suit. Il tient donc en deux phrases, en tête du modèle de
+// données, et « See R become typed » fait le reste en code.
+//
+// « TypR compile vers du R ordinaire » ne fait pas non plus de section : c'est
+// la première objection d'un lecteur qui vient de R, donc elle est répondue
+// dès le hero, avant même le titre d'une section.
+//
+// La section « Vision » (R / JS / WASM) a été retirée le temps de clarifier la
+// roadmap — elle reviendra quand ce sera pertinent, pas avant.
+
+import React, {useEffect, useState, type ReactNode} from 'react';
+import Layout from '@theme/Layout';
+import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import clsx from 'clsx';
+import {CodePane} from '@site/src/homepage/Code';
+import {Branch, Hub} from '@site/src/homepage/Diagram';
+import UseCases from '@site/src/homepage/UseCases';
+import {PLAYGROUND_URL} from '@site/src/playground/url';
+import styles from './index.module.css';
 
-interface Styles {
-  [key: string]: CSSProperties;
-}
+const GITHUB_URL = 'https://github.com/we-data-ch/typr';
 
-const styles: Styles = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#1b1b1d",
-    color: "#f3f4f6",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2rem",
-  },
-  container: {
-    maxWidth: "960px",
-    width: "100%",
-    textAlign: "center",
-  },
-  logo: {
-    width: "220px",
-    height: "220px",
-    borderRadius: "24px",
-    marginBottom: "2rem",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
-  },
-  title: {
-    fontSize: "3rem",
-    fontWeight: 700,
-    marginBottom: "1.5rem",
-    lineHeight: 1.1,
-  },
-  subtitle: {
-    display: "block",
-    color: "#c7c7cc",
-  },
-  tagline: {
-    fontSize: "1.3rem",
-    color: "#9ca3af",
-    marginBottom: "3rem",
-    lineHeight: 1.6,
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "1.5rem",
-    marginBottom: "3rem",
-  },
-  card: {
-    backgroundColor: "#232326",
-    borderRadius: "20px",
-    padding: "1.5rem",
-    boxShadow: "0 10px 20px rgba(0,0,0,0.3)",
-  },
-  cardTitle: {
-    fontSize: "1.1rem",
-    fontWeight: 600,
-    marginBottom: "0.5rem",
-  },
-  cardText: {
-    fontSize: "0.95rem",
-    color: "#9ca3af",
-    lineHeight: 1.5,
-  },
-  ctaRow: {
-    display: "flex",
-    gap: "1rem",
-    justifyContent: "center",
-    flexWrap: "wrap",
-  },
-  primaryButton: {
-    padding: "0.75rem 1.5rem",
-    borderRadius: "14px",
-    backgroundColor: "#f3f4f6",
-    color: "#1b1b1d",
-    fontWeight: 600,
-    textDecoration: "none",
-    display: "inline-block",
-  },
-  secondaryButton: {
-    padding: "0.75rem 1.5rem",
-    borderRadius: "14px",
-    border: "1px solid #6b7280",
-    color: "#e5e7eb",
-    textDecoration: "none",
-    display: "inline-block",
-  },
-  footer: {
-    marginTop: "4rem",
-    fontSize: "0.9rem",
-    color: "#6b7280",
-  },
-  versionLine: {
-    fontSize: "0.95rem",
-    color: "#9ca3af",
-    marginBottom: "0.5rem",
-  },
-  starLine: {
-    display: "flex",
-    justifyContent: "center",
-    marginBottom: "1.5rem",
-  },
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    height: "2rem",
-    borderRadius: "6px",
-    border: "1px solid #30363d",
-    backgroundColor: "#21262d",
-    fontSize: "0.8rem",
-    color: "#e6edf3",
-    textDecoration: "none",
-    overflow: "hidden",
-  },
-  badgeStart: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "0.4rem",
-    padding: "0 0.9rem",
-    color: "#e6edf3",
-  },
-  badgeCount: {
-    display: "inline-flex",
-    alignItems: "center",
-    borderLeft: "1px solid #30363d",
-    padding: "0 0.9rem",
-    fontWeight: 600,
-  },
-};
+// Écrite ici parce qu'aucun fichier de ce dépôt ne la connaît : la version vit
+// dans le Cargo.toml du compilateur (dépôt we-data-ch/typr). À reprendre à la
+// main à chaque release, comme la grammaire de syntaxes/.
+const VERSION = '0.5.10';
 
-const Home: React.FC = () => {
-	const logoUrl = useBaseUrl('/img/typr_carre.png');
-	const docsUrl = useBaseUrl('/docs/intro');
-	const philosophyUrl = useBaseUrl('/docs/philosophy/intro');
-	const playgroundUrl = 'https://we-data-ch.github.io/typr-playground.github.io/';
-	const [stars, setStars] = useState<number | null>(null);
+/** Le compteur d'étoiles, à charger côté client — il n'existe pas au build. */
+function GitHubStars(): ReactNode {
+  const [stars, setStars] = useState<number | null>(null);
 
-	useEffect(() => {
-		fetch("https://api.github.com/repos/we-data-ch/typr")
-			.then((res) => res.json())
-			.then((data) => setStars(data.stargazers_count))
-			.catch(() => {});
-	}, []);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('https://api.github.com/repos/we-data-ch/typr')
+      .then((res) => res.json())
+      .then((data) => {
+        // L'API répond aussi 403 (quota) avec un corps JSON : sans le champ,
+        // on n'affiche simplement rien.
+        if (!cancelled && typeof data?.stargazers_count === 'number') {
+          setStars(data.stargazers_count);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (stars === null) {
+    return null;
+  }
 
   return (
-    <main style={styles.page}>
-      <div style={styles.container}>
-        <img src={logoUrl} alt="Typed R logo" style={styles.logo} />
+    <>
+      <span className={styles.metaSeparator} aria-hidden="true">
+        ·
+      </span>
+      <a
+        className={styles.metaLink}
+        href={`${GITHUB_URL}/stargazers`}
+        target="_blank"
+        rel="noopener noreferrer">
+        ★ {stars.toLocaleString('en-US')} on GitHub
+      </a>
+    </>
+  );
+}
 
-		<div style={styles.versionLine}>version 0.5.10 (alpha)</div>
-		{stars !== null && (
-			<div style={styles.starLine}>
-				<a
-					href="https://github.com/we-data-ch/typr/stargazers"
-					style={styles.badge}
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<span style={styles.badgeStart}>⭐ Star · GitHub</span>
-					<span style={styles.badgeCount}>{stars.toLocaleString()}</span>
-				</a>
-			</div>
-		)}
-		<h1 style={styles.title}>
-          Type hints for R
+function Section({
+  id,
+  tone,
+  children,
+}: {
+  id: string;
+  /** `alt` pose un fond légèrement différent, pour séparer deux sections. */
+  tone?: 'alt';
+  children: ReactNode;
+}): ReactNode {
+  return (
+    <section id={id} className={clsx(styles.section, tone === 'alt' && styles.sectionAlt)}>
+      <div className={styles.container}>{children}</div>
+    </section>
+  );
+}
+
+function Hero(): ReactNode {
+  const logoUrl = useBaseUrl('/img/typr_carre.png');
+
+  return (
+    <header className={styles.hero}>
+      <div className={styles.container}>
+        <img className={styles.heroLogo} src={logoUrl} alt="" />
+
+        <h1 className={styles.heroTitle}>
+          Type-safe R for <span className={styles.nowrap}>long-lived</span> software.
         </h1>
 
-        <p style={styles.tagline}>
-		  Types for long-lasting works: packages, Shiny app or ETL pipeline.
+        <p className={styles.heroSubtitle}>
+          TypR is a typed programming language for building R packages,
+          applications and data systems that are easier to understand, maintain
+          and evolve. It compiles to plain R, so it fits into the ecosystem you
+          already use.
         </p>
 
-        <div style={styles.grid}>
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Build faster. Maintain longer.</h3>
-            <p style={styles.cardText}>
-              Evolve your packages with confidence thanks to powerful tools 
-			  that support code reuse and long-term evolution.
-            </p>
-          </div>
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Data modeling</h3>
-            <p style={styles.cardText}>
-              Clearly express data structures, invariants, and contracts for R
-              code that is easier to read, reason about, and trust.
-            </p>
-          </div>
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Safety by default</h3>
-            <p style={styles.cardText}>
-              Catch errors earlier. Types document intent and prevent silent bugs
-              in analyses and R packages.
-            </p>
-          </div>
-        </div>
+        <p className={styles.heroDomains}>
+          Packages <span aria-hidden="true">·</span> Shiny applications{' '}
+          <span aria-hidden="true">·</span> Data pipelines{' '}
+          <span aria-hidden="true">·</span> APIs
+        </p>
 
-        <div style={styles.ctaRow}>
-          <a href={playgroundUrl} style={styles.primaryButton}>
+        <div className={styles.heroActions}>
+          <Link className={styles.buttonPrimary} to="/docs/reference/installation">
+            Download TypR
+          </Link>
+          <Link className={styles.buttonSecondary} to="/docs/intro">
+            Get started
+          </Link>
+          <a
+            className={styles.buttonGhost}
+            href={PLAYGROUND_URL}
+            target="_blank"
+            rel="noopener noreferrer">
             Try the playground
           </a>
-          <a href={docsUrl} style={styles.secondaryButton}>
-            Read the documentation
-          </a>
-          <a href={philosophyUrl} style={styles.secondaryButton}>
-            Explore the philosophy
-          </a>
         </div>
 
-        <footer style={styles.footer}>
-          Built for R developers who care about reliable, maintainable, and
-          evolvable systems.
-        </footer>
+        <p className={styles.heroMeta}>
+          <span>version {VERSION} (alpha)</span>
+          <GitHubStars />
+        </p>
       </div>
-    </main>
+    </header>
   );
-};
+}
 
-export default Home;
+export default function Home(): ReactNode {
+  const typrLogo = useBaseUrl('/img/typr_carre.png');
+
+  return (
+    <Layout
+      title="Type-safe R for long-lived software"
+      description="TypR is a typed programming language for building R packages, applications and data systems that are easier to understand, maintain and evolve.">
+      <Hero />
+
+      {/* Pourquoi les types sont-ils importants ? */}
+      <Section id="data-model" tone="alt">
+        <h2 className={styles.sectionTitle}>
+          Your data model should not live in people’s heads.
+        </h2>
+        <p className={styles.sectionLead}>
+          R projects start as scripts. The ones that turn into packages, Shiny
+          applications or data pipelines end up maintained for years — and by
+          then, the shape of the data is what everyone needs to know. Define it
+          once, and use it throughout your system.
+        </p>
+
+        <div className={styles.split}>
+          <CodePane snippet="data-model.typr" tone="accent" />
+          <Branch
+            root={{label: 'Customer', accent: true}}
+            leaves={[
+              {label: 'Package', hint: 'typed functions'},
+              {label: 'Shiny', hint: 'typed reactives'},
+              {label: 'API', hint: 'typed responses'},
+            ]}
+            caption="One definition, the same meaning everywhere it is used."
+          />
+        </div>
+      </Section>
+
+      {/* Qu'est-ce que cela change concrètement ? */}
+      <Section id="from-r-to-typr">
+        <h2 className={styles.sectionTitle}>See R become typed.</h2>
+        <p className={styles.sectionLead}>
+          The same ideas. More explicit contracts.
+        </p>
+        <UseCases />
+      </Section>
+
+      {/* Quels outils sont disponibles ? */}
+      <Section id="toolchain" tone="alt">
+        <h2 className={styles.sectionTitle}>One language. One toolchain.</h2>
+        <p className={styles.sectionLead}>
+          The <code>typr</code> command provides the tools needed to build,
+          explore and maintain TypR projects.
+        </p>
+
+        <Hub
+          center={{label: 'typr', accent: true, img: typrLogo}}
+          top={{label: 'Compiler', hint: 'check, build'}}
+          right={{label: 'REPL', hint: 'explore'}}
+          bottom={{label: 'Project manager', hint: 'new, run, test'}}
+          left={{label: 'LSP', hint: 'editors'}}
+          caption="One binary. Every tool talks to the same compiler and the same types."
+        />
+      </Section>
+
+      {/* Comment commencer ? */}
+      <Section id="get-started" tone="alt">
+        <div className={styles.cta}>
+          <h2 className={styles.sectionTitle}>Build software that lasts.</h2>
+          <p className={styles.sectionLead}>
+            Start building your next R package, application or data system with
+            TypR.
+          </p>
+          <div className={styles.heroActions}>
+            <Link className={styles.buttonPrimary} to="/docs/reference/installation">
+              Download TypR
+            </Link>
+            <Link className={styles.buttonSecondary} to="/docs/intro">
+              Read the documentation
+            </Link>
+            <a
+              className={styles.buttonGhost}
+              href={PLAYGROUND_URL}
+              target="_blank"
+              rel="noopener noreferrer">
+              Try the playground
+            </a>
+          </div>
+        </div>
+      </Section>
+    </Layout>
+  );
+}

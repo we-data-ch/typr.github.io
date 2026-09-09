@@ -1,0 +1,6 @@
+type RawSale <- list { region: char, amount: char };
+
+let report <- fn(sales: [RawSale]): num {
+  (sales) |> map(\(s) s$amount)
+          |> sum()
+};

@@ -1,23 +1,195 @@
-/**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
- */
+/* La page d'accueil.
+   Les couleurs viennent des jetons définis dans src/css/custom.css : la page
+   suit le thème clair/sombre de Docusaurus comme le reste du site. */
 
-.heroBanner {
-  padding: 4rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+.container {
+  width: 100%;
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
+/* --- hero ---------------------------------------------------------------- */
+
+.hero {
+  padding: 5rem 0 4rem;
+  text-align: center;
+  /* Un halo discret derrière le logo, plutôt qu'un aplat : le fond de la page
+     reste celui du thème. */
+  background:
+    radial-gradient(
+      60rem 22rem at 50% 0%,
+      var(--typr-accent-soft),
+      transparent 70%
+    );
+}
+
+.heroLogo {
+  width: 128px;
+  height: 128px;
+  margin-bottom: 1.75rem;
+}
+
+.heroTitle {
+  max-width: 24ch;
+  margin: 0 auto 1.25rem;
+  font-size: clamp(2.2rem, 5.5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  /* Sans quoi les navigateurs coupent les lignes au plus tard, et un titre de
+     deux lignes se retrouve avec un mot seul sur la seconde. */
+  text-wrap: balance;
+}
+
+/* « long-lived » ne doit pas se couper sur son trait d'union. */
+.nowrap {
+  white-space: nowrap;
+}
+
+.heroSubtitle {
+  max-width: 46rem;
+  margin: 0 auto 1.5rem;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--typr-muted);
+}
+
+.heroDomains {
+  margin-bottom: 2.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--typr-accent);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.heroMeta {
+  margin-top: 1.75rem;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  color: var(--typr-muted);
+}
+
+.metaSeparator {
+  margin: 0 0.5rem;
+}
+
+.metaLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.metaLink:hover {
+  color: var(--typr-accent);
+  text-decoration: none;
+}
+
+/* --- boutons ------------------------------------------------------------- */
+
+.buttonPrimary,
+.buttonSecondary,
+.buttonGhost {
+  display: inline-block;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.buttonPrimary,
+.buttonPrimary:hover {
+  color: var(--typr-accent-contrast);
+  text-decoration: none;
+}
+
+.buttonPrimary {
+  background: var(--typr-accent);
+}
+
+.buttonPrimary:hover {
+  background: var(--typr-accent-hover);
+}
+
+.buttonSecondary {
+  border-color: var(--typr-border-strong);
+  color: var(--ifm-font-color-base);
+}
+
+.buttonSecondary:hover {
+  border-color: var(--typr-accent-border);
+  color: var(--typr-accent);
+  text-decoration: none;
+}
+
+.buttonGhost {
+  color: var(--typr-muted);
+}
+
+.buttonGhost:hover {
+  color: var(--typr-accent);
+  text-decoration: none;
+}
+
+/* --- sections ------------------------------------------------------------ */
+
+.section {
+  padding: 4.5rem 0;
+  border-top: 1px solid var(--typr-border);
+}
+
+.sectionAlt {
+  background: var(--typr-surface-alt);
+}
+
+.sectionTitle {
+  max-width: 24ch;
+  margin: 0 auto 1rem;
+  text-align: center;
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.sectionLead {
+  max-width: 44rem;
+  margin: 0 auto 2.5rem;
+  text-align: center;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--typr-muted);
+  text-wrap: pretty;
+}
+
+/* Un schéma d'un côté, du code ou du texte de l'autre. */
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
   }
 }
 
-.buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* --- appel à l'action final ---------------------------------------------- */
+
+.cta {
+  text-align: center;
 }

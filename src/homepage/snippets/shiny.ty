@@ -1,0 +1,10 @@
+type User <- list { id: int, name: char, active: bool };
+
+opaque Reactive<T> <- Any;
+@extern shiny::reactive: ([User]) -> Reactive<[User]>;
+
+let roster <- fn(members: [User]): [User] {
+  members.filter(\(u) u$active)
+};
+
+let team: Reactive<[User]> <- reactive([]);
