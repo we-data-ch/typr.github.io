@@ -1,18 +1,16 @@
 ---
 sidebar_position: 1
-title: TypR for dummies, at last I'm understanding types
+title: Types for Beginners
 ---
 
-# TypR for dummies, at last I'm understanding types
+# Types for Beginners, at last I'm understanding types
 
 > **TL;DR**  
-> Types exist so you don't have to remember your own rules. The moment you break them, TypR taps you on the shoulder and says "nope." 
+> Types exist so you don't have to remember your own rules. The moment you break them, TypR taps you on the shoulder and says "nope".
 >
 > Think of it like switching from a **manual car to an automatic**. In a stick shift, you're juggling clutch, revs, and gear ratios. In an automatic, the car just… remembers. TypR does that for your code. You write down a rule once (for instance, "this variable is a number") and months later, across thousands of lines and sixteen different files, the system still remembers. When something tries to break that rule, you hear about it immediately, not three hours into a pipeline run.
 >
 > **Does this matter for everyone?** Honestly, no. One-off scripts and quick exploratory plots? Probably overkill. But if you're building a **package, a Shiny app, or an ETL pipeline** that has to survive a long time, this is the insurance policy you didn't know you needed.
-
----
 
 ## Who is this actually for?
 
@@ -20,11 +18,9 @@ Scientists writing packages. Data scientists halfway through a Shiny app that's 
 
 If that sounds like you, read on. I'm going to keep the tone friendly and let the examples do the heavy lifting.
 
----
-
 ## What even is a type?
 
-> It's a declaration of what an object is. You tell the system: "this thing is a number. If it stops being a number, that's a bug, not a feature."
+> It's a declaration of what an object is. You tell the system: "this thing is a number. If it stops being a number, that's a bug, not a feature".
 
 Let's start with the smallest possible example. Same logic, two ways of writing it:
 
@@ -40,7 +36,7 @@ average_height <- mean(heights)
 let average_height: num <- mean(heights);
 ```
 
-*That's it. That's the whole concept.* In R, you hand someone a bucket and say "put whatever inside". R will guess it for you. In TypR, you say "this bucket is for numbers." If someone tries to drop a data frame in there (like R allows you to do), the compiler clears its throat politely and refuses.
+*That's it. That's the whole concept.* In R, you hand someone a bucket and say "put whatever inside". R will guess it for you. In TypR, you say "this bucket is for numbers". If someone tries to drop a data frame in there (like R allows you to do), the compiler clears its throat politely and refuses.
 
 *R allows you to do that*
 
@@ -58,14 +54,16 @@ let age: int <- 12;
 age <- data__frame(a=[4], b=["cat"]);
 ``` 
 
-*dot (`.`) in TypR can't be used as variable name. They define methods. So any function that used them should be replaced by double underscores (`__`). See the [Beautiful syntax](/docs/philosophy/beautiful_syntax) section*
+*dot (`.`) in TypR can't be used as variable or function name. They define methods. So any function that used them should be replaced by double underscores (`__`). See the [Beautiful syntax](/docs/philosophy/beautiful_syntax) section*
 
-The logic is simple: we want predictability so no code can change the meaning of the variable. We avoid unexpected changes. In our example, age is always a number, which makes sense. You don't want your colleagues changing it to a character because mathematical operations won't work on it. You will get an error later in the code rather than where the problem started. This is a long explanation, but the examples coming up will make it much clearer. In case you are confused, only the type is fixed. You can still change the value later in TypR:
+The logic is simple: we want predictability so no code can change the meaning of the variable. We avoid unexpected changes. In our example, `age` is always a number, which makes sense. You don't want your colleagues changing it to a character because mathematical operations won't work on it. You will get an error later in the code rather than where the problem started. This is a long explanation, but the examples coming up will make it much clearer. In case you are confused, only the type is fixed. You can still change the value later in TypR:
 
 ```typr
 let age: Integer <- 26;
+#> 26
 
 age <- 31;
+#> 31
 ```
 
 Every language deals with types, but they fall into two camps:
