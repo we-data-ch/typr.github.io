@@ -23,7 +23,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Tutorials',
-      items: ['tutorials/first-package', 'tutorials/migrate-r-package', 'tutorials/typed-data-modeling'],
+      items: ['tutorials/typr-for-dummies', 'tutorials/first-package', 'tutorials/migrate-r-package', 'tutorials/typed-data-modeling'],
     },
     {
       type: 'category',
