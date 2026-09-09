@@ -6,6 +6,8 @@
 
 Answers to common questions about TypR. Cross-links point to the [documentation](intro.md) and [blog](/blog) where you can explore topics in depth.
 
+**Not answered here?** Ask in [GitHub Discussions → Q&A](https://github.com/we-data-ch/typr/discussions/categories/q-a). It is the canonical place to get help with TypR, and questions asked there are what this page grows from.
+
 ---
 
 ## First questions
@@ -455,6 +457,12 @@ Do not use it unless you really need it, and you are really sure you need it.
 
 ### 35. Where can I discuss TypR or give feedback?
 
-- [GitHub Discussions](https://github.com/we-data-ch/typr/discussions)
-- [GitHub issues](https://github.com/we-data-ch/typr/issues)
-- [Reddit r/rstats](https://www.reddit.com/r/rstats/)
+[GitHub Discussions](https://github.com/we-data-ch/typr/discussions) is the main channel — public, searchable, and next door to the code:
+
+- [**Q&A**](https://github.com/we-data-ch/typr/discussions/categories/q-a) — "how do I…?", "why does the compiler say…?". Answers are marked as such, so the next person finds them.
+- [**Ideas**](https://github.com/we-data-ch/typr/discussions/categories/ideas) — language or tooling ideas that are not yet precise enough to be a bug report.
+- [**Show and tell**](https://github.com/we-data-ch/typr/discussions/categories/show-and-tell) — something you built with TypR.
+
+Use [GitHub issues](https://github.com/we-data-ch/typr/issues) instead when you have a reproducible bug: a snippet, what you expected, what the compiler did. If you are unsure which it is, open a discussion — it can be turned into an issue afterwards.
+
+Elsewhere: [Reddit r/rstats](https://www.reddit.com/r/rstats/).

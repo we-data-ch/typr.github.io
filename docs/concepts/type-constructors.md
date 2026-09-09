@@ -27,11 +27,26 @@ Transparent aliases are useful for **documentation** and **clarity** — they gi
 
 An `opaque` alias **hides** the underlying type from external code. This provides stronger encapsulation:
 
-```typr noplayground
-opaque Meters <- int;
+Inside the module that defines it, the underlying type is still visible:
 
-let d: Meters <- 42;
-let n: int <- d;   # ERROR: cannot implicitly convert opaque type
+```typr
+module Distance {
+    @pub opaque Meters <- int;
+    @pub let make <- fn(v: int): Meters { v };
+};
+```
+
+Outside, the boundary holds:
+
+```typr compile_fail
+# --- setup: the module above ---
+module Distance {
+    @pub opaque Meters <- int;
+    @pub let make <- fn(v: int): Meters { v };
+};
+
+let d <- Distance$make(42);
+let n: int <- d;   # the opaque type does not convert back on its own
 ```
 
 Opaque types enforce a boundary: code outside the module where the alias is defined cannot freely mix the opaque type with its underlying type. This prevents accidental misuse of domain-specific values.
