@@ -171,6 +171,14 @@ const config: Config = {
           label: 'FAQ',
         },
         {
+          // Le canal d'aide canonique (plan-phase2 §2.4). Dans la navbar et pas
+          // seulement dans le pied de page : une question posée est une question
+          // qui ne se perd pas, mais encore faut-il voir où la poser.
+          href: 'https://github.com/we-data-ch/typr/discussions',
+          label: 'Discussions',
+          position: 'right',
+        },
+        {
           href: 'https://github.com/we-data-ch/typr',
           label: 'GitHub',
           position: 'right',
@@ -204,14 +212,28 @@ const config: Config = {
         {
           title: 'Community',
           items: [
-        {
-          label: 'R-bloggers',
-          href: 'https://www.r-bloggers.com',
-        },
-        {
-          label: 'GitHub',
-          href: 'https://github.com/we-data-ch/typr',
-        },
+            // Une porte par intention, plutôt qu'un seul lien « Discussions » :
+            // les catégories existent pour trier, autant s'en servir dès l'entrée.
+            {
+              label: 'Ask a question',
+              href: 'https://github.com/we-data-ch/typr/discussions/categories/q-a',
+            },
+            {
+              label: 'Share an idea',
+              href: 'https://github.com/we-data-ch/typr/discussions/categories/ideas',
+            },
+            {
+              label: 'Show and tell',
+              href: 'https://github.com/we-data-ch/typr/discussions/categories/show-and-tell',
+            },
+            {
+              label: 'R-bloggers',
+              href: 'https://www.r-bloggers.com',
+            },
+            {
+              label: 'GitHub',
+              href: 'https://github.com/we-data-ch/typr',
+            },
           ],
         },
         {

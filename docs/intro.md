@@ -175,3 +175,7 @@ See [Working with R and TypR](reference/r-typr.md) for the full walkthrough.
 - **[Reference](/docs/reference/intro)** — types, functions, control flow
 - **[Philosophy](philosophy/intro.md)** — why TypR is designed this way
 - **[Blog](/blog)** — R and TypR, vectorization, testing, OOP
+
+Stuck on something, or want to share what you built? Head to
+[GitHub Discussions](https://github.com/we-data-ch/typr/discussions) — questions go
+in [Q&A](https://github.com/we-data-ch/typr/discussions/categories/q-a).

@@ -5,8 +5,8 @@
 > des exécutions. Chaque entrée porte un repro minimal exécutable tel quel.
 >
 > Établi le **2026-09-09**, en triant les 45 blocs ` ```typr noplayground ` restants après la
-> mise en place du contrôle CI des exemples (`plan-phase2.md` action 2). Aucun de ces six n'est
-> corrigé : ils attendent un arbitrage de Fabrice.
+> mise en place du contrôle CI des exemples (`plan-phase2.md` action 2). Deux sont corrigés
+> (D, F — 2026-09-09). Les quatre autres attendent un arbitrage ou un fix compilateur.
 
 ---
 
@@ -32,9 +32,9 @@ Quatre sont des erreurs de documentation, deux sont des trous du compilateur.
 | [A](#a--docsreferencetypesmd27--types-littéraux) | `docs/reference/types.md:27` | compilateur | `cases/` dans `we-data-ch/typr` |
 | [B](#b--docsreferencefunctionsmd131--closures) | `docs/reference/functions.md:131` | compilateur | `cases/` dans `we-data-ch/typr` |
 | [C](#c--docsphilosophyintromd25--functiona-b-présenté-comme-du-typr-valide) | `docs/philosophy/intro.md:25` | doc — **décision de langage d'abord** | à trancher |
-| [D](#d--docsphilosophybeautiful_syntaxmd174--constructeur-dunion) | `docs/philosophy/beautiful_syntax.md:174` | doc | une ligne |
+| ~~[D](#d--docsphilosophybeautiful_syntaxmd174--constructeur-dunion)~~ | `docs/philosophy/beautiful_syntax.md:174` | ~~doc~~ **corrigé** | ~~une ligne~~ |
 | [E](#e--docsconceptstype-constructorsmd28--opaque) | `docs/concepts/type-constructors.md:28` | doc | réécriture en deux blocs |
-| [F](#f--docsreferenceoperatorsmd33--pipe) | `docs/reference/operators.md:33` | doc | une ligne |
+| ~~[F](#f--docsreferenceoperatorsmd33--pipe)~~ | `docs/reference/operators.md:33` | ~~doc~~ **corrigé** | ~~une ligne~~ |
 
 ---
 
@@ -171,6 +171,8 @@ Tant que ce n'est pas tranché, le bloc reste `noplayground`.
 
 ## D · `docs/philosophy/beautiful_syntax.md:174` — constructeur d'union
 
+> ✅ **Corrigé le 2026-09-09.** Bloc remplacé, `noplayground` retiré, passe la CI.
+
 **Bloc actuel :**
 
 ```
@@ -278,6 +280,8 @@ Le second bloc est à vérifier avant d'être écrit tel quel — il faut confir
 ---
 
 ## F · `docs/reference/operators.md:33` — pipe
+
+> ✅ **Corrigé le 2026-09-09.** Bloc remplacé, `noplayground` retiré, passe la CI.
 
 **Bloc actuel :**
 

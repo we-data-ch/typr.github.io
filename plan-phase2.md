@@ -5,8 +5,8 @@
 > garantie de fraîcheur des exemples, consommation par les LLM, canaux de discussion et de
 > proposition.
 >
-> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1, 2 et 3 sont
-> implémentées ; les suivantes sont à faire par une session ultérieure. Les priorités
+> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1, 2, 3 et 4
+> sont implémentées ; les suivantes sont à faire par une session ultérieure. Les priorités
 > reflètent un arbitrage explicite valeur/coût, pas un ordre de préférence esthétique.
 
 ---
@@ -55,7 +55,7 @@ trouvé.)
 | 1 | Barre de recherche plein-texte locale | Haute | ✅ Fait (2026-09-09) |
 | 2 | Vérifier les blocs ` ```typr ` contre le vrai compilateur en CI | **Haute** | ✅ Fait (2026-09-09) |
 | 3 | Rendre la doc « AI-ready » : `llms.txt`, copie Markdown, MCP | **Haute** | ✅ Fait (2026-09-09) — sauf MCP, voir §2.3 |
-| 4 | Activer GitHub Discussions et le lier depuis le site | Haute | 🚧 À faire |
+| 4 | Activer GitHub Discussions et le lier depuis le site | Haute | ✅ Fait (2026-09-09) |
 | 5 | Processus RFC dans `we-data-ch/typr` + section « Design proposals » | Moyenne | 🚧 À faire |
 | 6 | Générer les pages de référence depuis `typr syntax --json` | Moyenne | 🚧 À faire |
 | 7 | Analytics respectueuses de la vie privée | Moyenne | 🚧 À faire |
@@ -265,19 +265,51 @@ contient toutes, et `curl` sur `/docs/intro.md` renvoie bien `text/markdown`.
 
 ---
 
-### 2.4 — Action 4 : GitHub Discussions
+### 2.4 — ✅ Action 4 : GitHub Discussions *(fait le 2026-09-09)*
 
 Le canal d'aide canonique, gratuit, indexé par Google, et voisin des issues.
 
-- Activer Discussions sur `we-data-ch/typr` avec les catégories **Q&A**, **Ideas**,
-  **Show and tell**.
-- Lier depuis la navbar **et** le footer de `docusaurus.config.ts` (section « Community », qui
-  ne contient aujourd'hui que R-bloggers et GitHub).
-- Ajouter un renvoi depuis `docs/faq.md` : « votre question n'est pas là ? demandez ici ».
+**Constat de départ : Discussions était déjà activé** sur `we-data-ch/typr`, avec le jeu de
+catégories par défaut — donc **Q&A** (répondable, la seule qui permette de marquer une réponse),
+**Ideas** et **Show and tell**, les trois demandées, plus Announcements, General et Polls.
+Un seul fil existant (le message de bienvenue automatique). Rien à créer : les catégories par
+défaut ont été gardées telles quelles plutôt que rognées — une catégorie inutilisée ne coûte
+rien, alors qu'en supprimer une déplace les fils qu'elle contiendrait plus tard.
+
+Ce qui manquait était donc **entièrement côté site** : le canal existait et personne ne pouvait
+le trouver depuis la documentation (une seule mention, en question 35 de la FAQ).
+
+**Ce qui a été fait.**
+
+- **Navbar** (`docusaurus.config.ts`) — un item `Discussions` à droite, avant `GitHub`. Devant
+  plutôt que derrière : le lecteur qui bloque cherche de l'aide, pas le dépôt.
+- **Footer, section « Community »** — elle ne contenait que R-bloggers et GitHub. Elle ouvre
+  maintenant sur **une porte par intention** plutôt que sur un lien « Discussions » unique :
+  *Ask a question* → `categories/q-a`, *Share an idea* → `categories/ideas`, *Show and tell* →
+  `categories/show-and-tell`. Les catégories existent pour trier ; les exposer à l'entrée évite
+  la question posée au mauvais endroit, qui est le premier coût d'un forum. (Au passage,
+  l'indentation du bloc, qui était cassée, a été remise d'aplomb.)
+- **`docs/faq.md`** — deux renvois. Un en tête de page, juste après le chapeau (« *Not answered
+  here?* »), parce que c'est là qu'on se trouve quand on constate que sa question n'y est pas ;
+  et la **question 35 réécrite** : elle listait trois liens à plat, elle explique maintenant à
+  quoi sert chaque catégorie et **où passe la frontière avec les issues** (un repro → une issue ;
+  dans le doute → une discussion, convertible ensuite). Sans cette frontière, le tri retombe sur
+  le mainteneur.
+- **`docs/intro.md`** — une ligne en fin de « Where to go next ». C'est la page d'arrivée du
+  débutant, et la fin du tutoriel est exactement le moment où l'on est bloqué.
+
+Vérifié : `npm run typecheck` et `npm run build` passent (`onBrokenLinks: 'throw'`, donc le build
+est aussi le contrôle des liens), et les trois URL de catégorie répondent 200.
 
 **Un Discord ou un Zulip en plus seulement si tu es sûr de l'animer** — un salon mort fait plus
 de mal que pas de salon du tout. Côté présence communautaire hors site : Posit Community et
 Bluesky/Mastodon `#rstats` sont les endroits où se trouve le public R.
+
+**Ce qui reste, et qui ne relève pas du code.** Un forum vide ne s'amorce pas tout seul : les
+premières questions viennent d'être posées par le mainteneur (les trois ou quatre questions qu'on
+vous pose déjà par e-mail, reposées en public et répondues), et une réponse rapide aux premiers
+fils décide de la suite. C'est aussi le vivier de l'action 5 : une idée qui revient en **Ideas**
+est le signal qu'il faut en faire une RFC.
 
 ---
 
