@@ -70,6 +70,7 @@ Every page is listed below. Fetch a page's `.md` URL to get its full Markdown so
 - [Philosophy](https://we-data-ch.github.io/typr.github.io/docs/philosophy/intro.md): Freedom versus safety, and where TypR's gradual typing sits between R and a strict language.
 - [Why this type system](https://we-data-ch.github.io/typr.github.io/docs/philosophy/type-system-design.md): Why the type system is shaped the way it is: keeping R's flexibility while taming its fragility.
 - [Vectorization by design](https://we-data-ch.github.io/typr.github.io/docs/philosophy/vectorization_by_design.md): Why R's vectorization stops at custom types, and how TypR's lifting-based vectorization goes further.
+- [Design Proposals](https://we-data-ch.github.io/typr.github.io/docs/philosophy/design-proposals.md): How language changes are decided in TypR: the RFC process, where proposals live, and what makes one convincing.
 - [Generics & Kind Sigils](https://we-data-ch.github.io/typr.github.io/docs/concepts/generics-kind.md): Generic type parameters and the kind sigils that power TypR's type system.
 - [Type Constructors & Aliases](https://we-data-ch.github.io/typr.github.io/docs/concepts/type-constructors.md): Defining new types with type, opaque, and typeconstructor.
 - [Known Pitfalls](https://we-data-ch.github.io/typr.github.io/docs/concepts/known-pitfalls.md): Common pitfalls and ambiguities in the TypR parser.

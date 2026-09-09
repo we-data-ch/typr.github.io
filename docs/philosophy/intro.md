@@ -61,3 +61,10 @@ A great example of its power lies in the capability of a simple function to work
 Another example that shows how functions work for us is a concept called [uniform function call](https://en.wikipedia.org/wiki/Uniform_function_call_syntax). You will understand its power through examples.
 
 By using the power of uniform function call, you have different ways to call your functions (classic, piping, method call). This functionality also supports single dispatch and transpiles to native S3 code.
+
+## Disagreeing with any of this
+
+None of these choices is settled by fiat, and the ones that are still open are
+open in public. Language changes go through a written proposal reviewed next to
+the compiler — see [Design proposals](design-proposals.md) for how that works
+and where the current ones are.

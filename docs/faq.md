@@ -465,4 +465,6 @@ Do not use it unless you really need it, and you are really sure you need it.
 
 Use [GitHub issues](https://github.com/we-data-ch/typr/issues) instead when you have a reproducible bug: a snippet, what you expected, what the compiler did. If you are unsure which it is, open a discussion — it can be turned into an issue afterwards.
 
+And when what you want is a **change to the language itself** — new syntax, a different typing rule, a change to the generated R — that goes through a written proposal, reviewed in the open: see [Design proposals](philosophy/design-proposals.md). The rule of thumb: if the answer to "what does TypR do here?" changes, it is a proposal; if the compiler is failing to do what the documentation already says, it is a bug report.
+
 Elsewhere: [Reddit r/rstats](https://www.reddit.com/r/rstats/).
