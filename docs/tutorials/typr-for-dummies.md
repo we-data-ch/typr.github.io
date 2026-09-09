@@ -108,7 +108,7 @@ No problem. We will look at four advantages of explicit types through examples. 
 
 ### Tools to keep you safe
 
-Think about your current workflow. Maybe use [**{renv}**](https://rstudio.github.io/renv/articles/renv.html) or [**uvr**](https://nbafrank.github.io/uvr/) to lock package versions so that updating ggplot2 for `Project A` doesn't nuke `Project B` (if you don't you might consider it for reproductibility). You run [**{lintr}**](https://lintr.r-lib.org/) or [**jarl**](https://jarl.etiennebacher.com/) so a robot scans your code for dodgy patterns. Maybe you even use [**{{styler}}**](https://styler.r-lib.org/) or [**Air**](https://posit-dev.github.io/air/) now to format your code automatically so you stop fighting with your collaborators about indentation.
+Think about your current workflow. Maybe use [**renv**](https://rstudio.github.io/renv/articles/renv.html) or [**uvr**](https://nbafrank.github.io/uvr/) to lock package versions so that updating ggplot2 for `Project A` doesn't nuke `Project B` (if you don't you might consider it for reproductibility). You run [**lintr**](https://lintr.r-lib.org/) or [**jarl**](https://jarl.etiennebacher.com/) so a robot scans your code for dodgy patterns. Maybe you even use [**styler**](https://styler.r-lib.org/) or [**Air**](https://posit-dev.github.io/air/) now to format your code automatically so you stop fighting with your collaborators about indentation.
 
 If you don't know any of these projects, no worries, just take a look. They're amazing! The main idea is that all of these tools make your life easier by doing things for you so you don't need to pay attention to them (managing package dependencies, scanning or formatting code). That frees up a lot of mental space. 
 
