@@ -59,7 +59,7 @@ trouvé.)
 | 5 | Processus RFC dans `we-data-ch/typr` + section « Design proposals » | Moyenne | ✅ Fait (2026-09-09) |
 | 6 | Générer les pages de référence depuis `typr syntax --json` | Moyenne | ✅ Fait (2026-09-09) |
 | 7 | Analytics respectueuses de la vie privée | Moyenne | ✅ Fait (2026-09-09) — en sommeil, voir §2.7 |
-| 8 | Lien « signaler un problème sur cette page » | Basse | 🚧 À faire |
+| 8 | Lien « signaler un problème sur cette page » | Basse | ✅ Fait (2026-09-09) |
 | 9 | Versionnement de la doc | Basse | ⏸ Différé — décider le schéma d'URL maintenant |
 | 10 | Section « TypR by example » | Basse | 🚧 À faire |
 | 11 | Internationalisation française | Basse | ⏸ Optionnel |
@@ -583,16 +583,55 @@ instrumentée.
 
 ---
 
-### 2.8 — Action 8 : lien « signaler un problème sur cette page »
+### 2.8 — ✅ Action 8 : lien « signaler un problème sur cette page » *(fait le 2026-09-09)*
 
-À côté du « Edit this page » déjà présent (`editUrl` est correctement configuré vers
-`we-data-ch/typr.github.io`), ajouter un lien qui **pré-remplit une issue GitHub** avec l'URL
-et le titre de la page.
+**Le problème.** « Edit this page » ne sert que le lecteur qui sait déjà quoi écrire à la place.
+Celui qui constate qu'une phrase est fausse, qu'un exemple ne compile pas ou qu'il manque une
+explication n'a pas de correctif à proposer — il a un signalement, et aucun endroit où le
+déposer sans quitter sa page, trouver le dépôt (**qui n'est pas celui du compilateur**), ouvrir
+l'onglet des issues et recopier l'URL. Ce coût-là suffit à ce que le signalement n'arrive jamais.
 
-Environ cinq lignes de swizzle, et ça transforme un lecteur agacé en rapport de bug exploitable.
-Rapport valeur/effort excellent.
+**Ce qui a été fait.**
 
----
+- **`src/theme/EditThisPage/index.tsx`** — une **enveloppe**, pas une éjection : aucune ligne du
+  thème n'est recopiée, donc rien à resynchroniser à la prochaine montée de version. Le point de
+  greffe a été choisi pour ça : `@theme/EditThisPage` est le seul composant par lequel passent à
+  la fois les pages de doc, les billets de blog et les pages MDX (tous les trois via
+  `@theme/EditMetaRow`). Un seul crochet couvre les trois.
+- **`src/components/ReportIssueLink`** — le lien. Il pré-remplit une issue avec **l'URL de la
+  page** et **le chemin de son fichier source**, c'est-à-dire précisément les deux choses que le
+  rapporteur ne recopie pas et ne connaît pas. Le corps propose deux rubriques (*what is wrong* /
+  *what did you expect*) et demande, pour un exemple qui ne compile pas, la sortie de
+  `typr check` et la version — le minimum sans lequel une issue de doc n'est pas actionnable.
+  Étiquette `documentation`, qui existe déjà sur le dépôt.
+- **Rien n'est configuré en double.** Le dépôt destinataire et le chemin du fichier sont
+  **déduits de l'`editUrl`** que le thème passe déjà au lien voisin. Si `editUrl` change de dépôt
+  ou de branche dans `docusaurus.config.ts`, le signalement suit sans qu'on y pense ; et une
+  `editUrl` absente ou non-GitHub ne rend pas de lien du tout, plutôt qu'un lien qui tombe à côté.
+
+**Le seul point non trivial : quand lire le titre de la page.** Le titre n'existe pas au rendu
+serveur, et sur une navigation interne rien ne garantit que react-helmet ait déjà posé le nouveau
+`document.title` quand les effets du composant s'exécutent — on prendrait alors le titre de la
+page *précédente*, c'est-à-dire une issue qui désigne la mauvaise page. Le titre est donc lu **au
+clic**, où la question ne se pose plus. Le `href` rendu reste valide en permanence : il retombe
+sur le chemin du fichier source, qui identifie la page tout aussi sûrement. Un clic milieu ou un
+« copier le lien » ouvre donc la bonne issue, avec un titre simplement moins joli.
+
+**`docs/faq.md` question 35** gagne la cinquième porte : la question 35 est le point de tri
+complet du projet, et il lui manquait le cas « le problème est dans la documentation », qui est
+le seul à ne pas viser le dépôt du compilateur.
+
+**Vérifié — pas seulement à la compilation.** `npm run typecheck`, `npm run build`,
+`npm run check:examples` (181 blocs + 3 contre-exemples) et `npm run check:syntax` passent. Puis,
+avec le site servi localement et Chrome headless :
+
+| Cas | Résultat observé |
+|---|---|
+| Page de doc, à l'atterrissage | `Docs: Getting started`, corps pointant sur `/docs/intro` |
+| Après une navigation SPA | titre **et** URL suivent la nouvelle page, pas la précédente |
+| Billet de blog | `Blog: R and TypR`, source `blog/2026-01-14-r-and-typr.md` |
+| Rendu HTML statique (avant hydratation) | `href` valide, titre replié sur le chemin du fichier |
+| Largeur mobile | les deux liens s'empilent au lieu de rogner la zone cliquable |
 
 ### 2.9 — Action 9 : versionnement de la doc *(différé, mais à décider maintenant)*
 

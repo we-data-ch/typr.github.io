@@ -1,0 +1,30 @@
+/* Le lien partage sa colonne avec « Edit this page ». Il s'aligne dessus —
+   même taille, même icône de 20 px collée au texte — mais reste second : c'est
+   le lien de repli pour qui ne peut pas corriger lui-même, pas l'action
+   principale. */
+
+.reportIssue {
+  margin-left: 1rem;
+  white-space: nowrap;
+}
+
+.icon {
+  margin-right: 0.3em;
+  vertical-align: sub;
+}
+
+/* Sur mobile la ligne est étroite : les deux liens passent l'un sous l'autre
+   plutôt que de rogner la zone cliquable. */
+@media (max-width: 576px) {
+  .reportIssue {
+    display: block;
+    margin-top: 0.5rem;
+    margin-left: 0;
+  }
+}
+
+@media print {
+  .reportIssue {
+    display: none;
+  }
+}
