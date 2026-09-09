@@ -36,7 +36,7 @@ average_height <- mean(heights)
 
 **TypR**
 
-```rust
+```typr
 let average_height: num <- mean(heights);
 ```
 
@@ -52,7 +52,7 @@ age <- data.frame(a=4, b="cat")
 
 *TypR won't*
 
-```rust
+```typr
 let age: int <- 12;
 
 age <- data__frame(a=4, b="cat");
@@ -62,7 +62,7 @@ age <- data__frame(a=4, b="cat");
 
 The logic is simple: we want predictability so no code can change the meaning of the variable. We avoid unexpected changes. In our example, age is always a number, which makes sense. You don't want your colleagues changing it to a character because mathematical operations won't work on it. You will get an error later in the code rather than where the problem started. This is a long explanation, but the examples coming up will make it much clearer. In case you are confused, only the type is fixed. You can still change the value later in TypR:
 
-```rust
+```typr
 let age: Integer <- 26;
 
 age <- 31;
