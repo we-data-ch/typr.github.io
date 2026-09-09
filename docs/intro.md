@@ -25,7 +25,7 @@ You need:
 - **The `typr` compiler.** Head to the [installation guide](reference/installation.md)
   and come back once `typr --version` prints a version number.
 
-Everything else — IDE, editor, RStudio — is optional.
+Everything else (IDE, editor, RStudio) is optional.
 
 ## 1. Say hello
 
@@ -45,7 +45,7 @@ typr build hello.ty
 ```
 
 TypR generates plain R code. If you look at the files produced, you will see
-an ordinary `hello.R` file — nothing exotic. That generated code is what runs, anywhere
+an ordinary `hello.R` file, nothing exotic. That generated code is what runs, anywhere
 R runs.
 
 ## 2. Store a value
@@ -77,13 +77,11 @@ print(add(5, 3));
 ```
 
 You did not have to annotate `add` itself: the compiler infers it. You only
-annotate what matters for clarity or safety. For example, swapping `b` for a
-string would now fail at compile time instead of at runtime.
+annotate what matters for clarity or safety. For example, swapping `b` for a charcter type would now fail at compile time instead of at runtime.
 
 ## 4. Call the same function three ways
 
-TypR functions are first-class values, and their first argument can become a
-"receiver". Thanks to uniform function call syntax, the three calls below are
+TypR functions are first-class values, and their first argument can become a "receiver". Thanks to uniform function call syntax, the three calls below are
 strictly equivalent:
 
 ```typr
@@ -115,7 +113,7 @@ type Person <- list {
 ```
 
 Because TypR uses structural types, a function that only needs the `age` field
-accepts *any* value that has one — including lists with extra
+accepts *any* value that has one, including lists with extra
 fields. See the [types reference](reference/types.md) for structural subtyping.
 
 ## 6. Write a function on your type
@@ -171,10 +169,10 @@ See [Working with R and TypR](reference/r-typr.md) for the full walkthrough.
 
 ## Where to go next
 
-- **[FAQ](faq.md)** — common questions, comparisons, and practical answers
-- **[Reference](/docs/reference/intro)** — types, functions, control flow
-- **[Philosophy](philosophy/intro.md)** — why TypR is designed this way
-- **[Blog](/blog)** — R and TypR, vectorization, testing, OOP
+- **[FAQ](faq.md)**: common questions, comparisons, and practical answers
+- **[Reference](/docs/reference/intro)**: types, functions, control flow
+- **[Philosophy](philosophy/intro.md)**: why TypR is designed this way
+- **[Blog](/blog)**: R and TypR, vectorization, testing, OOP
 
 Stuck on something, or want to share what you built? Head to
 [GitHub Discussions](https://github.com/we-data-ch/typr/discussions) — questions go
