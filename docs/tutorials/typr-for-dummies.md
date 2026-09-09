@@ -154,17 +154,16 @@ label
 #> [1] "3" "2" "3"
 ```
 
-Notice that? The number `2` became the character `"2"`. Your column *looks* okay. Then, three hundred lines later, in a file someone else wrote:
+Notice that? The number `2` became the character `"2"`. Your vector *looks* okay. Then, three hundred lines later, in a file someone else wrote:
 
 ```r
-total_labels <- sum(label)          # Fail, don't work on character
 label * 10
-#> Error in df$label * 10: non-numeric argument to binary operator
+#> Error in label * 10: non-numeric argument to binary operator
 ```
 
 The error message points at this innocent-looking multiplication. But the actual sin was committed way back at the `ifelse()` call, and R never told you. The error looks obvious, but that is only because you are looking at it with fresh eyes in a very short example where you expect an error. In a real setting, it is one of two thousand lines of code your tired eyes are screening through for four hours.
 
-Now there is a better way. Compare that to `dplyr::if_else()`:
+Now there is a better way. Compare that to `dplyr::if_else()` that gives an error:
 
 ```r
 library(dplyr)
@@ -188,7 +187,7 @@ Yes, it's annoying that it refuses to run. **That refusal is the feature.** The 
 
 `sapply()` is a meta function that allows you to run a function across a list of elements. It is like `lapply()`, but instead of returning a list, it returns a vector (useful)... or a matrix if you are not careful. It's cute until it isn't. It "simplifies" its output, which sounds helpful, except the shape of that simplification depends entirely on your data. 
 
-In the following example, we want to generate random numbers that follow a normal distribution (it could be another distribution). In my code, the `n` which decides the number of observations is normally set to `1`, which returns a vector. But the moment I make a mistake and put a value of `2` for `n` (a common mistake), then I get a matrix at the end. The code won't tell me anything, and my `sum` is now too big (too many numbers summed).
+In the following example, we want to generate random numbers that follow a normal distribution with `rnorm()` (it could be another distribution). In the code, the `n` which decides the number of observations is normally set to `1`, which returns one value per interation that combines into a vector. 
 
 ```r
 set.seed(7) # To get the same result each time, since it is random
@@ -199,6 +198,12 @@ result <- sapply(1:5, function(i) rnorm(n = 1))
 
 sum(abs(result))
 #> [1] 5.561278
+```
+
+But the moment I make a mistake and put a value of `2` for `n` (a common mistake), then I get a matrix at the end (combinaison of vectors of lenght 2). The code won't tell me anything, and my `sum` is now too big (too many numbers summed).
+
+```r
+set.seed(7) # To get the same result each time, since it is random
 
 result <- sapply(1:5, function(i) rnorm(n = 2))
 #>            [,1]       [,2]      [,3]
@@ -214,7 +219,9 @@ sum(abs(result))
 
 Same function call, totally different return type. Code downstream that expected a vector now misbehaves silently.
 
-purrr fixes this by making the contract explicit and failing when the shape isn't respected. The `map()` function works like `lapply()`, but you can also specify the type of the output using a variant of the function (e.g., `map_int`, `map_chr`, etc.). It will consider it to be a vector and fail when it is not the case. So we know something is wrong even before running the `sum()` function (that could happen several lines later):
+The purrr package fixes this by making the contract explicit and failing when the shape isn't respected. The `map()` function works like `lapply()`, but you can also specify the type of the output using a variant of the function (e.g., `map_int()`, `map_chr()`, etc.). Here we use `map_dbl()` since `rnorm()` generates floating numbers. It will consider it to be a vector and fail when it is not the case. So we know something is wrong even before running the `sum()` function (that could happen several lines later).
+
+Here it works with `n=1`, like `sapply`:
 
 ```r
 library(purrr)
@@ -224,6 +231,14 @@ set.seed(7) # To get the same result each time, since it is random
 map_dbl(1:5, function(i) rnorm(n = 1))
 #> [1]  2.2872472 -1.1967717 -0.6942925
 #> [4] -0.4122930 -0.9706733
+```
+
+When `n=2` it "fails" since it doesn't return the right shape (a vector), but a matrix. Good, it won't surprise us later:
+
+```r
+library(purrr)
+
+set.seed(7) # To get the same result each time, since it is random
 
 map_dbl(1:5, function(i) rnorm(n = 2)) 
 #> Error in `map_dbl()`:
@@ -232,17 +247,23 @@ map_dbl(1:5, function(i) rnorm(n = 2))
 #>   ! Result must be length 1, not 2.
 ```
 
-That's one type of error, but we could have created a function that returns the wrong type. If you pick the wrong type, `map_*` tells you, contrary to `sapply()`. For instance, imagine we change the result type to character:
+That's one type of error, but we could have created a function that returns the wrong type. If you pick the wrong type, `map_dbl()` tells you, contrary to `sapply()`. For instance, imagine we change the result type to character by mistake inside the function using `as.character()`. `sapply()` happily returns a charcter vector:
 
 ```r
-library(purrr)
-
 set.seed(7) # To get the same result each time, since it is random
 
 sapply(1:5, function(i) as.character(rnorm(n = 1)))
 #> [1] "2.28724716134052"   "-1.19677168222235" 
 #> [3] "-0.694292510435459" "-0.412292951136803"
 #> [5] "-0.970673341119483"
+```
+
+But `map_dbl()` tell us the wrong type was returned. Good, we can then correct the function:
+
+```r
+library(purrr)
+
+set.seed(7) # To get the same result each time, since it is random
 
 map_dbl(1:5, function(i) as.character(rnorm(n = 1)))
 # Error in `map_dbl()`:
@@ -251,7 +272,7 @@ map_dbl(1:5, function(i) as.character(rnorm(n = 1)))
 #   ! Can't coerce from a string to a double.
 ```
 
-It looks like an obvious mistake, but it can happen in more complex and less obvious ways. To put it bluntly, whenever a function becomes complex you run into this risk. That's why types win here. You don't need to worry about it; the system protects you. The typed variants don't guess. They promise, and they enforce.
+It looks like an obvious mistake, but it can happen in more complex and less obvious ways. To put it bluntly, whenever a function becomes complex you run into this risk. That's why explicit types win here. You don't need to worry about it; the system protects you. The typed variants don't guess. They promise, and they enforce.
 
 ### forcats: don't grep into the void
 
