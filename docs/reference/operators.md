@@ -1,0 +1,85 @@
+# Operators & Precedence
+
+> Every operator in TypR and its precedence rules.
+
+This page covers all operators in TypR and their precedence rules.
+
+<!-- truncate -->
+
+## Precedence
+
+Precedence from strongest (evaluated first) to weakest. Note that member access / pipe binds **more tightly** than arithmetic, unlike most languages.
+
+| Rank | Operators | Role |
+|------|-----------|------|
+| 4 (strong) | `.` `\|>` `$` `::` `as!` `in` | member access / UFCS, pipe, validating cast |
+| 3 | `*` `/` `%` `@` | multiplicative, matrix product |
+| 2 | `+` `-` | additive |
+| 1 (weak) | `== != < > <= >=`, `and/&&/&`, `or/\|\|/\|`, `%op%` | comparison, logical, custom operators |
+
+---
+
+## UFCS — `.` and `|>`
+
+TypR supports the **Uniform Function Call Syntax**: `x.f(y)` is equivalent to `f(x, y)`.
+
+```typr noplayground
+x.f(y)            # ≡ f(x, y) — method-style call
+x |> f() |> g()   # pipe — same desugaring
+t.1                # positional tuple access (1-based index)
+mod$member         # record field / module access — "::" is a historical alias for "$"
+```
+
+### Comparison with R
+
+```typr
+# --- setup ---
+let data <- [1, 2, 3, -4];
+
+# TypR — filter takes a real function, not a captured expression
+let r <- data |> filter(fn(x: int): bool { x > 0 }) |> mean();
+```
+```r
+# R — dplyr captures the expression (NSE)
+data |> filter(x > 0) |> mean()
+# or with magrittr: data %>% filter(...) %>% mean()
+```
+
+---
+
+## Validating cast
+
+```typr
+# --- setup ---
+type Point <- list { x: int, y: int };
+let p <- Point:{ x = 1, y = 2 };
+let xs <- [1, 2, 3];
+# ---------------
+
+p as! Point;                # calls validate_Point(p) at runtime
+xs as! [Any, int];          # cast to an inline structural type (not an alias)
+```
+
+---
+
+## Ranges
+
+```typr
+1:10;       # ≡ seq(1, 10, 1)
+1:2:10;     # ≡ seq(1, 10, 2) — step in the middle
+```
+
+---
+
+## Removed operators
+
+The following doubled operators were removed from the tokenizer: `++ -- ** // %% @@ .. $$ |>>`, as well as `@`/`@@`/`=` in infix position. None had typing/transpilation branches or a stdlib `` `op` `` signature to support them. A stray `//` (common C-style comment mistake) is now recognized by a dedicated parser and treated as a valid comment (see [Known Pitfalls](../concepts/known-pitfalls)).
+
+---
+
+## Arithmetic on types
+
+```typr noplayground
+type Combined <- A + B;      # Type::Operator on indices/dimensions
+T if T1 in T2                 # conditional type (experimental refinement)
+```

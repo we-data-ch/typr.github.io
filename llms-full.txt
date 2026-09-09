@@ -1,0 +1,5647 @@
+# TypR
+
+> A statically typed superset of R that compiles to plain, readable R.
+
+TypR is a statically typed language that compiles to plain R. Programs are
+checked before they run — types, records, sum types, interfaces, modules — and
+the compiler emits ordinary, readable `.R` files that depend on no runtime
+library.
+
+If you are an assistant writing TypR: TypR is **not** R, and it is not Julia,
+even though it borrows from both. Guessing produces code that does not compile.
+Treat the documentation as the authority, and when it does not answer a
+question, say so rather than inventing syntax.
+
+Code fences follow the conventions of the documentation site:
+
+- a `typr` fence is a complete program, checked in CI against the real compiler
+  (`typr check`) — it compiles;
+- `typr compile_fail` marks a deliberate counter-example; CI checks that the
+  compiler *rejects* it. Never present it as valid TypR;
+- `typr noplayground` marks a fragment, a syntax table or a multi-file project:
+  not a complete program, and not compiler-checked;
+- an `r` fence is plain R, shown for comparison or as transpiler output.
+
+Examples are self-contained: when a snippet needs definitions introduced earlier
+on the page, they are repeated in a leading `# --- setup, ... ---` preamble.
+
+Pages are ordered by Diátaxis genre — getting started and FAQ, then tutorials
+(learning by doing), how-to guides (task recipes), reference (the authoritative
+description of the language), then philosophy and deep dives (why the language
+is the way it is).
+
+The compiler is the last word: <https://github.com/we-data-ch/typr>. The syntax
+map at <https://github.com/we-data-ch/typr.github.io/blob/main/syntaxe.md> wins
+over any page below if the two ever disagree.
+
+The full text of every documentation page follows, in reading order.
+
+## Getting started
+
+This is a tutorial. You will learn TypR by writing and running small programs,
+step by step. It takes about ten minutes to complete this tutorial.
+
+> This page is not a reference — it does not list every construct or all types.
+> When you want the details, follow the links to the [reference](/docs/reference/intro)
+> at the end of each section.
+
+TypR is a typed version of R that transpiles into plain `.R` files. It is aimed
+at developers who write R code that must survive in production: packages,
+libraries, and applications. You write code that looks almost identical to R,
+a compiler checks your types, and the output is ordinary R.
+
+### Before you begin
+
+You need:
+
+- **A basic knowledge of R** — syntax, functions, the `<-` assignment.
+- **A recent version of R** installed.
+- **The `typr` compiler.** Head to the [installation guide](reference/installation.md)
+  and come back once `typr --version` prints a version number.
+
+Everything else — IDE, editor, RStudio — is optional.
+
+### 1. Say hello
+
+Create a file called `hello.ty` in an empty folder:
+
+```typr
+# hello.ty
+print("Hello, TypR!");
+```
+
+Note that you need to put a ";" at the end of each expression. It looks like a regression compared to R but it is a way to help the transpiler let us build more elegant code (you can see [beautiful syntax](/docs/philosophy/beautiful_syntax) section).
+
+Transpile it from the terminal:
+
+```bash
+typr build hello.ty
+```
+
+TypR generates plain R code. If you look at the files produced, you will see
+an ordinary `hello.R` file — nothing exotic. That generated code is what runs, anywhere
+R runs.
+
+### 2. Store a value
+
+In TypR, you declare a name with `let` and assign it with `<-`, like in R. A
+type annotation, written `name: type`, tells the compiler what the value should be:
+
+```typr
+let message: char <- "Hello, TypR!";
+print(message);
+```
+
+The compiler now checks that `message` is always used as a character string.
+
+The four primitive types are `int`, `num`, `bool`, and `char`. See the
+[types reference](reference/types.md) for the full type table.
+
+### 3. Write a typed function
+
+A typed function declares the type of each parameter and of its return value.
+The compiler uses these declarations to catch mistakes before the code runs:
+
+```typr
+let add <- fn(a: int, b: int): int {
+  a + b
+};
+
+print(add(5, 3));
+```
+
+You did not have to annotate `add` itself: the compiler infers it. You only
+annotate what matters for clarity or safety. For example, swapping `b` for a
+string would now fail at compile time instead of at runtime.
+
+### 4. Call the same function three ways
+
+TypR functions are first-class values, and their first argument can become a
+"receiver". Thanks to uniform function call syntax, the three calls below are
+strictly equivalent:
+
+```typr
+let add <- fn(a: int, b: int): int {
+  a + b
+};
+
+let value1 <- add(5, 3);        # classic call
+let value2 <- (5) |> add(3);    # pipe
+let value3 <- (5).add(3);       # method-call style
+
+print(value1);
+print(value2);
+print(value3);
+```
+
+Pick whichever reads best. See the [functions reference](reference/functions.md)
+for more on function types and higher-order functions.
+
+### 5. Model your data
+
+To work with structured data, define a type:
+
+```typr
+type Person <- list {
+  name: char,
+  age: int
+};
+```
+
+Because TypR uses structural types, a function that only needs the `age` field
+accepts *any* value that has one — including lists with extra
+fields. See the [types reference](reference/types.md) for structural subtyping.
+
+### 6. Write a function on your type
+
+```typr
+# --- setup, from the previous step ---
+type Person <- list { name: char, age: int };
+# -------------------------------------
+
+let is_adult <- fn(p: Person): bool {
+  p$age >= 18
+};
+
+let alice <- Person:{
+    name: "Alice", 
+    age: 25
+};
+
+alice.is_adult();   # true
+```
+
+Note the method-call style: `alice.is_adult()` is `is_adult(alice)`. Because
+`alice` is a `Person`, and `is_adult` expects a `Person`, the compiler knows the
+types all the way through.
+
+### 7. Add a test right next to the code
+
+With an inline `Test` block, logic and tests stay side by side. During
+transpilation the block is extracted into a standard testthat file:
+
+```typr noplayground
+Test {
+  test_that("is_adult works", {
+    let alice <- new_person("Alice", 25);
+    let bob <- new_person("Bob", 15);
+    expect_true(alice.is_adult());
+    expect_equal(bob.is_adult(), false);
+  })
+}
+```
+
+To R, devtools, testthat, and CRAN, the result is just a regular R package.
+
+### 8. From script to package
+
+A TypR package is a normal R package with one extra `TypR/` folder. Put your
+`.ty` files there, run `typr build`, and TypR generates the R code into `R/`.
+
+You can migrate any existing R package gradually: file by file, function by
+function. TypR never forces an all-or-nothing choice.
+
+See [Working with R and TypR](reference/r-typr.md) for the full walkthrough.
+
+### Where to go next
+
+- **[FAQ](faq.md)** — common questions, comparisons, and practical answers
+- **[Reference](/docs/reference/intro)** — types, functions, control flow
+- **[Philosophy](philosophy/intro.md)** — why TypR is designed this way
+- **[Blog](/blog)** — R and TypR, vectorization, testing, OOP
+
+---
+
+## FAQ
+
+## TypR — FAQ for R Users
+
+Answers to common questions about TypR. Cross-links point to the [documentation](intro.md) and [blog](/blog) where you can explore topics in depth.
+
+---
+
+### First questions
+
+#### 1. What is TypR?
+
+TypR is a **statically typed version of R**, designed for package and application developers. You write code that looks almost identical to R, a compiler checks your types, and everything is translated into ordinary `.R` files.
+
+It grew out of a master's thesis on type systems for multidimensional arrays and is developed openly by [WeData.ch](https://we-data.ch) (Geneva, Switzerland), principally Fabrice Hategekimana. The compiler is written in Rust.
+
+#### 2. Do I have to give up R to use it?
+
+No. TypR is built to live *next to* R, not replace it. There is no new platform, no virtual machine, no special version of R, and no system-level dependency—just one small `typr` binary. After compilation, TypR disappears: the output is plain R code that runs wherever R runs.
+
+R stays the best tool for research, exploration, and interactive statistics. TypR is for packages and applications that need to survive production. See [R and TypR](/blog/r-and-typr) for a walkthrough.
+
+#### 3. Will TypR replace R?
+
+No. TypR was never intended to replace R. Use it when you need stronger guarantees against errors.
+
+> "What makes R great for data science makes it bad for package building. TypR decides to inverse that."
+> — Fabrice Hategekimana
+
+#### 4. Who is TypR for? Who should skip it?
+
+**TypR fits well if you are:**
+
+- A package developer
+- Building Shiny applications for production
+- Maintaining R code that other people depend on
+
+**TypR may not be worth it if you mainly:**
+
+- Write exploratory scripts or one-off analyses
+- Work in interactive sessions where flexibility matters more than safety
+
+In those scenarios, strict typing is pure overhead. Using TypR for pure data analysis would be a burden at best.
+
+> **The 10-second litmus test:** if your script is thrown away after the analysis, stay in R. If your code will still be running in six months, keep reading.
+
+#### 5. How does TypR relate to R?
+
+Think of **TypeScript for JavaScript**. You write in a more structured, safer language and get standard R at the end.
+
+One important nuance: TypR is **not** a strict superset of R. It is a dialect of R with design ideas borrowed from Rust, Scala, Nim, and Roc.
+
+#### 6. Does TypR add system dependencies?
+
+No. The transpiler ships as a single binary. The compiled result has **no dependency on Rust whatsoever**—Rust is only the language the transpiler is written in.
+
+You can work from the command line (`typr build`), in a compatible IDE, or in RStudio via the [`typr_runner`](https://www.youtube.com/watch?v=GMo20g__nOc) package. An LSP and a formatter are in development.
+
+#### 7. Is TypR just R with Rust syntax?
+
+No. TypR is **gradually typed**: plain R code is valid TypR code, so you can start with normal R and add types incrementally. If you know R, you already know the base syntax of TypR.
+
+On top of that, TypR takes inspiration from [Scala](https://www.scala-lang.org/), [Nim](https://nim-lang.org/), and [Roc](https://www.roc-lang.org/), not just Rust.
+
+---
+
+### Getting started
+
+#### 8. How do I install it?
+
+1. Install a recent version of R.
+2. Get the `typr` compiler:
+   - **Binaries:** Windows, macOS, or Linux from the [Releases page](https://github.com/we-data-ch/typr/releases/)
+   - **Docker:** `docker pull fabricehategekimana/typr:latest`
+   - **Cargo:** if you already have Rust installed, `cargo install typr`
+3. Verify with `typr --version`.
+4. Install an IDE if you do not have one:
+   - [RStudio](https://docs.posit.co/ide/user/#rstudio-ide-oss-downloads)
+   - [Positron](https://positron.posit.co/download)
+   - [VS Code](https://code.visualstudio.com/download)
+   - [Neovim](https://neovim.io/doc/install/)
+5. Add the TypR helper:
+   - **RStudio / Positron:** install `typr.runner_*.tar.gz` from the [latest release](https://github.com/we-data-ch/typr/releases)
+   - **VS Code / Positron:** search "TypR" in the Marketplace
+
+For more details, see the [installation guide](reference/installation.md).
+
+#### 9. What does TypR code look like?
+
+Very close to R. The design principle is that typed code should still look like R, with minimal syntactic overhead:
+
+```typr
+# Hello World in TypR
+let message: char <- "Hello, TypR!";
+
+# A typed function
+let add <- fn(a: int, b: int): int {
+  a + b
+};
+
+add(5, 3);
+```
+
+Assignment still uses `<-`, and base R functions work as-is.
+
+What is new:
+
+- `let` for declarations
+- Semicolons (`;`) at the end of statements
+- Type annotations (`name: type`)
+- `fn` for typed functions
+
+Object management is also simpler. Roughly **70 lines** of typical generated S3 boilerplate (constructors, `missing()` juggling, field-by-field validators) collapse into about **15 lines** of TypR. See [Solving the OOP chaos for R](/blog/typr-oop) for a deeper look.
+
+#### 10. Why are there semicolons?
+
+Semicolons disambiguate statements for the current parser. They may become optional in the future; treat them as practical today, not permanent.
+
+#### 11. Do I have to annotate everything?
+
+No. TypR is **gradually typed**, like Python with type hints or TypeScript with `any`. Both of these are valid TypR:
+
+```typr
+# Strong on safety
+let my_addition <- fn(a: int, b: int): int { a + b };
+
+# Strong on freedom — plain R style
+let my_addition <- function(a, b) { a + b };
+```
+
+The compiler also performs **type inference**, filling in types from literals, expressions, and context. You only annotate where clarity or safety really matters. Pick your own point on the freedom-versus-safety spectrum, with R at one extreme and Rust at the other. See the [types reference](reference/types.md) for details.
+
+---
+
+### Types and data structures
+
+#### 12. What types are built in?
+
+- **Primitives:** `int`, `num`, `bool`, `char`
+- **Empty:** `Empty` for functions that return nothing
+- **Any:** `Any` as the escape hatch
+- **Composite types:**
+  - Vectors — `Vector[3, int]` or `c(...)`
+  - Arrays — `[3, int]`, written `[1, 2, 3]`
+  - Lists — `list { field: T, ... }`
+  - Function types — `(T1, T2) -> T3`
+
+See the [types reference](reference/types.md) for the full list and examples.
+
+#### 13. How do I define my own data types?
+
+With a `type` declaration:
+
+```typr
+type Person <- list {
+  name: char,
+  age: int
+};
+```
+
+From then on, the compiler checks that everything using a `Person` respects the structure. A mistyped field name or a `char` where an `int` belongs fails **at compile time**, before anything runs. Under the hood, this generates standard S3-based R (constructors, validators, classes) that any other R package can consume.
+
+Subtle but important: `type X <- ...` creates a *distinct* new type, while `type X = ...` creates a mere *alias*, interchangeable with the underlying type. See the [types reference](reference/types.md) for examples.
+
+#### 14. How do I handle values that can be one of several things?
+
+Use **tagged unions** and **pattern matching**. This is the safe way to handle optionals and error cases:
+
+```typr
+type Option<T> <- .Some(T) | .None;
+
+let val: Option<bool> <- .None;
+
+let res = match val {
+  .Some(a) => a,
+  _        => false
+};
+```
+
+Generics like `Option<T>` work with any inner type, and the compiler checks that your `match` is exhaustive. Plain union types (`int | bool`) exist too, with variants marked by a leading dot. See [control flow](reference/control-flow.md) for more on `match`.
+
+#### 15. What is structural typing?
+
+In most typed languages, a type must be *declared* to belong somewhere (nominal typing). TypR instead checks **shape** (structural typing, like TypeScript): a function expecting a list with an `age` field accepts any list that contains that field. No inheritance ceremony is required.
+
+For example, **row polymorphism** lets functions declare only the columns they touch:
+
+```typr
+let get_age <- fn(p: list { age: int }): int {
+  p$age
+};
+
+print(get_age(list(age = 30)));
+```
+
+That function accepts every value—including data frames—with an integer `age` field, regardless of what other fields are present. See the [types reference](reference/types.md) for more on structural subtyping.
+
+---
+
+### Working alongside R
+
+#### 16. Can I add TypR to an existing R package without rewriting everything?
+
+Yes. Just add a `TypR/` directory to a normal R package. It contains `.ty` files and a mandatory `main.ty` entry point. Run `typr build` and TypR generates plain R code into `R/` (typically helper files like `a_std.R`, `b_generic_functions.R`, `c_types.R`, plus `d_main.R` as the entry point). To `devtools`, `testthat`, `pkgdown`, and CRAN, it is just a regular package. `devtools::install()` and `library()` work unchanged.
+
+Migration is gradual: file by file, function by function. Best practice is one file per type, wired together via the `mod` keyword (`mod person;` finds, checks, and transpiles `person.ty`). Be careful: if a `.ty` file would transpile to an `.R` file of the same name, it will overwrite it. Agree on a naming convention to avoid collisions.
+
+See the full walkthrough in [R and TypR](/blog/r-and-typr).
+
+#### 17. Can I mix TypR and R in the same project?
+
+Yes, in all directions:
+
+- Write some functions in TypR, others in plain R
+- Call R code from TypR
+- Call TypR-generated code from R
+
+See [Working with R and TypR](reference/r-typr.md).
+
+#### 18. Base R functions are untyped—how do I get type checking on them?
+
+Out of the box, most base R functions arrive in TypR as accepting `Any` and returning `Empty`, so `toupper(7)` still only fails at runtime. The fix is a **signature annotation**, which types an existing function without touching it:
+
+```typr
+@toupper: (char) -> char;
+
+toupper("Hi");   # fully type-checked
+# toupper(7);    # compile-time error
+```
+
+This works for base R (`paste`, `cat`, `toupper`, …), functions from external packages, and even **Rcpp** packages whose functions you call with type signatures you write yourself. See the [functions reference](reference/functions.md) for more.
+
+#### 19. What does a compiled package contain?
+
+Currently, the transpiler emits **standard S3-based R**. Transpiling to S7 is under discussion, but S7 may not be rich enough to sustain TypR's type system. Either way, downstream users never need TypR installed to consume your package.
+
+TypR can also target other languages: **JavaScript and WebAssembly** are transpilation targets in addition to R. A related feature, **JS Blocks**, type-checks JavaScript strings meant for D3/Plotly/Shiny front-ends. See [TypR for the frontend?](/blog/r-js) for details.
+
+---
+
+### Advanced language features
+
+#### 20. How do function calls work? I heard something about methods and pipes.
+
+Every TypR function can be called in **three equivalent ways**, thanks to the [uniform function call syntax](https://en.wikipedia.org/wiki/Uniform_function_call_syntax) inspired by Nim:
+
+```typr
+# --- setup ---
+let add <- fn(a: int, b: int): int { a + b };
+# -------------
+
+add(5, 3);         # classic
+(5) |> add(3);     # pipe
+(5).add(3);        # method-call style
+```
+
+Because any function's first argument can become the receiver, you get readable chaining without attaching methods to classes. Function values are first-class citizens with their own type syntax (`(T1, T2) -> T3`), and higher-order functions, lambdas, and closures all work. See the [functions reference](reference/functions.md).
+
+#### 21. What about OOP? Do I still have to choose S3, S4, or R6?
+
+No. All you need are **types and functions**. Instead of picking an OOP system, you declare types and functions, and TypR handles the object system underneath.
+
+When you need polymorphism, TypR offers **interfaces**—ad-hoc polymorphism in the spirit of Rust traits or Haskell type classes:
+
+```typr
+# Signature for an existing R function
+@paste: (Any, Any) -> char;
+
+# Define an interface
+type Viewable <- interface {
+  view: (Self) -> char
+};
+
+# Implement `view` for `bool`
+let view <- fn(a: bool): char { "bool" };
+
+# Function written against the interface
+let double_view <- fn(a: Viewable): char {
+  paste(view(a), view(a))
+};
+
+true.double_view();   # bool inherits every function written for Viewable
+```
+
+Implement one required function for a type, and that type instantly inherits every function written against the interface, without modifying the original code. See [Solving the OOP chaos for R](/blog/typr-oop).
+
+#### 22. How does vectorization work?
+
+TypR keeps vectorization, but rethought: **lifting-based vectorization**. You write functions for scalar values, and the type system decides when to lift them over collections.
+
+> "The best way to use vectorization is not to think about vectorization."
+> — Fabrice Hategekimana
+
+Native R vectors handle atoms well but fall apart around custom objects. In TypR, arrays are vectorized by default:
+
+```typr
+type Point <- list { x: int, y: int };
+
+let new_point <- fn(x: int, y: int): Point {
+  list(x = x, y = y)
+};
+
+let scale <- fn(p: Point, n: int): Point {
+  new_point(p$x * n, p$y * n)
+};
+
+let `*` <- fn(p: Point, n: int): Point {
+  scale(p, n)
+};
+
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+
+scale(points, 2);   # works: lifts the scalar function automatically
+points * 3;         # works: via operator overloading
+```
+
+Reductions come along for the ride. If your type implements `+`, `sum()` works on the vector:
+
+```typr
+# --- setup, from the previous block ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# --------------------------------------
+
+let `+` <- fn(p1: Point, p2: Point): Point {
+  new_point(p1$x + p2$x, p1$y + p2$y)
+};
+
+points |> sum();   # uses your type's +
+```
+
+However, with `reduce`, the type system currently cannot infer which operator instance you mean, so you must write `` points |> reduce(`+`<Point>) ``.
+
+TypR arrays are backed by a custom S3 object (`typed_vec`), which means **native R vectors and data frames remain faster** for raw numeric work. Bridges to native types and field accessors are planned but not yet shipped. See [Vectorization by design](/blog/vectorization-by-design).
+
+#### 23. What other type-system features exist?
+
+The full toolkit includes: pattern matching, tagged unions, generics, interfaces, partial currying, union and intersection types, structural subtyping, row polymorphism, type aliases, and type inference.
+
+From the thesis heritage, **multidimensional arrays are first-class**: `[[1, 2, 3], [4, 5, 6]]` infers the recursive type `[2, [3, int]]`, enabling type-safe matrix operations (transpose, products). Type-safe ML packages and tensor types (`Tf[I, T]`) are feasible future directions.
+
+You can also export constructors compactly with the `@export` decorator:
+
+```typr
+type Button <- list {
+  color: char
+};
+
+@export
+let new_button <- fn(color: char): Button {
+  list(color = color)
+};
+```
+
+See the [types reference](reference/types.md) for details.
+
+---
+
+### Comparisons and evidence
+
+#### 24. How is TypR different from R7, S4, or checkmate-style assertions?
+
+R7 and S4 solve the class definition problem, but neither offers **static analysis before runtime**. Runtime validation packages check types as code executes; TypR checks them at compile time, then emits code that plays nicely with whatever class system your consumers expect. Validation code does not disappear—it moves from your maintenance burden to the compiler.
+
+#### 25. Can R's metaprogramming do runtime type checking already?
+
+Yes. Several projects have built runtime validation for R, such as infix operators using active bindings. For data analysis, a lighter approach is genuinely better, and adopting TypR there would be a burden at best. TypR's justification is being a **framework**: a real type system, a project manager, an LSP (in development), and a future formatter.
+
+#### 26. How does TypR compare to vapour?
+
+**vapour** is another type-system project for R. TypR's differentiators include:
+
+- typing for multidimensional arrays and tensors
+- multi-target transpilation (R, JavaScript, WebAssembly)
+- type embedding
+- row polymorphism
+- uniform function call syntax
+
+#### 27. How does TypR compare to Julia?
+
+**Julia** is an open-source scientific computing language optimized for performance with optional typing. TypR's advantages for R users are the smaller learning curve and staying inside the existing R ecosystem. Performance is not the primary goal yet; **type safety and robust projects** come first.
+
+#### 28. Does static typing actually reduce bugs?
+
+There is strong industry evidence that static typing reduces defect rates. TypeScript's success over JavaScript is one prominent example. The TypR team uses typed languages (Rust, TypeScript, Nim, and others) and wishes for similar safety when returning to R. A type system catches bugs before they reach production, where they are harder and more expensive to fix.
+
+---
+
+### Day-to-day workflow
+
+#### 29. How does testing work?
+
+Inline `Test { }` blocks sit right next to the code they validate. During transpilation, they are extracted into standard **testthat** files (`tests/testthat/test-<filename>.R`). Logic and tests stay side by side, while the resulting package remains fully conventional.
+
+```typr
+type Person <- list {
+  name: char,
+  age: int
+};
+
+let new_person <- fn(name: char, age: int): Person {
+  list(name = name, age = age)
+};
+
+let is_adult <- fn(self: Person): bool {
+  self$age >= 18
+};
+
+Test {
+  test_that("is_adult works", {
+    let adult <- new_person("Alice", 25);
+    let minor <- new_person("Bob", 15);
+    expect_true(adult.is_adult());
+    expect_equal(minor.is_adult(), false);
+  })
+}
+```
+
+See [Better tests with TypR](/blog/typr-tdd) for a full example.
+
+#### 30. What about documentation (Rd, pkgdown, roxygen)?
+
+TypR injects types, modules, and examples straight into **Rd documentation, with pkgdown support**: documented types cross-link automatically, type aliases get their own documentation page (and constructor where appropriate), roxygen `#'` comments are preserved, and `@export`-style annotations work in `.ty` files.
+
+#### 31. Can I keep using RStudio?
+
+Yes, via the companion `typr_runner` package. Otherwise: command line, any compatible IDE, or the Docker image. See the [installation guide](reference/installation.md).
+
+#### 32. Was TypR built for AI-generated code?
+
+Not originally. It grew from academic interest in type systems and industrial frustration with code that must survive production. However, as AI writes more code, the expensive part shifts from writing to **trusting** (reviewing, validating, and maintaining). A strict type system becomes a free automatic checker over generated code, and concise syntax means less for a human to misread. LLMs also tend to perform better with strongly typed languages.
+
+#### 33. How do I get an AI assistant to write correct TypR?
+
+Give it the documentation. Models have not seen TypR in training — asked for TypR, they produce R or Julia with a few keywords changed. This site publishes itself in the formats assistants read:
+
+- [`llms.txt`](pathname:///llms.txt) — an index of every page, one line each, in reading order.
+- [`llms-full.txt`](pathname:///llms-full.txt) — the whole documentation as a single Markdown file, to paste or load into a context window.
+- Any page's Markdown source, at its own URL plus `.md` (for instance `/docs/reference/types.md`). The **Copy as Markdown** button at the top of each page copies it for you.
+
+Point your assistant at `llms-full.txt` when you start a TypR project, and give it the reference page for whatever you are working on. Then let the compiler do the rest: `typr check` is the arbiter, and it is much cheaper to run than to review generated code by hand.
+
+---
+
+### Status
+
+#### 34. Is TypR production-ready?
+
+Not yet. TypR is **alpha-stage**. It is still new and needs work before it is ready for general use. Feedback is actively solicited—especially the skeptical kind.
+
+Do not use it unless you really need it, and you are really sure you need it.
+
+#### 35. Where can I discuss TypR or give feedback?
+
+- [GitHub Discussions](https://github.com/we-data-ch/typr/discussions)
+- [GitHub issues](https://github.com/we-data-ch/typr/issues)
+- [Reddit r/rstats](https://www.reddit.com/r/rstats/)
+
+---
+
+## Types for Beginners
+
+## Types for Beginners, at last I'm understanding types
+
+> **TL;DR**  
+> Types exist so you don't have to remember your own rules. The moment you break them, TypR taps you on the shoulder and says "nope".
+>
+> Think of it like switching from a **manual car to an automatic**. In a stick shift, you're juggling clutch, revs, and gear ratios. In an automatic, the car just… remembers. TypR does that for your code. You write down a rule once (for instance, "this variable is a number") and months later, across thousands of lines and sixteen different files, the system still remembers. When something tries to break that rule, you hear about it immediately, not three hours into a pipeline run.
+>
+> **Does this matter for everyone?** Honestly, no. One-off scripts and quick exploratory plots? Probably overkill. But if you're building a **package, a Shiny app, or an ETL pipeline** that has to survive a long time, this is the insurance policy you didn't know you needed.
+
+### Who is this actually for?
+
+Scientists writing packages. Data scientists halfway through a Shiny app that's becoming sentient. People who love R, aren't professional software engineers, and genuinely can't see how R's lovely flexibility might one day murder them in their sleep.
+
+If that sounds like you, read on. I'm going to keep the tone friendly and let the examples do the heavy lifting.
+
+### What even is a type?
+
+> It's a declaration of what an object is. You tell the system: "this thing is a number. If it stops being a number, that's a bug, not a feature".
+
+Let's start with the smallest possible example. Same logic, two ways of writing it:
+
+**R**
+
+```r
+average_height <- mean(heights)
+```
+
+**TypR**
+
+```typr noplayground 
+let average_height: num <- mean(heights);
+```
+
+*That's it. That's the whole concept.* In R, you hand someone a bucket and say "put whatever inside". R will guess it for you. In TypR, you say "this bucket is for numbers". If someone tries to drop a data frame in there (like R allows you to do), the compiler clears its throat politely and refuses.
+
+*R allows you to do that*
+
+```r
+age <- 12
+
+age <- data.frame(a=4, b="cat")
+```
+
+*TypR won't*
+
+```typr compile_fail
+let age: int <- 12;
+
+age <- data__frame(a=[4], b=["cat"]);
+``` 
+
+*dot (`.`) in TypR can't be used as variable or function name. They define methods. So any function that used them should be replaced by double underscores (`__`). See the [Beautiful syntax](/docs/philosophy/beautiful_syntax) section*
+
+The logic is simple: we want predictability so no code can change the meaning of the variable. We avoid unexpected changes. In our example, `age` is always a number, which makes sense. You don't want your colleagues changing it to a character because mathematical operations won't work on it. You will get an error later in the code rather than where the problem started. This is a long explanation, but the examples coming up will make it much clearer. In case you are confused, only the type is fixed. You can still change the value later in TypR:
+
+```typr
+let age: Integer <- 26;
+#> 26
+
+age <- 31;
+#> 31
+```
+
+Every language deals with types, but they fall into two camps:
+
+- **Dynamic typing** (R, Python, Ruby): types are figured out while the code is running.
+- **Static typing** (C, Rust, TypeScript): types are declared upfront and checked *before* anything runs.
+
+Dynamic typing is really nice. Less boilerplate, automatic conversions, the freedom to build a prototype in twenty minutes. Static typing offers you something different: fewer missing guardrails and less danger as your code grows past what you can hold in your head.
+
+> "But dynamic languages work fine! Why bother writing types?"
+
+Because there's a difference between **scripting** (run it once, low stakes, who cares) and **engineering** (other people depend on it, and it needs to outlive your current employment contract). The former is likely a collection of short scripts; the latter is mainly a full project with a lot of logic and dependencies. Scripting is mostly interactive, so there is no issue if an error appears from time to time. Bigger projects need to run correctly **all the time**, so it is too risky to not get the expected result every time. Don't worry, the examples later will make things clearer.
+
+It's not "good vs. evil." It's **flexibility vs. safety**. R and Rust are both beautiful languages; they just optimize for different things. We call it freedom vs. safety [TypR philosophy docs](/docs/philosophy/intro). TypR sits in the sweet spot. It's a **gradually typed** layer over R, which is a fancy way of saying: add types where they help you, ignore them where they don't. That's the point. It lets you adjust the dial yourself.
+
+Now, looking at how compiled programming languages are mostly typed you may also ask yourself:
+
+> "Wait, do types make my code faster?"
+
+Not necessarily. Types are mainly there for predictability and safety. Many counter-examples exist: 
+
+- **TypeScript** gives you safety but transpiles to plain old JavaScript. No speed boost.
+- **Julia** lets you annotate types for multiple dispatch, but its JIT compiler does the heavy optimization lifting underneath. The annotations are mainly for your sanity, not for speed.
+
+In the case of TypR, even though, in the future, types will help build faster code, their goal is more about data modeling and safety.
+
+**Still confused about safety?**
+No problem. We will look at four advantages of explicit types through examples. Each one will show errors you can run into with dynamically typed programming languages like R. Then we will see how more predictability can help reduce them. All examples and fixes are presented in pure R first then corrected with packages from the tidyverse. This way it is simple to understand (no new language to keep in mind). Here are the advantages of explicit typing:
+
+1. **Errors you can see** before your code runs (or your user sees them).
+2. **Fast feedback loops**: you find out you broke something in seconds, not hours.
+3. **Error messages that make sense** and tell you where the problem lives.
+4. **Better design habits**, because thinking in types forces you to decide what your code actually does before you write it.
+
+### R examples
+
+*(All of these use familiar tidyverse packages: dplyr, purrr, forcats, rlang.)*
+
+#### Tools to keep you safe
+
+Think about your current workflow. Maybe use [**renv**](https://rstudio.github.io/renv/articles/renv.html) or [**uvr**](https://nbafrank.github.io/uvr/) to lock package versions so that updating ggplot2 for `Project A` doesn't nuke `Project B` (if you don't you might consider it for reproductibility). You run [**lintr**](https://lintr.r-lib.org/) or [**jarl**](https://jarl.etiennebacher.com/) so a robot scans your code for dodgy patterns. Maybe you even use [**styler**](https://styler.r-lib.org/) or [**Air**](https://posit-dev.github.io/air/) now to format your code automatically so you stop fighting with your collaborators about indentation.
+
+If you don't know any of these projects, no worries, just take a look. They're amazing! The main idea is that all of these tools make your life easier by doing things for you so you don't need to pay attention to them (managing package dependencies, scanning or formatting code). That frees up a lot of mental space. 
+
+None of that's AI. It's deterministic automation: you write the rules, the machine enforces them. Types are just the next logical step. They lock the *shape* of your data and the *contracts* of your functions so you can't accidentally break them.
+
+#### The long feedback loop
+
+Here's a pattern I guarantee you've lived through. You start with a value and you get late an unexpected "NA".
+
+In the example, you start with an integer, make some transformation, got back to another integer... except the code silently return a `NA` because we try to transform a whole sentence back to a number with `as.numeric`. Here it is a silly example that you won't probably ever do, but it generalize to many operation where you start with a type and theoretically ending with an expected type and something happen in the middle (could be a few lines or thousands). The most important thing is that the operation in the middle can take time, like seconds, minutes, hours or more (here represented by `Sys.sleep(6)` that wait 6 seconds). And for operation like that, we want to be sure that the rest of the code will works before running everything, otherwise we will keep losing time. Here's the example:
+
+```r
+user_count <- 42
+
+Sys.sleep(6) # The long wait
+
+final_report <- user_count |> 
+  paste("Users since 2020:", ...=_) |> # makes it a character
+  toupper() |> 
+  as.numeric() # returns an NA
+```
+
+You wait. And wait. Maybe you make a coffee. Then, at the very end, you discover that `as.numeric()` silently coughed up `NA` and you missed the coercion warning somewhere in a wall of console output. The whole run is wasted, and that's not even the whole issue. Imagine using `final_report` later as a number (since you used `as.numeric()` to convert it). It will still return `NA`. By the time you realize it, you're already several lines further down and you have to go back step by step to find the issue.
+
+The problem isn't just that it failed. It's *when* it failed and *how* it failed (here silently).
+
+#### Silent errors: the "quiet children" problem
+
+It might be unexpected to you but, loud errors are your friends. A red message in the console tells you exactly where to look. The thing that should truly terrify you is the **silent error**: code runs, outputs look fine, and the result is completely wrong.
+
+Here's a parenting analogy: noisy kids are annoying, but at least you know where they are and what they're doing. Silent kids are the ones who've figured out how to open the front door.
+
+Silent failures come in two flavors:
+
+1. *It doesn't do what you asked, and you only notice too late.*
+2. *It changes something underneath you without telling you.* This is the worst one, and I'll show you why.
+
+#### The `ifelse()` trap
+
+Base R's `ifelse()` is a master of quiet sabotage. Watch this:
+
+```r
+is_admin  <- c(TRUE, FALSE, TRUE)
+
+label <- ifelse(is_admin, "3", 2)
+label
+#> [1] "3" "2" "3"
+```
+
+Notice that? The number `2` became the character `"2"`. Your vector *looks* okay. Then, three hundred lines later, in a file someone else wrote:
+
+```r
+label * 10
+#> Error in label * 10: non-numeric argument to binary operator
+```
+
+The error message points at this innocent-looking multiplication. But the actual sin was committed way back at the `ifelse()` call, and R never told you. The error looks obvious, but that is only because you are looking at it with fresh eyes in a very short example where you expect an error. In a real setting, it is one of two thousand lines of code your tired eyes are screening through for four hours.
+
+Now there is a better way. Compare that to `dplyr::if_else()` that gives an error:
+
+```r
+library(dplyr)
+
+is_admin  <- c(TRUE, FALSE, TRUE)
+
+label <- ifelse(is_admin, "3", 2)
+label
+#> [1] "3" "2" "3"
+
+label <- if_else(is_admin, "3", 2)
+#> Error in `if_else()`:
+#> ! Can't combine `true` <character> and `false` <double>.
+```
+
+What's the difference between `ifelse` and `if_else`? The first one sees that there is both a character and a number, but since a vector can only be of one type, it decides that everything will be a character without telling you. `if_else` stops there and immediately tells you that you have to fix it instead of guessing. 
+
+Yes, it's annoying that it refuses to run. **That refusal is the feature.** The bug is caught right where it's born, not 50 lines, three files or two weeks later.
+
+#### `sapply()` and the mystery return type
+
+`sapply()` is a meta function that allows you to run a function across a list of elements. It is like `lapply()`, but instead of returning a list, it returns a vector (useful)... or a matrix if you are not careful. It's cute until it isn't. It "simplifies" its output, which sounds helpful, except the shape of that simplification depends entirely on your data. 
+
+In the following example, we want to generate random numbers that follow a normal distribution with `rnorm()` (it could be another distribution). In the code, the `n` which decides the number of observations is normally set to `1`, which returns one value per interation that combines into a vector. 
+
+```r
+set.seed(7) # To get the same result each time, since it is random
+
+result <- sapply(1:5, function(i) rnorm(n = 1))
+#> [1]  2.2872472 -1.1967717 -0.6942925
+#> [4] -0.4122930 -0.9706733
+
+sum(abs(result))
+#> [1] 5.561278
+```
+
+But the moment I make a mistake and put a value of `2` for `n` (a common mistake), then I get a matrix at the end (combinaison of vectors of lenght 2). The code won't tell me anything, and my `sum` is now too big (too many numbers summed).
+
+```r
+set.seed(7) # To get the same result each time, since it is random
+
+result <- sapply(1:5, function(i) rnorm(n = 2))
+#>            [,1]       [,2]      [,3]
+#> [1,] -0.9472799 -0.1169552 2.1899781
+#> [2,]  0.7481393  0.1526576 0.3569862
+#>          [,4]      [,5]
+#> [1,] 2.716752 0.3240205
+#> [2,] 2.281452 1.8960671
+
+sum(abs(result))
+#> [1] 11.73029
+```
+
+Same function call, totally different return type. Code downstream that expected a vector now misbehaves silently.
+
+The purrr package fixes this by making the contract explicit and failing when the shape isn't respected. The `map()` function works like `lapply()`, but you can also specify the type of the output using a variant of the function (e.g., `map_int()`, `map_chr()`, etc.). Here we use `map_dbl()` since `rnorm()` generates floating numbers. It will consider it to be a vector and fail when it is not the case. So we know something is wrong even before running the `sum()` function (that could happen several lines later).
+
+Here it works with `n=1`, like `sapply`:
+
+```r
+library(purrr)
+
+set.seed(7) # To get the same result each time, since it is random
+
+map_dbl(1:5, function(i) rnorm(n = 1))
+#> [1]  2.2872472 -1.1967717 -0.6942925
+#> [4] -0.4122930 -0.9706733
+```
+
+When `n=2` it "fails" since it doesn't return the right shape (a vector), but a matrix. Good, it won't surprise us later:
+
+```r
+library(purrr)
+
+set.seed(7) # To get the same result each time, since it is random
+
+map_dbl(1:5, function(i) rnorm(n = 2)) 
+#> Error in `map_dbl()`:
+#>   ℹ In index: 1.
+#> Caused by error:
+#>   ! Result must be length 1, not 2.
+```
+
+That's one type of error, but we could have created a function that returns the wrong type. If you pick the wrong type, `map_dbl()` tells you, contrary to `sapply()`. For instance, imagine we change the result type to character by mistake inside the function using `as.character()`. `sapply()` happily returns a charcter vector:
+
+```r
+set.seed(7) # To get the same result each time, since it is random
+
+sapply(1:5, function(i) as.character(rnorm(n = 1)))
+#> [1] "2.28724716134052"   "-1.19677168222235" 
+#> [3] "-0.694292510435459" "-0.412292951136803"
+#> [5] "-0.970673341119483"
+```
+
+But `map_dbl()` tell us the wrong type was returned. Good, we can then correct the function:
+
+```r
+library(purrr)
+
+set.seed(7) # To get the same result each time, since it is random
+
+map_dbl(1:5, function(i) as.character(rnorm(n = 1)))
+# Error in `map_dbl()`:
+#   ℹ In index: 1.
+# Caused by error:
+#   ! Can't coerce from a string to a double.
+```
+
+It looks like an obvious mistake, but it can happen in more complex and less obvious ways. To put it bluntly, whenever a function becomes complex you run into this risk. That's why explicit types win here. You don't need to worry about it; the system protects you. The typed variants don't guess. They promise, and they enforce.
+
+#### forcats: don't grep into the void
+
+One last example. You have a factor with known levels, and you need to check membership. If you check with a classical text function like `grepl()`, `str_detect()`, or `%in%`, you might be under the impression that it works as well as `fct_match()`, which is specialised for factors. For instance, trying to detect if "medium" is one of the levels:
+
+```r
+library(stringr)
+library(forcats)
+
+statuses <- factor(c("low", "medium", "high", "low"))
+#> [1] low    medium high   low   
+#> Levels: high low medium
+
+"medium" %in% statuses
+#> [1] TRUE
+
+grepl("medium", statuses) |> any()
+#> [1] TRUE
+
+str_detect(statuses, "medium") |> any()
+#> [1] TRUE
+
+fct_match(statuses, "medium") |> any() 
+#> [1] TRUE
+```
+
+However, problems arise when we make a mistake in the search, for instance writing "medum" instead of "medium". All text-based approaches will simply tell us that this level does not exist, which is correct. However, they won't tell us that it's because we wrote it wrong. String functions are happy to search for substrings or exact matches even when your mental model says "only these three values are legal." forcats keeps you inside the factor's declared possibilities. Only `fct_match()` will throw an error message:
+
+```r
+library(stringr)
+library(forcats)
+
+statuses <- factor(c("low", "medium", "high", "low"))
+#> [1] low    medium high   low   
+#> Levels: high low medium
+
+"medum" %in% statuses
+#> [1] FALSE
+
+grepl("medum", statuses) |> any()
+#> [1] FALSE
+
+str_detect(statuses, "medum") |> any()
+#> [1] FALSE
+
+fct_match(statuses, "medum") |> any() 
+#> Error in `fct_match()`:
+#> ! All `lvls` must be present in `f`.
+#> ℹ Missing levels: "medum"
+```
+
+Just in case you don't understand how it is possible to search for a level that doesn't exist, here is an example where we remove the value "medium" from `statuses`, which doesn't remove the **level** from the variable.
+
+```r
+statuses
+#> [1] low    medium high   low   
+#> Levels: high low medium
+
+statuses[-2]
+#> [1] low  high low 
+#> Levels: high low medium
+
+fct_match(statuses[-2], "medium") |> any() # the level exists, not the value
+#> [1] FALSE
+```
+
+---
+
+### Error messages that don't make you cry
+
+If you are using a recent version of tidyverse for this tutorial or your usual work, you have probably realized that warning and error messages are richer now. This is thanks to the rlang package. Here's what rlang has given us, and it's genuinely great:
+
+```r
+library(dplyr)
+
+mtcars$cyl <- NULL
+mtcars |> count(cyl)
+#> Error in `count()`:
+#> ! Must group by variables found in
+#>   `.data`.
+#> ✖ Column `cyl` is not found.
+```
+
+Look at that: **which function failed, which argument, and what you probably meant to do.** Compare it to base R's one-liners, which tell you approximately nothing. rlang (from the tidyverse team) built this infrastructure, and we all benefit. 
+
+Types will lead to even better messages: when the system knows what something *should* be, it can tell you *what it got instead* and *where you made the promise*.
+
+---
+
+### Better design happens whether you plan it or not
+
+Thinking in types isn't just about catching bugs. It forces you to answer three questions before your fingers hit the keyboard:
+
+- What goes in?
+- What comes out?
+- Who is going to use this?
+
+That's designing, not just typing. In our [TypR philosophy](/docs/philosophy/intro) we call this "clean data science code by design, not by effort." 
+
+"By effort" means you're holding all the rules in your head, burning mental energy that could go toward the actual science. "By design" means the language holds the rules for you.
+
+---
+
+### So where does this leave us?
+
+The automatic transmission was always coming to R. You just didn't notice the milestones:
+
+- **renv** locked your dependencies.
+- **lintr** and **Air** enforced style without being annoying about it.
+- **dplyr**, **purrr**, and **forcats** were letting you offload the rules about data shapes to the machine.
+
+TypR just builds that transmission into the engine itself.
+
+If you're writing packages, Shiny apps, or long pipelines that need to survive the next grant cycle, TypR is your insurance policy against future-you's unreliable memory. And if you're just throwing together a quick exploration in a notebook? Leave the types off. TypR genuinely doesn't mind. You can dial the safety up or down as you need it.
+
+---
+
+## Create your first TypR package
+
+This tutorial walks you through creating a complete R package with TypR — from
+an empty folder to an installable package with types, tests, and documentation.
+
+> **Duration:** 15–20 minutes.
+>
+> This is a tutorial. It teaches you by doing. For the full details on every
+> construct used here, follow the links to the [reference](/docs/reference/intro).
+
+### What you will build
+
+A small package called `tempscale` that converts temperatures between Celsius,
+Fahrenheit, and Kelvin. By the end you will have:
+
+- A `TypR/` folder with typed source code
+- Generated R code in `R/`
+- Inline tests extracted into testthat
+- Roxygen2 documentation from type annotations
+- A package that installs and checks cleanly
+
+### Prerequisites
+
+- **R** (≥ 4.1) and **devtools** installed
+- **The `typr` compiler** — see the [installation guide](/docs/reference/installation)
+- A terminal and a text editor
+
+### Step 1: Scaffold the package
+
+Create a new directory and initialize a minimal R package:
+
+```bash
+mkdir tempscale
+cd tempscale
+Rscript -e 'devtools::create(".")'
+```
+
+This gives you `DESCRIPTION`, `NAMESPACE`, and an `R/` folder. Now add the
+TypR folder:
+
+```bash
+mkdir TypR
+```
+
+Your package should look like this:
+
+```
+tempscale/
+  DESCRIPTION
+  NAMESPACE
+  R/            # generated code will go here
+  TypR/         # your typed source code
+```
+
+### Step 2: Write typed source code
+
+Create `TypR/main.ty` with a type definition, a constructor, and two functions:
+
+```typr
+# main.ty — entry point of the package
+
+type Unit <- .Celsius | .Fahrenheit | .Kelvin;
+
+type Temp <- list {
+  value: num,
+  unit: Unit
+};
+
+let new_temp <- fn(value: num, unit: Unit): Temp {
+  Temp:{ value = value, unit = unit }
+};
+
+let to_celsius <- fn(t: Temp): num {
+  let unit <- t$unit;
+  match unit {
+    .Celsius    => t$value,
+    .Fahrenheit => (t$value - 32.0) * 5.0 / 9.0,
+    .Kelvin     => t$value - 273.15
+  }
+};
+
+@pub let to_fahrenheit <- fn(t: Temp): num {
+  to_celsius(t) * 9.0 / 5.0 + 32.0
+};
+
+let fahrenheit: Unit <- .Fahrenheit;
+let boiling <- new_temp(212.0, fahrenheit);
+print(to_celsius(boiling));
+```
+
+A few things to notice:
+
+- `Temp` is a **record type** — a named structure with typed fields.
+- `Unit` is a **tagged union** — `match` on it is checked for exhaustiveness.
+- `@pub` marks `to_fahrenheit` as **public** — it will be exported in the
+  generated NAMESPACE.
+- `new_temp` and `to_celsius` are package-internal by default.
+
+### Step 3: Add inline tests
+
+Add a `Test` block at the bottom of `TypR/main.ty`:
+
+```typr
+# --- setup, from step 2 ---
+type Unit <- .Celsius | .Fahrenheit | .Kelvin;
+type Temp <- list { value: num, unit: Unit };
+let new_temp <- fn(value: num, unit: Unit): Temp { Temp:{ value = value, unit = unit } };
+let to_celsius <- fn(t: Temp): num {
+  let unit <- t$unit;
+  match unit {
+    .Celsius    => t$value,
+    .Fahrenheit => (t$value - 32.0) * 5.0 / 9.0,
+    .Kelvin     => t$value - 273.15
+  }
+};
+@pub let to_fahrenheit <- fn(t: Temp): num { to_celsius(t) * 9.0 / 5.0 + 32.0 };
+# --------------------------
+
+Test {
+  test_that("to_celsius converts Fahrenheit", {
+    let fahrenheit: Unit <- .Fahrenheit;
+    let f <- new_temp(212.0, fahrenheit);
+    expect_equal(to_celsius(f), 100.0);
+  });
+
+  test_that("to_celsius converts Kelvin", {
+    let kelvin: Unit <- .Kelvin;
+    let k <- new_temp(373.15, kelvin);
+    expect_equal(to_celsius(k), 100.0);
+  });
+
+  test_that("to_fahrenheit converts Celsius", {
+    let celsius: Unit <- .Celsius;
+    let c <- new_temp(100.0, celsius);
+    expect_equal(to_fahrenheit(c), 212.0);
+  })
+}
+```
+
+During transpilation, this block is extracted into a standard
+`tests/testthat/test-main.R` file. To R, devtools, and testthat, it is just
+regular test code.
+
+### Step 4: Build
+
+Run the compiler from the package root:
+
+```bash
+typr build
+```
+
+TypR transpiles `TypR/main.ty` into `R/` files:
+
+```
+R/
+  a_std.R                # generated helpers
+  b_generic_functions.R  # generated helpers
+  c_types.R              # generated type definitions (Temp, new_temp, ...)
+  d_main.R               # transpiled main.ty
+```
+
+The naming convention (`a_`, `b_`, `c_`, `d_`) ensures correct load order.
+
+### Step 5: Test
+
+Run the tests as you would for any R package:
+
+```r
+devtools::test()
+```
+
+You should see all three tests pass. The test code was generated from the
+`Test` block — you never had to write `tests/testthat/` by hand.
+
+### Step 6: Document
+
+The `@pub` keyword on `to_fahrenheit` generates a roxygen2 `@export` directive.
+Type annotations are turned into `@param` and `@return` tags. Run:
+
+```r
+devtools::document()
+```
+
+This populates `man/` with `.Rd` files and updates `NAMESPACE`.
+
+### Step 7: Install and check
+
+```r
+devtools::install()
+devtools::check()
+```
+
+The package installs and passes `R CMD check`. CRAN, pkgdown, and
+`devtools::check()` all see regular R code — TypR is invisible at this stage.
+
+### Where you are now
+
+You have built a complete R package using TypR:
+
+- **Types** — `Temp` is a record type with named, typed fields.
+- **Pattern matching** — `match` on a tagged union replaces if/else chains.
+- **Tests** — inline `Test` blocks that extract into testthat.
+- **Documentation** — `@pub` generates roxygen2 exports.
+- **Standard R** — the generated code is plain R that any R tool understands.
+
+### Where to go next
+
+- [Migrate an existing R package](migrate-r-package) — add TypR to a package
+  you already have
+- [Model data with TypR types](typed-data-modeling) — records, unions, and
+  dataframes in depth
+- [How-To: Build, test & document](/docs/howto/build-and-test) — the full
+  development workflow
+- [Reference: Records & Constructors](/docs/reference/records) — construction,
+  spread, and named embedding
+
+---
+
+## Migrate an existing R package
+
+## Migrate an existing R package to TypR
+
+This tutorial shows how to add TypR to an R package you already have, one file
+at a time. You do not need to rewrite anything — TypR works incrementally.
+
+> **Duration:** 20–30 minutes.
+>
+> This is a tutorial. It teaches you by doing. For the full details, follow the
+> links to the [reference](/docs/reference/intro).
+
+### What you will learn
+
+- How to add a `TypR/` folder to an existing package
+- How to type one function at a time using `@` signatures
+- How to convert R code to typed TypR and verify nothing broke
+- How to mix typed and untyped code in the same package
+
+### Prerequisites
+
+- An existing R package (or create a sample one below)
+- **R** (≥ 4.1) and **devtools**
+- **The `typr` compiler** — see the [installation guide](/docs/reference/installation)
+
+### Step 1: Create a sample package (skip if you have one)
+
+If you do not have a package to migrate, create a minimal one:
+
+```r
+devtools::create("mypkg")
+```
+
+Add a function in `R/utils.R`:
+
+```r
+#' Normalize a numeric vector
+#' @param x Numeric vector
+#' @param center Logical, center the data
+#' @param scale Logical, scale the data
+#' @return Normalized numeric vector
+#' @export
+normalize <- function(x, center = TRUE, scale = TRUE) {
+  x <- scale(x, center = center, scale = scale)
+  as.vector(x)
+}
+
+#' Compute the mean of a vector
+#' @param x Numeric vector
+#' @return Numeric mean
+#' @export
+mean_val <- function(x) {
+  mean(x, na.rm = TRUE)
+}
+```
+
+Run `devtools::document()` and `devtools::test()` to make sure everything works
+before you start.
+
+### Step 2: Add the TypR folder
+
+```bash
+mkdir TypR
+```
+
+Create `TypR/main.ty` — the mandatory entry point:
+
+```typr
+# main.ty — typed code lives here
+```
+
+Run `typr build` to verify the toolchain works. The generated `R/` files will
+be mostly empty at this stage.
+
+### Step 3: Type one function with a signature
+
+You do not have to rewrite the R code. A **signature** declares the types of
+an existing R function, giving you compile-time checking without touching the
+original code.
+
+Add to `TypR/main.ty`:
+
+```typr
+@normalize: (x: [Any, num], center: bool, scale: bool) -> [Any, num];
+```
+
+The `@` prefix tells TypR this is a signature for an existing R function — no
+body needed. The compiler will now check every call to `normalize` against
+these types.
+
+Run `typr build` again. The signature is type-checked but the generated R code
+still calls your original `normalize` function. Nothing changed at runtime.
+
+### Step 4: Add signatures for base R functions
+
+As you write typed code, you will call base R functions. Declare their types
+so the compiler can check your usage:
+
+```typr
+@normalize: (x: [Any, num], center: bool, scale: bool) -> [Any, num];
+@mean_val: (x: [Any, num]) -> num;
+@as__character: (Self) -> char;
+@as__numeric: (Self) -> num;
+@paste0: (...Any) -> char;
+@toupper: (char) -> char;
+@nchar: (char) -> int;
+```
+
+The `__` convention maps to `.` in R output: `as__character` becomes
+`as.character`.
+
+### Step 5: Write typed code that calls the signed functions
+
+Now add a typed function that uses the signatures:
+
+```typr
+# --- signatures for the R functions this file calls ---
+@paste: (...values: Any) -> char;
+# ------------------------------------------------------
+
+@normalize: (x: [Any, num], center: bool, scale: bool) -> [Any, num];
+@mean_val: (x: [Any, num]) -> num;
+@as__numeric: (Self) -> num;
+
+let standardize_and_report <- fn(x: [Any, num]): char {
+  let normalized <- normalize(x, true, true);
+  let avg <- mean_val(normalized);
+  paste("Mean after normalization:", as__character(avg))
+};
+```
+
+The compiler checks that:
+
+- `x` is a numeric vector
+- `normalize` receives the right types
+- `mean_val` receives a numeric vector
+- `paste` returns a character string
+
+If you pass a string to `normalize`, it fails at compile time — not at
+runtime.
+
+### Step 6: Convert R code to typed TypR (optional)
+
+Once you are comfortable with signatures, you can convert R functions to full
+TypR implementations. Move `normalize` from `R/utils.R` to `TypR/main.ty`:
+
+```typr
+@pub let normalize <- fn(x: [Any, num], center: bool, scale: bool): [Any, num] {
+  R {
+    x <- scale(x, center = center, scale = scale)
+    as.vector(x)
+  }
+};
+```
+
+The `R {}` block preserves the original R logic. The function signature is
+type-checked, but the body is emitted verbatim. This is the cleanest way to
+migrate: typed signature + R body.
+
+:::tip
+You do not have to convert everything at once. Keep functions in `R/` and
+add signatures in `.ty` files. Convert to full TypR only when you are ready.
+:::
+
+### Step 7: Test
+
+Run your existing tests:
+
+```r
+devtools::test()
+```
+
+Everything should pass. The generated R code is functionally identical to what
+you had before. TypR adds type checking on top — it does not change behavior.
+
+### Step 8: Add inline tests (optional)
+
+As you convert more functions, add `Test` blocks next to them:
+
+```typr
+# --- signature for the R helper used in the test ---
+@mean_val: (x: [Any, num]) -> num;
+# ---------------------------------------------------
+
+@pub let normalize <- fn(x: [Any, num], center: bool, scale: bool): [Any, num] {
+  R {
+    x <- scale(x, center = center, scale = scale)
+    as.vector(x)
+  }
+};
+
+Test {
+  test_that("normalize centers and scales", {
+    let x <- c(1.0, 2.0, 3.0, 4.0, 5.0);
+    let result <- normalize(x, true, true);
+    expect_equal(mean_val(result), 0.0);
+  })
+}
+```
+
+### Step 9: Document
+
+Run `devtools::document()` to regenerate `man/` and `NAMESPACE`. The `@pub`
+keyword generates `@export` directives, and type annotations become `@param`
+and `@return` tags.
+
+### The incremental migration strategy
+
+Here is the recommended approach for migrating any R package:
+
+1. **Add `TypR/`** to your existing package
+2. **Sign the functions you call most** — add `@` signatures in `.ty` files
+3. **Write new code in TypR** — use signatures for existing functions, write
+   new logic in typed TypR
+4. **Convert one function at a time** — move from `R/` to `TypR/` when ready
+5. **Run `devtools::test()` after each step** — verify nothing broke
+6. **Repeat** until you are satisfied with the coverage
+
+TypR never forces an all-or-nothing choice. You can stop at any point and your
+package works exactly as before.
+
+### Where to go next
+
+- [Create your first TypR package](first-package) — start from scratch
+- [Model data with TypR types](typed-data-modeling) — records, unions, and
+  dataframes
+- [How-To: Type existing R functions](/docs/howto/type-r-functions) — the
+  `@` signature reference
+- [Reference: Compatibility with R](/docs/reference/r-typr) — the full
+  interop walkthrough
+
+---
+
+## Model data with TypR types
+
+This tutorial teaches you how to model real-world data using TypR's type
+system — records, unions, interfaces, and generics. You will build a small
+library for managing a contact list, step by step.
+
+> **Duration:** 15–20 minutes.
+>
+> This is a tutorial. It teaches you by doing. For the full details, follow the
+> links to the [reference](/docs/reference/intro).
+
+### What you will learn
+
+- How to define record types for structured data
+- How to use tagged unions for variant data
+- How to write functions that operate on your types
+- How to use interfaces for polymorphic behavior
+- How to work with option types and error handling
+
+### Prerequisites
+
+- Basic knowledge of R and TypR (complete the
+  [Getting Started](/docs/intro) tutorial first)
+- The `typr` compiler installed
+
+### Step 1: Define your data types
+
+Create a file called `contacts.ty`. Start with the core types:
+
+```typr
+# contacts.ty
+
+type Email <- list {
+  address: char,
+  verified: bool
+};
+
+type Phone <- list {
+  number: char,
+  country: char
+};
+
+type Contact <- list {
+  name: char,
+  email: Email,
+  phone: Phone
+};
+```
+
+These are **record types** — named structures with typed fields. Each field
+has a name and a type. The compiler will check that you use them correctly.
+
+### Step 2: Write constructors
+
+Records in TypR are plain lists at runtime. Write constructor functions to
+create them:
+
+```typr
+# --- setup, from the previous steps ---
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+# --------------------------------------
+
+let new_email <- fn(address: char): Email {
+  list(address = address, verified = false)
+};
+
+let new_phone <- fn(number: char, country: char): Phone {
+  list(number = number, country = country)
+};
+
+let new_contact <- fn(name: char, email: Email, phone: Phone): Contact {
+  Contact:{ name = name, email = email, phone = phone }
+};
+
+let alice <- new_contact("Alice", new_email("alice@example.com"), new_phone("0600000000", "+33"));
+print(alice$name);
+```
+
+Notice that the return type `Contact` tells the compiler exactly what structure
+the function returns. You get type checking on the fields without extra work.
+
+### Step 3: Write functions on your types
+
+Now write functions that operate on contacts:
+
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+let new_phone <- fn(number: char, country: char): Phone { list(number = number, country = country) };
+let new_contact <- fn(name: char, email: Email, phone: Phone): Contact { Contact:{ name = name, email = email, phone = phone } };
+# --------------------------------------
+
+let is_verified <- fn(c: Contact): bool {
+  c$email$verified
+};
+
+let display_name <- fn(c: Contact): char {
+  c$name
+};
+
+let full_info <- fn(c: Contact): char {
+  paste(c$name, "<", c$email$address, ">", c$phone$country, c$phone$number)
+};
+
+let alice <- new_contact("Alice", new_email("alice@example.com"), new_phone("0600000000", "+33"));
+print(full_info(alice));
+print(is_verified(alice));
+```
+
+Because `c` is typed as `Contact`, the compiler knows that `c$email` is an
+`Email` and `c$email$address` is a `char`. Mistakes like `c$email$phone`
+fail at compile time.
+
+### Step 4: Use tagged unions for variant data
+
+Not all data fits neatly into a single record. Use **tagged unions** for
+values that can be one of several things:
+
+```typr
+# --- setup, from the previous steps ---
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+# --------------------------------------
+
+type VerificationStatus <- .Unverified | .Pending | .Verified(char);
+
+type ContactWithStatus <- list {
+  name: char,
+  email: Email,
+  status: VerificationStatus
+};
+
+let bob <- ContactWithStatus:{
+  name = "Bob",
+  email = new_email("bob@example.com"),
+  status = .Pending
+};
+print(bob$name);
+```
+
+Each variant is prefixed with a dot (`.`). A tag can carry data —
+`.Verified(char)` holds the verification code.
+
+### Step 5: Pattern match on unions
+
+Use `match` to handle each variant:
+
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+type VerificationStatus <- .Unverified | .Pending | .Verified(char);
+type ContactWithStatus <- list { name: char, email: Email, status: VerificationStatus };
+# --------------------------------------
+
+let get_status_label <- fn(c: ContactWithStatus): char {
+  let status <- c$status;
+  let label <- match status {
+    .Unverified       => "Not verified",
+    .Pending          => "Verification in progress",
+    .Verified(code)   => paste("Verified with code:", code)
+  };
+  # each arm carries its own literal type; as__character widens them to `char`
+  as__character(label)
+};
+
+let bob <- ContactWithStatus:{
+  name = "Bob",
+  email = new_email("bob@example.com"),
+  status = .Verified("abc123")
+};
+print(get_status_label(bob));
+```
+
+`match` is exhaustive — if you forget a variant, the compiler tells you. The
+payload is automatically destructured: `code` binds to the `char` inside
+`.Verified`.
+
+### Step 6: Use the Option pattern
+
+A common pattern in typed languages is `Option<T>` — a value that might not
+exist. TypR does not have a built-in `Option`, but you can define one:
+
+```typr noplayground
+type Option<T> <- .Some(T) | .None;
+
+let find_contact <- fn(contacts: [Any, ContactWithStatus], name: char): Option<ContactWithStatus> {
+  # Simplified: in real code you would iterate
+  .None
+};
+
+let greet <- fn(opt: Option<ContactWithStatus>): char {
+  match opt {
+    .Some(c) => paste("Hello,", c$name),
+    .None    => "Contact not found"
+  }
+};
+```
+
+The generic parameter `<T>` makes `Option` reusable for any type. This is
+the idiomatic way to handle nullable values in TypR.
+
+### Step 7: Define an interface for polymorphism
+
+Use an **interface** to define a capability that multiple types can share:
+
+```typr
+type Displayable <- interface {
+  display: (Self) -> char
+};
+```
+
+Any type that has a `display: (Self) -> char` function automatically
+implements `Displayable`. No `impl` keyword needed.
+
+Now write a function that works for any `Displayable`:
+
+```typr
+# --- setup, from the previous steps ---
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+type Displayable <- interface { display: (Self) -> char };
+# --------------------------------------
+
+let display <- fn(e: Email): char { e$address };
+
+let print_item <- fn(item: Displayable): Empty {
+  print(display(item))
+};
+
+print_item(new_email("alice@example.com"));
+```
+
+### Step 8: Make your types implement the interface
+
+Define `display` for each type:
+
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+type VerificationStatus <- .Unverified | .Pending | .Verified(char);
+type ContactWithStatus <- list { name: char, email: Email, status: VerificationStatus };
+type Displayable <- interface { display: (Self) -> char };
+# --------------------------------------
+
+let display <- fn(e: Email): char {
+  e$address
+};
+
+let display <- fn(p: Phone): char {
+  paste(p$country, p$number)
+};
+
+let display <- fn(c: ContactWithStatus): char {
+  paste(c$name, "<", display(c$email), ">")
+};
+
+let bob <- ContactWithStatus:{
+  name = "Bob",
+  email = new_email("bob@example.com"),
+  status = .Pending
+};
+print(display(bob));
+print(display(Phone:{ number = "0600000000", country = "+33" }));
+```
+
+Now `print_item` works with emails, phones, and contacts — the compiler
+verifies that each type satisfies the `Displayable` interface.
+
+### Step 9: Build and test
+
+Add a `Test` block to verify your data model:
+
+```typr
+# --- setup, from the previous steps ---
+@paste: (...values: Any) -> char;
+type Email <- list { address: char, verified: bool };
+type Phone <- list { number: char, country: char };
+type Contact <- list { name: char, email: Email, phone: Phone };
+let new_email <- fn(address: char): Email { list(address = address, verified = false) };
+let new_phone <- fn(number: char, country: char): Phone { list(number = number, country = country) };
+let new_contact <- fn(name: char, email: Email, phone: Phone): Contact { Contact:{ name = name, email = email, phone = phone } };
+type VerificationStatus <- .Unverified | .Pending | .Verified(char);
+type ContactWithStatus <- list { name: char, email: Email, status: VerificationStatus };
+# --------------------------------------
+
+Test {
+  test_that("new_email creates an unverified email", {
+    let e <- new_email("alice@example.com");
+    expect_equal(e$address, "alice@example.com");
+    expect_equal(e$verified, false);
+  });
+
+  test_that("match handles all variants", {
+    let v <- .Verified("abc123");
+    let label <- match v {
+      .Unverified     => "none",
+      .Pending        => "pending",
+      .Verified(code) => code
+    };
+    expect_equal(label, "abc123");
+  })
+}
+```
+
+Run `typr build` and `devtools::test()`.
+
+### Summary of patterns
+
+| Pattern | Use case | Example |
+|---------|----------|---------|
+| **Record type** | Named, structured data | `type Point <- list { x: int, y: int }` |
+| **Tagged union** | Variant data | `type Shape <- .Circle(num) \| .Square(num)` |
+| **Option type** | Nullable values | `type Option<T> <- .Some(T) \| .None` |
+| **Interface** | Polymorphic behavior | `type Displayable <- interface { display: (Self) -> char }` |
+| **Generic function** | Reusable logic | `let id <- fn(x: T): T { x }` |
+
+### Where to go next
+
+- [Create your first TypR package](first-package) — build a complete package
+- [Migrate an existing R package](migrate-r-package) — add TypR incrementally
+- [Reference: Records & Constructors](/docs/reference/records) — construction,
+  spread, named embedding
+- [Reference: Unions & Pattern Matching](/docs/reference/unions-patterns) —
+  tags, match, exhaustive checks
+- [Reference: Interfaces](/docs/reference/interfaces) — structural validation
+  and polymorphism
+
+---
+
+## Type existing R functions
+
+## How to type existing R functions with `@` signatures
+
+This guide shows how to add type safety to R functions you already have — base R,
+your own helpers, or third-party packages — without rewriting them.
+
+### Why use signatures?
+
+By default, untyped R functions accept `Any` and return `Empty`. The compiler
+cannot check their usage, so mistakes slip through to runtime. A signature
+declares the types an R function expects and returns, giving you compile-time
+checking without touching the original R code.
+
+### Basic signature
+
+Suppose you have an R function in `R/utils.R`:
+
+```r
+normalize <- function(x, center = TRUE, scale = TRUE) {
+  x <- scale(x, center = center, scale = scale)
+  as.vector(x)
+}
+```
+
+Declare its type in a `.ty` file:
+
+```typr
+@normalize: (x: [Any, num], center: bool, scale: bool) -> [Any, num];
+```
+
+The `@` prefix tells TypR this is a signature for an existing R function — no
+body needed. The compiler will now check every call to `normalize` against these
+types.
+
+### Working with base R
+
+Base R functions benefit immediately from signatures. The `__` convention maps
+to `.` in R output:
+
+```typr
+@toupper: (char) -> char;
+@nchar: (char) -> int;
+@paste0: (...Any) -> char;
+@as__character: (Self) -> char;
+@as__numeric: (Self) -> num;
+```
+
+Now `toupper("Hi")` is type-checked as `char -> char`, and `toupper(7)` would
+fail at compile time instead of producing a silent coercion at runtime.
+
+### Signatures with overloading
+
+Some R functions accept multiple input types. Repeat the signature with
+different type parameters:
+
+```typr
+@abs: (int) -> int;
+@abs: (num) -> num;
+@sqrt: (int) -> num;
+@sqrt: (num) -> num;
+```
+
+The compiler picks the right overload based on the argument type.
+
+### Using `@extern` for external packages
+
+When calling functions from other packages, use `@extern` to declare both the
+package and the type:
+
+```typr
+@extern stats::sd: (x: [Any, num]) -> num;
+@extern stats::lm: (formula: char, data: Foreign<Any>) -> Foreign<Any>;
+@extern base::readRDS: (path: char) -> Foreign<Any>;
+@importFrom dplyr filter select mutate;
+```
+
+- `@extern` generates a `package::function` call at runtime
+- `@importFrom` generates a roxygen2 `@importFrom` directive
+- `Foreign<Any>` wraps opaque R values that pass through TypR untouched
+
+### Practical example: typing a dplyr pipe
+
+Say you call `dplyr::filter` on a dataframe. You can declare its signature and
+use it in typed code:
+
+```typr
+@extern dplyr::filter: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+
+let filter_adults <- fn(df: Foreign<Any>): Foreign<Any> {
+  # the NSE argument stays inside an R block; the call itself is typed
+  R { dplyr::filter(df, .data$age >= 18) }
+};
+```
+
+### Step-by-step workflow
+
+1. **Identify** the R function you want to type
+2. **Determine** the input types and return type
+3. **Write** a `@` signature in a `.ty` file
+4. **Run** `typr build` — the compiler checks your usage
+5. **Fix** any type errors that surface
+
+:::tip
+Start with the functions you call most often. You do not have to sign everything
+at once — add signatures incrementally as you find value in the type checking.
+:::
+
+### Where to go next
+
+- [Signatures, @extern & Foreign](/docs/reference/signatures) — full reference
+- [Escape Hatches](/docs/reference/escape-hatches) — `extern`, `R {}`, `function()`
+- [Use dplyr/tidyr from TypR](use-dplyr-tidyr) — tidyverse interop patterns
+
+---
+
+## Interop with R6/S4/RC
+
+## How to interoperate with R6, S4, and Reference Classes
+
+TypR does not replace R's OOP systems — it works alongside them. This guide
+shows how to use R6, S4, and RC objects from TypR code.
+
+### The key concept: `Foreign<T>`
+
+R6, S4, and RC objects are opaque R values. TypR represents them with
+`Foreign<Any>`, a type that passes through the compiler untouched — no field
+access, no method calls, just values flowing through bindings and function
+arguments.
+
+```typr
+type R6Person <- Foreign<Any>;
+```
+
+This is not a limitation. It is the design: TypR does not try to model R's
+dynamic OOP systems inside its type checker. Instead, you wrap the OOP object
+in `Foreign<Any>` and delegate operations to R code.
+
+### Working with R6 objects
+
+Suppose you have an R6 class in `R/Person.R`:
+
+```r
+Person <- R6::R6Class("Person",
+  public = list(
+    name = NULL,
+    age = NULL,
+    initialize = function(name, age) {
+      self$name <- name
+      self$age <- age
+    },
+    greet = function() {
+      paste0("Hi, I'm ", self$name)
+    }
+  )
+)
+```
+
+From TypR, declare the constructor and methods as signatures:
+
+```typr noplayground
+type R6Person <- Foreign<Any>;
+
+@extern Person$new: (name: char, age: int) -> R6Person;
+
+let p <- Person$new("Alice", 30);
+```
+
+For calling methods, use an `extern` escape hatch since method call syntax
+(`$`) is not typed:
+
+```typr
+extern (p: R6Person) -> char r#"p$greet()"#;
+```
+
+The `r#"..."#` raw R string is emitted verbatim into the generated `.R` file.
+
+### Working with S4 objects
+
+S4 classes follow the same pattern — wrap the object in `Foreign<Any>` and use
+`@extern` for the generic functions:
+
+```typr
+type S4Model <- Foreign<Any>;
+
+@readRDS: (path: char) -> S4Model;
+@extern stats::coef: (object: S4Model) -> Foreign<Any>;
+@extern stats::summary: (object: S4Model) -> Foreign<Any>;
+
+let m: S4Model <- readRDS("model.rds");
+let s <- summary(m);
+```
+
+For creating S4 objects, use `@extern` with the constructor:
+
+```typr
+@extern methods::new: (Class: char, ...args: Any) -> Foreign<Any>;
+```
+
+### Working with Reference Classes (RC)
+
+RC objects are handled identically to R6 — they are just R values:
+
+```typr noplayground
+type RCLogger <- Foreign<Any>;
+
+@extern Logger$new: () -> RCLogger;
+
+let log <- Logger$new();
+```
+
+### Using R `{}` blocks for complex OOP interactions
+
+When you need to call multiple methods or access fields, `R {}` blocks are
+often cleaner than chaining `extern` escape hatches:
+
+```typr
+let result <- R {
+  person <- Person$new("Bob", 25)
+  paste(person$name, "is", person$age)
+};
+```
+
+This block is emitted as-is into the generated R code. It is not type-checked,
+but it integrates seamlessly with the surrounding typed code.
+
+### Best practices
+
+1. **Wrap, do not rebuild** — Use `Foreign<Any>` for OOP objects. TypR is not
+   meant to reimplement R's class systems.
+
+2. **Signature the entry points** — Declare `@extern` for constructors and
+   key methods. Leave internal field access to `R {}` blocks.
+
+3. **Keep OOP code in R files** — If a class is complex, define it in `R/`
+   and only call it from TypR via signatures. This is the cleanest interop.
+
+4. **Prefer `R {}` for multi-step OOP** — When you need to create, configure,
+   and call methods on an object in sequence, a raw R block is simpler than
+   multiple `extern` escape hatches.
+
+### Full example
+
+```typr noplayground
+# Type declarations
+type R6Person <- Foreign<Any>;
+@extern Person$new: (name: char, age: int) -> R6Person;
+
+# Create and use
+let p <- Person$new("Alice", 30);
+
+# Multi-step interaction via R block
+let greeting <- R {
+  p$greet()
+};
+```
+
+### Where to go next
+
+- [Escape Hatches](/docs/reference/escape-hatches) — `extern`, `R {}`, `Foreign<T>`
+- [Type existing R functions](type-r-functions) — `@` signatures for plain functions
+- [Working with R and TypR](/docs/reference/r-typr) — full compatibility walkthrough
+
+---
+
+## Use dplyr/tidyr from TypR
+
+## How to use dplyr/tidyr from TypR
+
+TypR does not require you to abandon the tidyverse. This guide shows how to
+use dplyr, tidyr, and related packages from typed code.
+
+### The core pattern: `R {}` blocks
+
+Tidyverse functions rely heavily on non-standard evaluation (NSE), formulas,
+and the pipe operator `%>%` / `|>`. These are fundamentally untyped constructs.
+The idiomatic way to use them from TypR is `R {}` blocks:
+
+```typr
+let filtered <- R {
+  mtcars |>
+    dplyr::filter(cyl > 4) |>
+    dplyr::select(mpg, cyl, hp)
+};
+```
+
+The `R {}` block captures its body verbatim and emits it as plain R code. It
+is not type-checked, but it integrates perfectly with typed code that surrounds
+it.
+
+### Declaring tidyverse signatures
+
+For typed interop with dplyr, use `@extern` to declare the types of functions
+you want to call with type safety:
+
+```typr
+@extern dplyr::filter: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::mutate: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::select: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::summarise: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::arrange: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+```
+
+With these declarations, `dplyr::filter(df, .data$x > 1)` is partially checked —
+the compiler verifies the first argument is a dataframe, but the variadic
+`...args: Any` tail is intentionally untyped to allow NSE.
+
+### Mixing typed and untyped code
+
+The best pattern is to do data preparation in `R {}` blocks and business
+logic in typed functions:
+
+```typr
+@extern dplyr::filter: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::mutate: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+
+# Typed business logic
+let compute_score <- fn(row: Foreign<Any>): num {
+  R { row$age * 0.3 + row$income * 0.7 }
+};
+
+# Untyped data preparation
+let prepare <- fn(df: Foreign<Any>): Foreign<Any> {
+  R {
+    df |>
+      dplyr::filter(!is.na(age)) |>
+      dplyr::mutate(score = compute_score(.))
+  }
+};
+```
+
+### Using `@importFrom`
+
+To generate proper roxygen2 import directives, use `@importFrom`:
+
+```typr
+@importFrom dplyr filter select mutate arrange summarise;
+@importFrom tidyr pivot_longer pivot_wider;
+@importFrom purrr map map_dbl;
+```
+
+This ensures your package's `NAMESPACE` file is correctly populated when the
+package is built.
+
+### Working with dataframes in TypR
+
+TypR supports dataframe types for typed access:
+
+```typr
+type PersonRow <- df[1]{ name: char, age: int };
+
+# a dataframe column is a vector, so `df$name` is `[1, char]`, not `char`
+let process <- fn(df: PersonRow): [1, char] {
+  df$name
+};
+```
+
+However, for most tidyverse workflows, `Foreign<Any>` with `R {}` blocks is
+more practical because tidyverse functions return generic tibbles, not
+specific dataframe types.
+
+### Practical patterns
+
+#### Typed wrapper around dplyr
+
+```typr
+@extern dplyr::group_by: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern dplyr::summarise: (data: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+
+let summarize_by_group <- fn(
+  df: Foreign<Any>,
+  group_col: char
+): Foreign<Any> {
+  R {
+    df |>
+      dplyr::group_by(.data[[group_col]]) |>
+      dplyr::summarise(n = dplyr::n())
+  }
+};
+```
+
+#### Type-safe column access
+
+```typr
+@extern dplyr::pull: (data: Foreign<Any>, var: char) -> Foreign<Any>;
+
+let get_column <- fn(df: Foreign<Any>, col: char): Foreign<Any> {
+  pull(df, col)
+};
+```
+
+### Best practices
+
+1. **Use `R {}` for NSE** — Tidyverse NSE (bare column names, formulas, `...`)
+   cannot be type-checked. Embrace `R {}` blocks for these operations.
+
+2. **Signature the entry points** — Add `@extern` for dplyr/tidyr functions
+   you call frequently. This gives you partial type safety on the first argument.
+
+3. **Use `@importFrom`** — Generate proper namespace imports for your package.
+   This is required for CRAN and good practice for any R package.
+
+4. **Keep business logic typed** — Do data transformation in `R {}` blocks, but
+   write the core logic of your package in typed TypR functions.
+
+5. **Return `Foreign<Any>`** — Tidyverse functions return tibbles, which are
+   opaque R objects. Do not try to type them as specific dataframe types unless
+   you know the exact schema.
+
+### Where to go next
+
+- [Escape Hatches](/docs/reference/escape-hatches) — `R {}` blocks, `extern`, `function()`
+- [Type existing R functions](type-r-functions) — `@` signatures for plain functions
+- [Compatibility with R](/docs/reference/r-typr) — full interop walkthrough
+
+---
+
+## Build, test & document
+
+## How to build, test, and document a TypR package
+
+A TypR package is a normal R package with one extra folder. This guide covers
+the full development workflow: building, testing, and documenting.
+
+### Package structure
+
+A TypR package follows standard R package conventions:
+
+```
+mypackage/
+  DESCRIPTION
+  NAMESPACE
+  R/            # generated R code (do not edit by hand)
+  TypR/         # your typed source code
+    main.ty     # entry point (mandatory)
+    utils.ty    # additional modules
+  man/          # documentation (auto-generated)
+  tests/        # testthat tests
+  mypackage.Rproj
+```
+
+The `TypR/` folder is the only addition. Everything else — `DESCRIPTION`,
+`NAMESPACE`, `R/`, `man/`, `tests/` — is standard R.
+
+### Step 1: Build the package
+
+Write your typed code in `TypR/main.ty`:
+
+```typr
+# a signature types the base-R `paste` so the call below is checked
+@paste: (...values: Any) -> char;
+
+type Person <- list {
+  name: char,
+  age: int
+};
+
+let new_person <- fn(name: char, age: int): Person {
+  list(name = name, age = age)
+};
+
+let greet <- fn(p: Person): char {
+  paste("Hello,", p$name)
+};
+
+print(greet(new_person("Alice", 25)));
+```
+
+Run the build from the package root:
+
+```bash
+typr build
+```
+
+This transpiles every `.ty` file in `TypR/` into R code in `R/`:
+
+```
+R/
+  a_std.R                # generated helpers
+  b_generic_functions.R  # generated helpers
+  c_types.R              # generated type definitions
+  d_main.R               # transpiled main.ty
+```
+
+The naming convention (`a_`, `b_`, `c_`, `d_`) ensures correct load order.
+
+### Step 2: Test with testthat
+
+TypR has a built-in `Test` block that extracts into standard testthat files
+during transpilation:
+
+```typr
+# --- setup, from step 1 ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+let greet <- fn(p: Person): char { paste("Hello,", p$name) };
+# --------------------------
+
+Test {
+  test_that("new_person creates a valid person", {
+    let p <- new_person("Alice", 25);
+    expect_equal(p$name, "Alice");
+    expect_equal(p$age, 25);
+  });
+
+  test_that("greet returns a greeting string", {
+    let p <- new_person("Bob", 30);
+    expect_equal(greet(p), "Hello, Bob");
+  })
+}
+```
+
+Run tests as you would for any R package:
+
+```r
+devtools::test()
+# or
+testthat::test_local()
+```
+
+:::tip
+Place `Test` blocks directly after the functions they test. This keeps
+logic and tests side by side — the transpiler extracts them into
+`tests/testthat/` automatically.
+:::
+
+### Step 3: Document with roxygen2
+
+TypR generates roxygen2-compatible comments from your type annotations. The
+transpiler infers `@param`, `@return`, and `@export` directives from the
+function signatures:
+
+```typr
+# --- setup, from step 1 ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+# --------------------------
+
+@pub let greet <- fn(p: Person): char {
+  paste("Hello,", p$name)
+};
+```
+
+The `@pub` keyword generates an `@export` directive. After transpilation,
+run:
+
+```r
+devtools::document()
+```
+
+This populates `man/` with `.Rd` files and updates `NAMESPACE`.
+
+### Step 4: Install and check
+
+```r
+devtools::install()
+devtools::check()
+```
+
+The package installs and checks like any standard R package. CRAN, R CMD check,
+and pkgdown all see regular R code — TypR is invisible at this stage.
+
+### Step 5: Use modules for clean organization
+
+As your package grows, split code into one file per type or concept:
+
+```typr noplayground
+# main.ty
+mod person;
+mod utils;
+```
+
+TypR resolves `mod person` to `TypR/person.ty` and generates `R/person.R`.
+This keeps the codebase modular without any extra configuration.
+
+See [Modules & Imports](/docs/reference/modules) for the full module system.
+
+### Incremental migration
+
+You do not have to convert an entire R package at once. The recommended
+approach:
+
+1. Add a `TypR/` folder to your existing package
+2. Move one function at a time from `R/` to `TypR/`
+3. Run `typr build` to regenerate the R code
+4. Run `devtools::test()` to verify nothing broke
+5. Repeat
+
+TypR never forces an all-or-nothing choice.
+
+### Common build issues
+
+| Problem | Solution |
+|---------|----------|
+| `main.ty` not found | Ensure `TypR/main.ty` exists (mandatory entry point) |
+| Collision with `R/` file | TypR overwrites `R/<name>.R` when `TypR/<name>.ty` exists. Do not edit generated files by hand. |
+| Missing type errors | Run `typr build` — the compiler reports type errors before generating R code |
+| `@importFrom` not in NAMESPACE | Run `devtools::document()` after `typr build` |
+
+### Where to go next
+
+- [Compatibility with R](/docs/reference/r-typr) — full package walkthrough
+- [Type existing R functions](type-r-functions) — adding `@` signatures
+- [Modules & Imports](/docs/reference/modules) — organizing code into modules
+
+---
+
+## Use raw R blocks
+
+## How to use raw R blocks in TypR
+
+Not everything needs to be typed. TypR provides several escape hatches for
+writing plain R code when the type system gets in the way.
+
+### When to use raw R blocks
+
+Use raw R when:
+
+- You need idiomatic R that is hard to type (pipes `%>%`, NSE, formulas `~`)
+- You are calling complex dplyr/tidyr pipelines
+- You are working with R6/S4 objects and their methods
+- You are prototyping and want to move fast
+
+The goal is not to type everything — it is to type the parts where types help.
+
+### `R {}` blocks — the primary escape hatch
+
+```typr
+let result <- R {
+  mtcars |>
+    dplyr::filter(cyl > 4) |>
+    dplyr::mutate(efficiency = mpg / wt) |>
+    dplyr::arrange(desc(efficiency))
+};
+```
+
+`R {}` captures its body verbatim and emits it as a plain R block `{ ... }`.
+It is the preferred form for idiomatic R that is difficult to type.
+
+#### Using return values
+
+`R {}` blocks evaluate to the value of their last instruction, just like R
+blocks:
+
+```typr
+let count <- R { length(x) };         # returns an integer
+let names <- R { colnames(df) };      # returns a character vector
+```
+
+The return value flows into the surrounding typed code as `Foreign<Any>`.
+
+#### Calling typed functions from R blocks
+
+You can call TypR functions from within `R {}` blocks — the transpiler resolves
+the references:
+
+```typr
+let compute <- fn(x: int): int { x * 2 };
+
+let result <- R {
+  sapply(1:10, compute)
+};
+```
+
+### `extern` — typed R functions
+
+When you want type checking on the signature but have a plain R body:
+
+```typr
+extern (x: int, y: char) -> char r#"paste0(x, y)"#;
+```
+
+The compiler checks the types of `x` and `y` and the return type. The R code
+itself is emitted verbatim. This is useful for small helpers where you want
+the type safety but not the effort of writing typed TypR.
+
+### `function()` — untyped R functions
+
+Any `function(...)` expression in TypR is captured as an untyped R function:
+
+```typr
+let my_func <- function(x, y) {
+  x + y
+};
+```
+
+The body is not type-checked. This is useful for callbacks, callbacks to R
+functions that expect plain functions, and quick prototypes.
+
+### Comparison table
+
+| Form | Type-checked? | Returns typed value? | Best for |
+|------|--------------|---------------------|----------|
+| `R {}` | No | `Foreign<Any>` | Idiomatic R pipelines, NSE |
+| `extern` | Signature only | Yes | Small typed helpers with R bodies |
+| `function()` | No | `RFunction` | Callbacks, prototypes |
+| `@` signature | N/A | N/A | Typing existing R functions |
+
+### Practical patterns
+
+#### Data transformation pipeline
+
+```typr
+let clean_data <- fn(df: Foreign<Any>): Foreign<Any> {
+  R {
+    df |>
+      tidyr::drop_na() |>
+      dplyr::mutate(across(where(is.character), trimws))
+  }
+};
+```
+
+#### Configuration with R code
+
+```typr
+let theme <- R {
+  ggplot2::theme_minimal() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 14, face = "bold"),
+      axis.text = ggplot2::element_text(size = 10)
+    )
+};
+```
+
+#### Prototype first, type later
+
+```typr
+# Quick prototype (untyped)
+let analyze <- function(data) {
+  summary(lm(mpg ~ wt, data = data))
+};
+
+# Later, add types
+let analyze_typed <- fn(data: Foreign<Any>): Foreign<Any> {
+  R { summary(lm(mpg ~ wt, data = data)) }
+};
+```
+
+### Best practices
+
+1. **Use `R {}` as the default escape** — It is the cleanest way to embed R
+   code. Save `extern` for cases where you need the typed signature.
+
+2. **Keep `R {}` blocks small** — Large `R {}` blocks defeat the purpose of
+   using TypR. If a block grows beyond 10-15 lines, consider whether it should
+   be a function in `R/`.
+
+3. **Extract return types** — Even if the block is untyped, you can annotate
+   the binding with a type if the return value is known:
+
+   ```typr
+   let count: int <- R { nrow(df) };
+   ```
+
+4. **Do not nest `R {}` blocks** — Keep them flat. If you need typed logic
+   inside R code, call a TypR function from the R block.
+
+### Where to go next
+
+- [Escape Hatches](/docs/reference/escape-hatches) — full reference for all escape mechanisms
+- [Use dplyr/tidyr from TypR](use-dplyr-tidyr) — tidyverse-specific patterns
+- [Interop with R6/S4/RC](interop-r6-s4) — working with OOP objects
+
+---
+
+## Declare S3/S4 generics
+
+## How to declare S3 and S4 generics in TypR
+
+TypR can declare the types of R's S3 and S4 generic functions, giving you
+type safety when working with R's object-oriented systems.
+
+### S3 generics
+
+S3 is R's simplest OOP system — a generic function dispatches on the class of
+its first argument. Declare S3 generics with `@` signatures:
+
+```typr
+@print: (x: Foreign<Any>) -> Empty;
+@summary: (object: Foreign<Any>) -> Foreign<Any>;
+@plot: (x: Foreign<Any>, ...args: Any) -> Empty;
+@format: (x: Foreign<Any>, ...args: Any) -> char;
+```
+
+The `Foreign<Any>` type is used because S3 dispatch is dynamic — the actual
+type is determined at runtime based on the class attribute.
+
+#### Typing your own S3 generics
+
+If your package defines an S3 generic:
+
+```r
+# In R/my_generic.R
+#' @export
+my_generic <- function(x, ...) {
+  UseMethod("my_generic")
+}
+```
+
+Declare it in TypR:
+
+```typr
+@my_generic: (x: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+```
+
+Then implement methods in `R/` as usual — TypR does not need to know about
+the individual S3 methods.
+
+### S4 generics
+
+S4 generics are more structured. Use `@extern` to declare them:
+
+```typr
+@extern stats::coef: (object: Foreign<Any>) -> Foreign<Any>;
+@extern stats::confint: (object: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+@extern stats::fitted: (object: Foreign<Any>) -> Foreign<Any>;
+@extern stats::residuals: (object: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+```
+
+For your own S4 generics, declare them with `@extern` pointing to the package:
+
+```typr
+@extern mypackage::my_generic: (x: Foreign<Any>, ...args: Any) -> Foreign<Any>;
+```
+
+### Using generics in typed code
+
+Once declared, generics work naturally in typed functions:
+
+```typr
+@summary: (object: Foreign<Any>) -> Foreign<Any>;
+@plot: (x: Foreign<Any>, ...args: Any) -> Empty;
+
+let analyze <- fn(model: Foreign<Any>): char {
+  let s <- summary(model);
+  R { capture.output(plot(model)) };
+  "Analysis complete"
+};
+```
+
+### The `Foreign<T>` wrapper
+
+`Foreign<T>` is the idiomatic type for opaque R values. It wraps any R object
+that passes through TypR untouched:
+
+```typr
+type LmModel <- Foreign<Any>;
+type Ggplot <- Foreign<Any>;
+type R6Object <- Foreign<Any>;
+```
+
+Key properties of `Foreign<T>`:
+
+- Values pass through `let` bindings, function arguments, and return values
+  without conversion
+- `m.field` / `m$field` never type-checks (no structural access)
+- You need a dedicated `@extern` accessor for each field or method
+
+### Reference classes (RC)
+
+RC generics are handled the same way as S3 — declare with `@` or `@extern`:
+
+```typr noplayground
+@Logger$log: (msg: char) -> Empty;
+@Logger$get_entries: () -> Foreign<Any>;
+```
+
+### Practical pattern: typed model interface
+
+```typr
+type Model <- Foreign<Any>;
+
+@extern stats::lm: (formula: char, data: Foreign<Any>) -> Model;
+@extern stats::summary: (object: Model) -> Foreign<Any>;
+@extern stats::coef: (object: Model) -> Foreign<Any>;
+@extern stats::predict: (object: Model, newdata: Foreign<Any>) -> Foreign<Any>;
+
+# an `@extern pkg::name` signature binds the *bare* name in TypR code
+let fit_model <- fn(formula: char, data: Foreign<Any>): Model {
+  lm(formula, data)
+};
+
+let get_coefficients <- fn(model: Model): Foreign<Any> {
+  coef(model)
+};
+```
+
+### Best practices
+
+1. **Use `Foreign<Any>` for dispatch types** — S3/S4 dispatch is dynamic.
+   Do not try to model the class hierarchy in TypR's type system.
+
+2. **Declare signatures for generics you call** — Even partial type safety
+   (checking the first argument) is better than none.
+
+3. **Keep method implementations in R** — TypR is for typed logic, not for
+   reimplementing OOP dispatch. Write methods in `R/`, declare generics in `.ty`.
+
+4. **Use `@extern` for cross-package generics** — When calling generics from
+   other packages (stats, ggplot2, etc.), `@extern` is the right tool.
+
+### Where to go next
+
+- [Interfaces & Structural Validation](/docs/reference/interfaces) — TypR's own structural polymorphism
+- [Signatures, @extern & Foreign](/docs/reference/signatures) — full reference
+- [Escape Hatches](/docs/reference/escape-hatches) — `R {}`, `extern`, `function()`
+
+---
+
+## Reference
+
+### Going further
+
+This section provides a deeper overview of the Typed R language. It is intended as a practical guide to understand the core mechanisms of the type system and the main programming constructs.
+
+Typed R is designed to scale from simple scripts to complex systems, combining the expressiveness of R with the safety and clarity of a modern typed language.
+
+---
+
+## Installation
+
+TypR is installed as a complement to R.
+
+General steps:
+
+### 1. Install a recent version of **R**.
+
+You can install R (and RStudio) in this [link](https://rstudio-education.github.io/hopr/starting.html).
+
+### 2. Install the TypR compiler/interpreter 
+
+You can install TypR in 3 different ways:
+
+#### With the release page
+
+If you have Windows, Mac or Linux, you can download it with the [release page](https://github.com/we-data-ch/typr/releases/).
+
+#### Via DockerHub:
+
+If you have docker you can install TypR with your terminal:
+```bash
+docker pull fabricehategekimana/typr:latest
+```
+
+You can then run it in this way:
+
+```bash
+docker run -it --rm -v $(pwd):/workspace fabricehategekimana/typr:latest
+```
+
+#### With Cargo (Rust)
+
+If you already have Rust in your system, you can download it with Cargo from Rust:
+
+```bash
+cargo install TypR
+```
+
+### 3. Verify the installation 
+
+To verify your installation, you can use this command:
+
+```bash
+> typr --version
+typr [actual version]
+
+```
+
+Once installed, TypR can be used:
+- from the command line,
+- within a compatible IDE — see [Editor Setup](./editor-setup) for VS Code,
+  RStudio and Vim/Neovim.
+
+---
+
+## Editor Setup
+
+TypR ships first-class integrations for three editors: **VS Code** (and
+Positron), **RStudio** (and Positron), and **Vim / Neovim**. All three talk to
+the same [`typr` CLI](./installation) and the same language server
+(`typr lsp`) — install the compiler first, then pick your editor below.
+
+### VS Code / Positron
+
+#### Install
+
+Search **TypR** in the Extensions view (`Ctrl+Shift+X`) and install it — the
+extension is published on the [VS Code
+Marketplace](https://marketplace.visualstudio.com/vscode).
+
+Positron, VSCodium and Cursor don't have access to the Marketplace; install
+from [Open VSX](https://open-vsx.org/) instead (same extension, same
+version).
+
+If you'd rather install manually, download the `.vsix` file attached to the
+[latest release](https://github.com/we-data-ch/typr/releases/latest), then in
+VS Code: Command Palette (`Ctrl+Shift+P`) → **Extensions: Install from
+VSIX...**.
+
+#### Features
+
+- Syntax highlighting for `.ty` files
+- Language server: hover, go-to-definition, autocompletion
+- Commands: **typR: Check/Build/Run Project**, plus current-file variants,
+  bound to `Ctrl+Shift+C` / `Ctrl+Shift+B` / `F5`
+
+#### Requirements
+
+The `typr` binary must be on your `PATH`. If it isn't, set the
+`typr.path` setting to its full path. Verify with `typr --version` in a
+terminal, or check the **typR** channel in VS Code's Output panel if the
+language server doesn't start.
+
+### RStudio / Positron
+
+#### Install
+
+Download `typr.runner_*.tar.gz` from the [latest
+release](https://github.com/we-data-ch/typr/releases/latest), then install it
+as a local source package:
+
+```r
+install.packages("typr.runner_0.5.10.tar.gz", repos = NULL, type = "source")
+```
+
+(adjust the filename to the version you downloaded). This installs the
+**typr.runner** package and registers its RStudio addins.
+
+#### Usage
+
+Every action is available both as an RStudio addin and as an R function:
+
+| Addin | Function |
+|---|---|
+| Run TypR project | `typr.runner::run()` |
+| Build TypR project | `typr.runner::build()` |
+| Check TypR project | `typr.runner::check()` |
+| Test TypR project | `typr.runner::test()` |
+
+Scaffold a new project with:
+
+```r
+typr.runner::new("/path/of/your/project/folder/project_name")
+```
+
+then open the generated folder as a normal RStudio project.
+
+#### Requirements
+
+The `typr` binary must be installed and on your `PATH` — see
+[Installation](./installation).
+
+### Vim / Neovim
+
+#### Install
+
+The plugin lives at `editors/vim` in the [TypR
+repository](https://github.com/we-data-ch/typr) and follows the standard Vim
+plugin layout, so any plugin manager works. There's no central plugin
+registry for Vim, so point your manager at the repo (or a subdirectory of
+it) rather than searching a marketplace.
+
+**lazy.nvim** (Neovim):
+```lua
+{
+  "we-data-ch/typr",
+  dir = "editors/vim",
+  ft = "typr",
+  config = function()
+    require("typr").setup()
+  end,
+}
+```
+
+**vim-plug**:
+```vim
+Plug 'we-data-ch/typr', { 'rtp': 'editors/vim', 'for': 'typr' }
+" :PlugInstall
+```
+
+**packer.nvim** (Neovim):
+```lua
+use { "we-data-ch/typr", rtp = "editors/vim", ft = "typr" }
+```
+
+**Native packages** (Vim or Neovim), from a local clone of the repository:
+```bash
+ln -s "$(pwd)/editors/vim" ~/.local/share/nvim/site/pack/typr/start/typr
+# or for Vim:
+ln -s "$(pwd)/editors/vim" ~/.vim/pack/typr/start/typr
+```
+
+Alternatively, download `typr-vim-*.tar.gz` from the [latest
+release](https://github.com/we-data-ch/typr/releases/latest) and extract it
+directly into your plugin manager's install directory.
+
+#### Features
+
+- Syntax highlighting, filetype detection (`.ty`, legacy `.typr` / `.tyr`)
+  and indentation
+- `#` comments, `# region` / `# endregion` folding
+- CLI integration: `:TyprCheck` / `:TyprBuild` / `:TyprRun` / `:TyprTest` /
+  `:TyprRepl`, plus current-file variants (`:TyprCheckFile`, ...), with
+  tab-completion of CLI flags
+- Language server:
+  - **Neovim** — starts automatically via the built-in LSP client
+  - **Vim** — one-line setup with `coc.nvim` or `vim-lsp` (below)
+
+#### Language server
+
+Neovim needs no configuration: the plugin starts `typr lsp` automatically for
+`.ty` files when `typr` is on `PATH`. Check its status with
+`:TyprLspStatus`, or opt out entirely with `vim.g.typr_lsp_enabled = false`
+before the plugin loads.
+
+Vim has no built-in LSP client, so wire it through your client of choice:
+
+**coc.nvim** (`:CocConfig`):
+```json
+{
+  "languageserver": {
+    "typr": {
+      "command": "typr",
+      "args": ["lsp"],
+      "filetypes": ["typr"]
+    }
+  }
+}
+```
+
+**vim-lsp**:
+```vim
+au User lsp_setup call lsp#register_server({
+      \ 'name': 'typr',
+      \ 'cmd': {server_info->['typr', 'lsp']},
+      \ 'whitelist': ['typr'],
+      \ })
+autocmd FileType typr setlocal omnifunc=lsp#complete
+```
+
+#### Requirements
+
+The `typr` binary must be installed and expose the LSP subcommand
+(`typr lsp --help`). If it isn't on `PATH`, set `g:typr_path` to its full
+path (works for both Vim and Neovim). Full command reference: `:help typr`
+once the plugin is installed.
+
+---
+
+## Lexicon & Literals
+
+This page covers the fundamental tokens and literal types in TypR.
+
+<!-- truncate -->
+
+### Semicolons
+
+Every top-level instruction ends with `;`. The parser tolerates missing semicolons (emitting a `SyntaxError::ForgottenSemicolon` warning), except for the **last expression in a block**, which acts as an implicit return value — just like in R.
+
+```typr
+let x <- 42;        # explicit semicolon
+let y <- 42         # tolerated, warning emitted
+```
+
+---
+
+### Literals
+
+| Literal | Syntax | Note |
+|---------|--------|------|
+| Integer | `42`, `-7` | `Lang::Integer` |
+| Number | `3.14`, `-0.5` | a decimal point is **required** for `Number`; otherwise it's an `Integer` |
+| String | `"text"` or `'text'` | single and double quotes are interchangeable; escapes: `\" \' \\ \n \t` |
+| Boolean | `true` / `TRUE`, `false` / `FALSE` | both lowercase and uppercase forms accepted |
+| Null | `null` / `NULL` | `Lang::Null` — distinct from `NA` |
+| Missing | `na` / `NA` | `Lang::NA` — distinct from `null` |
+
+#### Literal types
+
+Literals can also appear as **types** (singleton types): `3`, `3.14`, `true`, `"chat"` are valid types, more precise than `int`/`num`/`bool`/`char`.
+
+---
+
+### Identifiers
+
+| Kind | Convention | Example | Enforcement |
+|------|-----------|---------|-------------|
+| Variable | `snake_case` | `my_var` | must start with `a-z` or `_` |
+| Type | `PascalCase` | `MyType` | **required** for `type`/`opaque`/alias declarations |
+| Quoted | backticks | `` `+` ``, `` `weird name` `` | useful for naming custom operators |
+
+The parser explicitly rejects casing mistakes:
+
+- `let PascalCase <- ...` triggers `LetInsteadOfType`
+- `type snake_case <- ...` triggers `TypeInsteadOfLet`
+
+---
+
+### Comments
+
+```typr
+# This is a comment
+```
+
+Only `#` is recognized. There is **no** `//` syntax — a `.ty` file containing `//` will fail silently (see [Known Pitfalls](../concepts/known-pitfalls)).
+
+---
+
+## Bindings & Mutation
+
+This page covers how variables are declared, destructured, and reassigned in TypR.
+
+<!-- truncate -->
+
+### Declaration with `let`
+
+```typr
+let x <- 42;
+let y: int <- 5;
+@pub let z <- "hello";             # public + testable
+@testable let cache <- state(0);   # private, visible in build --test via M$.test_cache
+@export let api <- fn(x: int): int { x };  # @pub + #' @export roxygen2
+```
+
+Both `<-` and `=` work as the assignment operator in `let`. However, a single `=` is **never** a binary infix operator in expressions — it is reserved for named fields (`x = 1`), top-level assignment, and default parameter values.
+
+---
+
+### Tuple destructuring
+
+```typr
+let :{a, b, c} <- :{1, 2, 3};
+let :{a, _, c} <- :{1, 2, 3};   # wildcard: ignore the element
+```
+
+Destructuring is desugared into a temporary variable + positional access via dot (`__tuple_tmp__.1`, `.2`, ...).
+
+---
+
+### Reassignment & mutation
+
+```typr
+# --- setup ---
+let x <- 0;
+let f <- fn(a: int): int { a + 1 };
+let g <- fn(a: int): int { a * 2 };
+# ---------------
+
+x <- 10;         # reassign an already-bound variable
+x <- x + 1;
+
+# "implicit mutation" sugar: x!; reassigns x to the result of the expression
+x |> f() |> g()!;         # ≡  x <- x |> f() |> g();
+
+print(x);
+```
+
+The `expr!;` form requires the head of the `.`/`|>` chain to be an assignable variable — `3!;` is rejected at parse time.
+
+---
+
+### Visibility annotations
+
+| Annotation | Effect |
+|-----------|--------|
+| `@pub` | makes the binding public (visible outside the module) |
+| `@testable` | private, but exposed as `M$.test_name` in `build --test` mode |
+| `@export` | combines `@pub` with a `#' @export` roxygen2 tag |
+
+---
+
+## Types
+
+This page provides a comprehensive overview of the TypR type system.
+
+<!-- truncate -->
+
+### Basic types
+
+Typed R provides explicit basic (primitive) types:
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `int` | Integer numbers | `42` |
+| `num` | Floating-point numbers | `3.14159` |
+| `bool` | Boolean values | `true`, `false` |
+| `char` | Character strings | `"Hello"` |
+| `null` | Null value (`NULL`) | `null` |
+| `na` | Missing value (`NA`) | `na` |
+| `Any` | Top type — accepts any value | (used in signatures) |
+| `Empty` | Bottom type — no value satisfies it | (return type for side-effect functions) |
+| `Self` | Refers to the type that implements an interface | (used in interface definitions) |
+
+#### Literal types
+
+Literals can appear as **types** (singleton types), providing more precise type information than their base type:
+
+```typr noplayground
+let x: 3 = 3;          # x is exactly 3, not just int
+let flag: true = true;  # flag is exactly true, not just bool
+let name: "hello" = "hello";  # name is exactly "hello", not just char
+```
+
+---
+
+### Composite types
+
+#### Records
+
+Records combine named fields of different types. They are the primary way to model structured data:
+
+```typr
+type Point <- list { x: int, y: int };
+type Config <- record { name: char, timeout: int };   # explicit synonym
+```
+
+Equivalent literal forms: `list{...}`, `record{...}`, `object{...}`, `:{...}`.
+
+See [Records & Constructors](records.md) for construction, spread, and named embedding.
+
+#### Tuples
+
+Tuples combine values of different types by position:
+
+```typr
+type Pair    <- tuple{int, char};   # explicit
+type PairAlt <- Tuple[int, char];   # bracket notation
+type Rest    <- Tuple[T..., U];     # variadic: T... captures a sequence of types
+```
+
+#### Vectors
+
+```typr
+type Vector <- Vec[3, int];
+let v <- c(1, 2, 3);
+```
+
+#### Arrays
+
+```typr
+type Array <- [4, bool];
+let a <- [true, false, false, true];
+```
+
+| Form | Example | Description |
+|------|---------|-------------|
+| `[T]` (S3 short) | `[int]` | array of integers, free size (`Any`) |
+| `[#N, T]` (S3 full) | `[#N, int]` | size indexed by generic `#N` |
+| `Array[N, T]` | `Array[3, int]` | named variant, fixed size = 3 |
+| `Vec[T]` | `Vec[num]` | native R vector |
+| `df[N]{...}` | `df[N]{ name: char, age: int }` | `df` = short alias for `dataframe` |
+| `Tibble[N]{...}` | `Tibble[3]{ id: int, active: bool }` | requires a `typeconstructor` declaration |
+
+#### Dataframes
+
+```typr
+type PersonRows <- dataframe[3]{ name: char, age: int };
+```
+
+---
+
+### Generic types
+
+#### Generics and kind sigils
+
+```typr noplayground
+let id <- fn(x: T): T { x };         # T uppercase = free generic
+#N     # "index" generic (array dimension)
+$T     # "label" generic (field name)
+%R     # constrained: must be a Record
+@I     # constrained: must be an Interface
+^S     # constrained: must be a char
+?B     # constrained: must be a bool
+```
+
+#### Generic type definitions
+
+```typr
+type Option<T> <- .Some(T) | .None;
+opaque Factor<L> <- int;             # phantom parameter: L appears only in signatures
+```
+
+---
+
+### Function types
+
+Functions are first-class values and have their own type syntax:
+
+```typr
+type Predicate <- (int, char) -> bool;   # anonymous function type
+type Adder     <- (a: int, b: int) -> int;  # parameter names optional, ignored for typing
+```
+
+:::caution
+Writing `fn(a: int) -> int` in **type position** (instead of `(int) -> int`) triggers `SyntaxError::FunctionTypeSyntax` — `fn(...)` only exists at the expression level, never in types.
+:::
+
+---
+
+### Interfaces
+
+```typr
+type Viewable <- interface { view: (Self) -> char };   # structural capability
+```
+
+See [Interfaces & Structural Validation](interfaces.md) for details.
+
+---
+
+### Union types
+
+```typr
+type Shape <- .Circle(num) | .Square(num);
+type Combined <- Movable & Drawable;          # intersection of interfaces
+```
+
+See [Unions, Tags & Pattern Matching](unions-patterns.md) for pattern matching.
+
+---
+
+### Type aliases
+
+Type aliases give a name to an existing type:
+
+```typr
+type Person <- list {
+    name: char,
+    age: int
+};
+```
+
+With an alias, `Person` and `list { name: char, age: int }` are interchangeable. See [Signatures](signatures.md) for `type` vs `opaque`.
+
+---
+
+### Type inference
+
+Typed R features **type inference** — explicit annotations are not always required. The compiler infers types from:
+
+- literal values
+- expressions
+- function bodies
+- usage context
+
+Explicit types can be added incrementally where clarity or safety is critical.
+
+---
+
+### Summary of type constructors
+
+| Kind | Syntax | Example |
+|------|--------|---------|
+| Vector | `Vec[n, T]` | `c(1, 2, 3)` |
+| Array | `[n, T]` | `[true, false, true]` |
+| Record | `list { field: T, ... }` | `list(a = 3, b = false)` |
+| Tuple | `tuple{T1, T2}` | `:{1, "hello"}` |
+| Function | `(T1, T2) -> T3` | `fn(a: int): bool { true }` |
+| Interface | `interface { f: (T) -> T, ... }` | no default constructor |
+| Union | `T1 \| T2` | no default constructor |
+| Tagged | `.Tag(T) \| .Tag2` | `.Some(42)`, `.None` |
+| Alias | `type Name = T` | `type Person = list { ... }` |
+
+---
+
+## Functions
+
+This page covers function definitions, calling conventions, signatures, and advanced patterns in TypR.
+
+<!-- truncate -->
+
+### Defining typed functions
+
+The `fn` keyword defines a typed function. Parameter types use `: type`, and the return type appears after the closing parenthesis:
+
+```typr
+let add <- fn(a: int, b: int): int {
+    a + b
+};
+
+print(add(5, 3));
+```
+
+:::caution
+`fn(...)` **always** requires a return type — omitting it triggers an explicit panic ("You forgot to specify the function return type").
+:::
+
+---
+
+### Default parameters
+
+Default values are supported for the **final parameter(s)**:
+
+```typr
+let greet <- fn(name: char, greeting: char = "Hello"): char {
+    greeting
+};
+
+greet("World");        # "Hello"
+greet("World", "Hi");  # "Hi"
+```
+
+---
+
+### Variadic functions
+
+```typr
+let sum_all <- fn(...xs: int): int {
+    sum(xs)
+};
+
+print(sum_all(1, 2, 3));
+```
+
+The `...` prefix makes a parameter accept any number of arguments.
+
+---
+
+### Calling conventions
+
+TypR supports three equivalent ways to call a function, thanks to the **uniform function call syntax** (UFCS):
+
+```typr
+# Classic call
+print(add(5, 3));
+
+# Pipe syntax (|>)
+(5) |> add(3)
+    |> print();
+
+# Method call syntax (.)
+(5).add(3)
+   .print();
+```
+
+All three styles produce the same result. The first argument can be "pulled out" as the receiver in pipe or method-call notation — making operation chaining readable and natural.
+
+---
+
+### Lambdas
+
+Lambdas use `\` without type annotations:
+
+```typr
+let sq <- \(x) x * x;
+```
+
+:::info
+`\(...)` (lambda) has no declared parameter types or return type. Use `fn(...)` when types are needed.
+:::
+
+---
+
+### Partial application
+
+The `\` symbol also supports **partial application** of functions:
+
+```typr
+# --- setup ---
+let add <- fn(a: int, b: int): int { a + b };
+type Point <- list { x: int, y: int };
+# -------------
+
+let add5 <- \add(a = 5);                         # partial application of a function
+let origin <- \Point:{ x = 0, y = 0 };           # partial application of a record constructor
+
+print(add5(3));
+```
+
+:::note
+**Lambda vs partial application**: both use `\`, disambiguating by what follows — `\(` → lambda, `\identifier(` → partial application. `PartialApp` is desugared into `Lang::Function` during type-checking and never reaches transpilation.
+:::
+
+---
+
+### Higher-order functions
+
+Functions are first-class values in TypR. They can be passed as arguments and returned as values:
+
+```typr
+type Function <- (int) -> bool;
+
+let function0 <- fn(a: int): bool {
+    true
+};
+```
+
+The type system tracks function types using `(T1, T2) -> T3` syntax, ensuring composition and callbacks are type-safe.
+
+---
+
+### Closures
+
+Functions can capture variables from their surrounding environment. The type system ensures captured variables and returned functions remain type-safe:
+
+```typr noplayground
+let make_adder <- fn(n: int): (int) -> int {
+    fn(x: int): int { x + n }
+};
+
+let add5 <- make_adder(5);
+add5(3);   # 8
+```
+
+---
+
+### Signatures: typing existing R functions
+
+By default, most base R functions accept `Any` and return `Empty`. The `@` annotation declares the type of an existing R function without modifying it:
+
+```typr
+@toupper: (char) -> char;
+
+toupper("Hi"); # now takes char, returns char
+# toupper(7);  # would now fail at compile time
+```
+
+See [Signatures, @extern & Foreign](signatures.md) for overloading, `@extern`, and `@importFrom`.
+
+---
+
+### Interfaces: polymorphic functions
+
+Interfaces enable **ad-hoc polymorphism** — write functions that work across multiple types:
+
+```typr
+@paste: (Any, Any) -> char;
+
+type Viewable <- interface {
+    view: (Self) -> char
+};
+
+let double <- fn(a: Viewable): char {
+    paste(view(a), view(a))
+};
+
+let view <- fn(a: bool): char { "bool" };
+
+true.double();  # works because bool implements Viewable
+```
+
+See [Interfaces & Structural Validation](interfaces.md) for details.
+
+---
+
+## Records & Constructors
+
+This page covers record types, constructors, spread operators, and named type embedding in TypR.
+
+<!-- truncate -->
+
+### Record literals and constructors
+
+```typr
+let p <- :{ x = 1, y = 2 };                 # anonymous record (requires type context)
+let p <- Point:{ x = 1, y = 2 };             # explicit constructor → transpiles to Point(x=1, y=2)
+let q <- Point:{ ...p, y = 9 };              # runtime spread: structural merge, override after
+let r <- mod$Point:{ x = 1, y = 2 };          # constructor qualified by module path
+
+let arr <- IntBox:[1, 2, 3];                  # ArrayConstructorCall
+```
+
+Equivalent record literal forms: `record{...}`, `object{...}`, `list{...}`, `:{...}` — the form is determined by the **shape** of the fields, not the keyword: named fields `name = value` produce a record (`Lang::List`), positional values produce a tuple (`Lang::Tuple`) even with `list{1, 2, 3}`.
+
+---
+
+### Spread — two distinct mechanisms
+
+```typr
+# --- setup ---
+type Point <- list { x: int, y: int };
+type Tag <- list { z: int };
+let source <- Point:{ x = 1, y = 2 };
+let a <- source;
+let b <- Tag:{ z = 3 };
+# -------------
+
+Point:{ ..source };     # "static" spread (nominal) — one per call
+Point:{ ...source };    # "runtime" spread (structural) — one per constructor, several in a record literal
+:{ ...a, ...b, z = 1 }; # record literal: multiple runtime spreads allowed, merged in order then overridden
+```
+
+| Form | Name | Allowed in | Behavior |
+|------|------|-----------|----------|
+| `..source` | Static spread | Constructor call | Nominal; one per call |
+| `...source` | Runtime spread | Constructor call or literal | Structural; merged in order |
+
+---
+
+### Named type embedding
+
+```typr
+# --- setup ---
+type Position <- list { x: int, y: int };
+# -------------
+
+type Widget <- list { embed coords: Position, label: char };
+```
+
+`embed` is a "soft" keyword — it is only recognized before `name: Type` with a trailing space, so a field actually named `embed` remains parsable.
+
+---
+
+### The `{...}` rule for generic types
+
+A `{ ... }` block following a parameterized type name **always** makes it a record constructor:
+
+```typr noplayground
+Tibble[3]{ id: int, active: bool }   # record constructor
+Tibble[3]                             # just a parameterized alias (no braces)
+```
+
+Two violations are caught explicitly:
+
+```typr compile_fail
+Df[8, int]{ name: char }        # SyntaxError::RecordConstructorIndex
+Array[5, { a: int }]             # SyntaxError::RecordInRecursiveParams
+```
+
+---
+
+## Unions, Tags & Pattern Matching
+
+This page covers tagged union types and the `match` expression in TypR.
+
+<!-- truncate -->
+
+### Defining tagged unions
+
+```typr
+type Shape <- .Circle(num) | .Square(num);
+let s <- .Circle(3.14);
+let n <- .None;                              # tag without payload
+```
+
+Each variant is prefixed with a dot (`.`) to distinguish it from regular type names.
+
+---
+
+### The `match` expression
+
+```typr
+# --- setup, from the previous block ---
+type Shape <- .Circle(num) | .Square(num);
+let s: Shape <- .Circle(3.14);
+# --------------------------------------
+
+match s {
+    .Circle(r) => r * 2.0,
+    .Square(side) => side,
+}
+```
+
+#### Available patterns
+
+| Pattern | Example | Description |
+|---------|---------|-------------|
+| Tag with binding | `.Some(a) => a` | destructures and binds the payload |
+| Tag without binding | `.None => 0` | matches a zero-payload tag |
+| Type pattern | `x as int => x + 1` | type cast/refinement |
+| Record pattern | `:{nom: n, age: a} => a` | destructures a record |
+| Tuple pattern | `:{a, b} => a` | destructures a tuple |
+| Wildcard | `_ => default` | matches anything |
+| Variable | `v => v` | binds and returns |
+
+---
+
+### Qualified union constructors
+
+```typr
+type Color <- .Red | .Blue;
+Color.Red;                      # qualified reference to a tag (bare, no :{...})
+
+type Rgb <- list { r: int, g: int, b: int };
+type Palette <- .Red | .Blue | Rgb;
+Palette.Rgb:{ r = 10, g = 20, b = 30 };  # Rgb is a record alias used as a union member
+```
+
+**Important**: `Union.Variant:{ field = val }` syntax **only** works when `Variant` is a record alias used directly as a union member — never for a real tag `.Variant(...)`. To construct a tag, use `.Variant(value)`, and `.Variant(:{ ... })` when the payload is itself a record.
+
+---
+
+### Generic tagged unions
+
+Tagged unions work with generics for reusable patterns:
+
+```typr
+type Option<T> <- .Some(T) | .None;
+
+let val: Option<int> <- .Some(42);
+let empty: Option<int> <- .None;
+
+match val {
+    .Some(n) => n,
+    .None => 0,
+}
+```
+
+---
+
+## Operators & Precedence
+
+This page covers all operators in TypR and their precedence rules.
+
+<!-- truncate -->
+
+### Precedence
+
+Precedence from strongest (evaluated first) to weakest. Note that member access / pipe binds **more tightly** than arithmetic, unlike most languages.
+
+| Rank | Operators | Role |
+|------|-----------|------|
+| 4 (strong) | `.` `\|>` `$` `::` `as!` `in` | member access / UFCS, pipe, validating cast |
+| 3 | `*` `/` `%` `@` | multiplicative, matrix product |
+| 2 | `+` `-` | additive |
+| 1 (weak) | `== != < > <= >=`, `and/&&/&`, `or/\|\|/\|`, `%op%` | comparison, logical, custom operators |
+
+---
+
+### UFCS — `.` and `|>`
+
+TypR supports the **Uniform Function Call Syntax**: `x.f(y)` is equivalent to `f(x, y)`.
+
+```typr noplayground
+x.f(y)            # ≡ f(x, y) — method-style call
+x |> f() |> g()   # pipe — same desugaring
+t.1                # positional tuple access (1-based index)
+mod$member         # record field / module access — "::" is a historical alias for "$"
+```
+
+#### Comparison with R
+
+```typr
+# --- setup ---
+let data <- [1, 2, 3, -4];
+
+# TypR — filter takes a real function, not a captured expression
+let r <- data |> filter(fn(x: int): bool { x > 0 }) |> mean();
+```
+```r
+# R — dplyr captures the expression (NSE)
+data |> filter(x > 0) |> mean()
+# or with magrittr: data %>% filter(...) %>% mean()
+```
+
+---
+
+### Validating cast
+
+```typr
+# --- setup ---
+type Point <- list { x: int, y: int };
+let p <- Point:{ x = 1, y = 2 };
+let xs <- [1, 2, 3];
+# ---------------
+
+p as! Point;                # calls validate_Point(p) at runtime
+xs as! [Any, int];          # cast to an inline structural type (not an alias)
+```
+
+---
+
+### Ranges
+
+```typr
+1:10;       # ≡ seq(1, 10, 1)
+1:2:10;     # ≡ seq(1, 10, 2) — step in the middle
+```
+
+---
+
+### Removed operators
+
+The following doubled operators were removed from the tokenizer: `++ -- ** // %% @@ .. $$ |>>`, as well as `@`/`@@`/`=` in infix position. None had typing/transpilation branches or a stdlib `` `op` `` signature to support them. A stray `//` (common C-style comment mistake) is now recognized by a dedicated parser and treated as a valid comment (see [Known Pitfalls](../concepts/known-pitfalls)).
+
+---
+
+### Arithmetic on types
+
+```typr noplayground
+type Combined <- A + B;      # Type::Operator on indices/dimensions
+T if T1 in T2                 # conditional type (experimental refinement)
+```
+
+---
+
+## Control Flow
+
+### Control flow
+
+#### if / else
+
+Conditional expressions in TypR behave like in standard R, with additional type safety.
+
+```typr
+if (4 == 4) {
+	print("It works!")
+} 
+```
+
+The type system ensures that:
+
+* conditions evaluate to boolean values,
+* all branches of a conditional expression are type-compatible when required.
+
+This prevents common errors where different branches return incompatible types.
+
+---
+
+#### for / while
+
+Loop constructs such as `for` and `while` follow R semantics, while benefiting from type checking:
+
+* loop variables have well-defined types,
+* operations inside loops are checked for consistency.
+
+This makes iterative algorithms more robust without changing their familiar structure.
+
+---
+
+#### match expressions
+
+The `match` expression provides exhaustive pattern matching on tagged unions. It is the idiomatic way to handle values that can take one of several forms:
+
+```typr
+# Define an Option type with generics
+type Option<T> <- .Some(T) | .None;
+
+# Create a value of type Option<bool>
+let val: Option<bool> <- .None;
+
+# Pattern match to extract or provide a default
+let res = match val {
+	.Some(a) => a,
+	_ => false
+};
+
+res;
+```
+
+Each branch of a `match` expression uses the `=>` arrow to map a pattern to its result. The patterns can:
+
+* **destructure tagged values**: `.Some(a)` binds the inner value to `a`,
+* **use wildcards**: `_` matches anything and acts as a default branch.
+
+The `match` expression is especially powerful when combined with [tagged unions and the Option type](types.md), making it easy to handle optional values, error cases, or any discriminated data safely at compile time.
+
+---
+
+---
+
+## Modules & Imports
+
+This page covers how to organize code into modules and import symbols in TypR.
+
+<!-- truncate -->
+
+### Defining a module
+
+```typr
+module Math {
+    let pi <- 3.14159;
+    @pub let pi_approx <- 3.14;
+    @pub opaque Radians <- num;
+};
+```
+
+A module compiles to an R environment. Members without `@pub` remain invisible from outside (except in `build --test` mode via `@testable`, where they are exposed as `M$.test_name`).
+
+---
+
+### Importing from modules
+
+```typr
+# --- setup ---
+module Math {
+    @pub let pi_approx <- 3.14;
+    @pub let sin <- fn(x: num): num { x };
+};
+
+module Stats {
+    @pub let mean_of <- fn(x: num): num { x };
+};
+# ---------------
+
+use Math::pi_approx;              # import a single member
+use Math::{sin as s};             # import several, with an alias
+use Stats::*;                     # import all @pub members
+
+print(pi_approx);
+```
+
+---
+
+### Module-level imports
+
+```typr noplayground
+import Math;                   # import the module itself
+import Math as M;              # with an alias
+```
+
+---
+
+### Legacy forms
+
+```typr noplayground
+mod Utils;                     # historical import form (equivalent to import)
+library(dplyr);               # classic R dependency
+use("dplyr", c("filter", "select"));   # legacy adapter
+```
+
+---
+
+### Module organization
+
+A common pattern is to use `main.ty` as an aggregation entry point and create one file per type or concept:
+
+```typr noplayground
+# main.ty
+mod person;
+mod utils;
+```
+
+TypR will look for `person.ty` and `utils.ty`, parse, type-check, and transpile each into a corresponding `.R` file in the `R/` folder. This keeps the codebase clean and modular.
+
+---
+
+## Interfaces & Structural Validation
+
+This page covers interfaces in TypR — a way to describe structural capabilities without modifying the original types.
+
+<!-- truncate -->
+
+### Defining an interface
+
+```typr
+type Movable <- interface { mv: (Self, int, int) -> Self };
+```
+
+An interface describes a **structural capability**: any type whose free functions have this type as their first parameter "implements" it, without requiring an `impl` keyword.
+
+---
+
+### Using an interface as a validator
+
+```typr
+# --- setup ---
+type Point <- list { x: int, y: int };
+type Movable <- interface { mv: (Self, int, int) -> Self };
+let mv <- fn(p: Point, dx: int, dy: int): Point { Point:{ x = p$x + dx, y = p$y + dy } };
+# -------------
+
+let p <- Point:{ x = 1, y = 2 };
+let q <- Movable(p);   # compile-time validator — transpiles to `q <- p`, never a real call
+```
+
+Calling `I(x)` where `I` is an interface alias is never a real function call (aliases live in a separate namespace from variables) — it is a compile-time compatibility check that fails with `InterfaceNotSatisfied` or `IncompatibleInterfaceMethod`.
+
+---
+
+### Polymorphic functions with interfaces
+
+Interfaces enable **ad-hoc polymorphism** — similar to type classes in Haskell or traits in Rust:
+
+```typr
+@paste: (Any, Any) -> char;
+
+type Viewable <- interface {
+    view: (Self) -> char
+};
+
+# A function that works for ALL Viewable types
+let double <- fn(a: Viewable): char {
+    paste(view(a), view(a))
+};
+```
+
+To make a type part of an interface, simply define the required function for it:
+
+```typr
+# --- setup, from the previous block ---
+@paste: (Any, Any) -> char;
+type Viewable <- interface { view: (Self) -> char };
+let double <- fn(a: Viewable): char { paste(view(a), view(a)) };
+# --------------------------------------
+
+let view <- fn(a: bool): char {
+    "bool"
+};
+
+# bool now inherits 'double'
+true.double();
+```
+
+This pattern is powerful for building extensible libraries where users can plug in their own types without modifying the original code.
+
+---
+
+### Intersection of interfaces
+
+```typr
+type Combined <- Movable & Drawable;   # intersection of interfaces
+```
+
+A value must satisfy **all** interfaces in the intersection.
+
+---
+
+## Signatures, @extern & Foreign
+
+This page covers type aliases, opaque types, typeconstructors, and the signature system for declaring types without bodies.
+
+<!-- truncate -->
+
+### Type aliases and opaque types
+
+```typr
+type Meters <- int;                 # transparent alias
+opaque Meters <- int;               # opaque alias: the underlying type is hidden from external typing
+type Option<T> = .Some(T) | .None;  # generic alias — uses `<T>`, not [T]
+opaque Factor<L> <- int;            # "phantom" parameter: L appears only in future @signature
+```
+
+Key differences:
+- **`type`**: transparent — the alias and its underlying type are interchangeable
+- **`opaque`**: the underlying type is hidden from external code, providing stronger encapsulation
+
+---
+
+### Typeconstructors
+
+```typr
+typeconstructor Tibble[N] record;          # registers a generic record constructor
+typeconstructor Matrix[N, M, T] recursive;
+```
+
+Typeconstructors register generic constructors that can be used with the `TypeName[N]{ ... }` syntax to create parameterized records.
+
+---
+
+### Signatures (type declarations without bodies)
+
+Signatures declare the type of an existing R function without providing an implementation:
+
+```typr
+@map: (a: [#N, T], f: (T) -> U) -> [#N, U];   # generic
+@add: (a: int, b: int) -> int;                  # overload: repeat @add with other types
+@add: (a: num, b: num) -> num;
+@as__character: (Self) -> char;                 # "__" → "." in R output (as.character)
+```
+
+A `.ty` signature file can contain a real `let name <- fn(...){...}` body and pass type-checking — but that body is **silently discarded**: only the `(name, type)` pair survives.
+
+#### Overloading
+
+Signatures can be repeated with different type parameters to define overloaded functions:
+
+```typr
+@add: (a: int, b: int) -> int;
+@add: (a: num, b: num) -> num;
+```
+
+---
+
+### @extern — external R functions
+
+```typr
+@extern stats::sd: (x: [Any, num]) -> num;      # real package::fn call
+@extern base::readRDS: (path: char) -> Foreign<Any>;  # already-visible function (no pkg:: prefix needed)
+@importFrom dplyr filter select mutate;          # generates a roxygen2 @importFrom
+```
+
+`@extern` declares the type of an R function from an external package. The compiler uses this for type-checking; at runtime, the actual `package::function` call is emitted.
+
+---
+
+### Foreign — opaque external R values
+
+`opaque Foreign<T> <- Any;` (defined in `configs/std/foreign.ty`) is the idiomatic companion type for `@extern` — it names an R value that already exists outside TypR (S3/S4/RC/R6 objects, third-party packages) without ever constructing it from TypR:
+
+```typr
+type LmModel <- Foreign<Any>;
+@extern base::readRDS: (path: char) -> LmModel;
+@extern stats::coef: (m: LmModel) -> Foreign<Any>;
+
+let m: LmModel <- readRDS("modele.rds");
+```
+
+The value passes through `let` bindings, function arguments, and return values **untouched** (no `as.X()`/`struct()` applied).
+
+#### Limitations
+
+1. `m.field` / `m$field` **never** type-checks (`Any` has no known structural fields — you need a dedicated `@extern` accessor for each field/slot/method)
+2. `@extern` calls are **positional only** — you cannot directly call an R function that requires named arguments (`new("X", x=1)`)
+
+---
+
+### Signature patterns for the stdlib
+
+The only pattern that works for the standard library is: signature-only in `.ty` + hand-written R implementation in `std.R`.
+
+---
+
+## Escape Hatches
+
+This page covers the mechanisms for dropping out of TypR's type system to write raw R or JavaScript code.
+
+<!-- truncate -->
+
+### `extern` — typed R escape
+
+```typr
+extern (x: int, y: char) -> char r#"paste0(x, y)"#;   # raw R body, typed input/output
+```
+
+`extern` keeps a TypR-verified signature around an opaque R body. The compiler checks the types; the R code itself is emitted verbatim.
+
+---
+
+### Untyped R functions
+
+```typr
+let add <- function(x, y) { x + y };   # raw R function (RFunction), body captured as-is
+```
+
+Any `function(...)` expression is captured as an untyped R function — no type checking on the body.
+
+---
+
+### `R { }` blocks — raw R values
+
+```typr
+R {
+  df |>
+    dplyr::filter(x > 1) |>
+    dplyr::mutate(z = y + 1)
+}
+```
+
+`R { ... }` captures its body verbatim (balanced braces, like `function(...)`), and transpiles to a plain R block `{ ... }` — which already evaluates to the value of its last instruction, so no wrapper or call is emitted.
+
+This is the preferred form for idiomatic R that is difficult to type (pipes `%>%`/`|>`, dplyr NSE, formulas `~`, etc.) when you just want a value without worrying about the type system.
+
+---
+
+### `JS { }` blocks
+
+```typr noplayground
+JS { /* ... */ }               # raw JavaScript block (JS target)
+```
+
+For targeting JavaScript output (when TypR compiles to JS).
+
+---
+
+### `Class(...)` — R class denotation
+
+```typr noplayground
+Class("data.frame", "tbl")    # denotes an existing R class (RClass)
+```
+
+Used to name existing R classes in the type system without constructing them.
+
+---
+
+### `@{ ... }@` — vectorial blocks
+
+```typr
+@{ 1 + x * 2 }@
+```
+
+Vectorial blocks are re-parsed as a sequence of TypR elements (literals, calls, variables) — **not** arbitrary R. This is different from `R { ... }`, which captures arbitrary R code.
+
+---
+
+### Comparison
+
+| Form | Type-checked? | Use case |
+|------|--------------|----------|
+| `extern` | signature yes, body no | Typed interop with existing R functions |
+| `function(...)` | no | Untyped R functions |
+| `R { }` | no | Idiomatic R values (pipes, NSE, formulas) |
+| `JS { }` | no | JavaScript target |
+| `@{ }@` | partially (TypR elements only) | Lightweight vectorial expressions |
+| `Class(...)` | naming only | Referencing existing R classes |
+
+---
+
+## TypR vs R — What Really Changes
+
+A side-by-side comparison of R and TypR.
+
+<!-- truncate -->
+
+| Aspect | R (classic) | TypR |
+|--------|------------|------|
+| End of instruction | newline is sufficient | `;` expected (parser warning if missing) |
+| Typing | dynamic, no annotations | static; `fn(...)` always requires a return type |
+| Name casing | free convention | enforced by parser: `snake_case` for `let`, `PascalCase` for `type`/aliases |
+| Lists | `list(a = 1, b = 2)`, no validation | `list{a=1, b=2}` generates a real constructor + validator (`as.T`, `validate_T`) |
+| Sum types | no native type — ad-hoc `class` conventions | tags `.A(T) \| .B` + exhaustive `match` |
+| Method dispatch | `UseMethod`/S3, or `$` on R6/environment objects | general UFCS: `x.f(y)` ≡ `f(x, y)` for *any* type |
+| Interfaces | no formal notion | `interface { ... }` + structural validator `I(x)` at compile time |
+| Pattern matching | `switch()`, barely typed | `match` with tag/type/record/tuple/wildcard patterns |
+| Modules | packages / `local()` / ad-hoc environments | `module M { ... }` → R environment, explicit `@pub` visibility |
+| Generics | none (dynamic S3 dispatch) | type parameters `T`, kind sigils (`%R @I ^S ?B #N`) |
+| Mutation | `x <- f(x)` explicit | `expr!;` sugar + `State` for real shared mutation |
+| Output | R directly executed | transpiles to idiomatic R (`R/*.R`) — 100% of generated R is readable and executable as-is |
+
+---
+
+### Key takeaway
+
+> TypR is not a new runtime — it is a layer of static verification and syntactic sugar
+> (UFCS, tags, match, interfaces, modules, generics) that fully desugars into
+> conventional R before execution. None of this exists at R runtime; everything is
+> resolved by the TypR compiler.
+
+---
+
+### Migration effort
+
+TypR is designed for **gradual adoption**:
+
+- Start with a single `.ty` file in your existing R package
+- Call R functions from TypR using `@` signatures
+- Write new functions in TypR incrementally
+- Generated R code is standard — CRAN, devtools, testthat all work unchanged
+
+See [Compatibility with R](r-typr.md) for a detailed walkthrough.
+
+---
+
+## Compatibility with R
+
+### TypR Is Not a Replacement for R — It’s a Companion to R
+
+When people first hear about TypR, a very common question comes up:
+
+> “Is TypR meant to replace R?”
+
+The short answer is no. The more interesting answer is: TypR is designed to live next to R, not instead of it.
+
+TypR is not a new platform, a new runtime, or a new ecosystem that forces you to rewrite everything. It is a typed language that transpiles to R, and integrates directly into the existing R ecosystem.
+
+<!-- truncate -->
+
+I will use an example to illustrate this concept. We will assume we already have an existing package named `along` with a file `along/R/hello.R`: 
+
+```r
+# along/R/hello.R
+#' @export
+hello <- function() {
+	print("Hello world")
+}
+```
+
+### A TypR package is just an R package
+
+Someone might ask:
+
+> How to create a TypR package from an R package? 
+ 
+Simple answer: Just add one folder!
+ 
+Indeed, structurally, nothing exotic is happening. A TypR package is simply a normal R package with one additional folder:
+
+```
+along/
+  DESCRIPTION
+  NAMESPACE
+  R/
+  TypR/ <- A new folder for TypR's code
+  along.Rproj
+  man
+```
+
+And voila!
+
+The `TypR/` folder contains files written in TypR, while the R/ folder contains the R code that will actually be executed.
+
+Let's create a file named `main.ty` (mandatory). Inside that file, we will create a type `Person` with a name and an age.
+
+```typr
+type Person <- list {
+	name: char,
+	age: int	
+};
+
+let new_person <- fn(name: char, age: int): Person {
+	list(name = name, age = age)
+};
+```
+
+Let's also create a `get_info` that will return a string with the information of the person.
+
+```typr
+# --- setup, from the previous block ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+# --------------------------------------
+
+let get_info <- fn(p: Person): char {
+	# as__character() is there for compatibility
+	paste(p$name, " is ", p$age, " years old")
+		|> as__character()
+};
+
+print(get_info(new_person("John", 27)));
+```
+
+Then we can transpile our code with the terminal command `typr build` at the root of the project.
+
+```
+typr build
+```
+
+When you transpile TypR, you are not producing a special artifact. You are simply generating R code into the package’s R/ directory. In this case, it will produce the content of the main file `main.ty` and other helper files in alphabetical order:
+
+```
+along/
+  R/
+    a_std.R   <-- generated helper file
+    b_generic_functions.R   <-- generated helper file
+    c_types.R  <-- generated helper file
+    d_main.R   <-- generated entry point to TypR's code
+    hello.R    <-- default file
+```
+
+To R, CRAN, devtools, pkgdown, testthat, and everything else,
+this is just a regular R package.
+
+It's now possible to call the functions from `hello.R`.
+
+```r
+#' @export
+hello <- function() {
+	person <- new_person("John", 27)
+	get_info(person)
+}
+```
+
+If we try to load the function with the R console we get the expected result:
+
+```r
+# In the R console
+> devtools::install()
+> library(along)
+> hello()
+[1] "John is 27 years old"
+attr(,"class")
+[1] "Character" "character" "any"   
+```
+
+### TypR introduces no new runtime
+
+TypR does not require:
+
+- a VM
+- a native compiler
+- a special version of R
+- system-level dependencies
+
+Just the `typr` binary file. Once transpiled, the result is plain R.
+It is parsed, interpreted, and executed by R exactly like any other R code.
+
+TypR only exists at development time. At runtime, it disappears.
+
+### You can freely mix TypR and R
+
+Inside the same package, you can:
+
+- write some functions in TypR
+- keep others in regular R
+- call TypR-generated code from R
+- call R code from TypR
+
+We have already shown all except the last one, so let's try it. We will start by creating a `along/R/utils.R` file with an example function:
+
+```r
+# along/R/utils.R
+
+example <- function() {
+	print("This is an example function!");
+}
+```
+
+Now we can use it from TypR within our `get_info()` function. The key mechanism here is the **signature annotation** (`@`), which tells TypR the types of an existing R function without modifying it:
+
+```typr
+# along/TypR/person.ty
+# --- setup, from the previous blocks ---
+@paste: (...values: Any) -> char;
+type Person <- list { name: char, age: int };
+let new_person <- fn(name: char, age: int): Person { list(name = name, age = age) };
+# ---------------------------------------
+
+# example is a function which take nothing and return nothing
+@example: () -> Empty;
+
+let get_info <- fn(p: Person): char {
+	example(); # <--- Using the R function here
+	# as__character() is there for compatibility
+	paste(p$name, " is ", p$age, " years old")
+		|> as__character()
+};
+```
+
+##### How signatures work
+
+By default, untyped R functions accept `Any` and return `Empty`, which means the compiler can't verify your usage. The `@` annotation fixes this by declaring the expected types:
+
+```typr
+# Without signature: toupper takes Any, returns Empty
+toupper("Hi"); # works, but no type checking
+
+# With signature: toupper takes char, returns char
+@toupper: (char) -> char;
+
+toupper("Hi"); # now fully type-checked!
+# toupper(7);  # would now fail at compile time instead of runtime
+```
+
+This is particularly useful when you want to use base R functions or functions from external packages with full type safety, without having to wrap them in TypR functions.
+
+Now `get_info()` also call `example()` and is integrated into our package:
+
+```r
+> devtools::install()
+> library(along)
+> hello()
+[1] "This is an example function!"
+[1] "John is 27 years old"
+attr(,"class")
+[1] "Character" "character" "any"  
+```
+
+#### Best practices
+
+It's better to only use custom R functions from TypR only when using TypR's untyped functions isn't enough (for some reasons). In all cases, interoperability exists.
+
+TypR is not an “all or nothing” mode. It is just an alternative source language that produces R.
+You can migrate gradually, file by file, function by function.
+
+### The only possible point of friction
+
+There is only one situation where TypR can collide with R:
+
+> When TypR transpiles into a file that already exists in R/.
+
+For instance, if you create a `hello.ty` into the `TypR/` folder, it will rewrite the `hello.R` in the `R/` folder, then yes — there is a collision. But that is just two tools writing to the same file.
+
+This is not a conceptual conflict between R and TypR.
+It is simply a file-level conflict, easy to avoid through conventions or configuration.
+
+Other than that, TypR and R do not step on each other.
+
+#### Best practice
+
+A good practice is to use `main.ty` as an aggregation module and create one file per type.
+
+In our case, we should put the content of `main.ty` into the `person.ty` file, then import it within the main file with the `mod` keyword:
+
+```typr noplayground
+mod person;
+```
+
+TypR will understand that it should find un file named "person.ty", parse, type check and transpile it into a `person.R` file within the `R/` folder. This practice will bring the same result but with a cleaner code.
+
+### The right mental model
+
+TypR is not a new language that replaces R.
+It is much closer to things like:
+
+- TypeScript for JavaScript
+- Cython for Python
+- Scala.js for JavaScript
+
+You write in a more structured, safer, more expressive language…
+and you get standard R code at the end.
+
+### Why this matters
+
+This changes the real question.
+
+You don’t have to ask:
+
+> “Should I leave R for TypR?”
+
+But rather:
+
+> “Would this part of my code benefit from types?”
+
+You can keep:
+
+- tidyverse
+- data.table
+- CRAN
+- your existing code
+- your team
+
+…and add where it makes sense:
+
+- static typing
+- richer data structures
+- compile-time guarantees
+- safer refactoring
+
+TypR does not compete with R. It amplifies R with software engineering good practices.
+
+---
+
+## Philosophy
+
+### Freedom vs Safety
+
+![freedom vs safety](/img/freedom_safety2.png)
+
+Freedom and safety each have their own advantages and disadvantages. The fundamental challenge is that we cannot maximize both simultaneously. We experienced this tension during the COVID-19 pandemic with measures like lockdowns, masks, and vaccination requirements.
+
+This same trade-off exists in programming languages. Consider R and Rust, two of my favorite languages that are drastically different. R advocates for freedom and flexibility, while Rust prioritizes safety. Consequently, they excel in different use cases: R shines in experimentation, data exploration, and visualization, while Rust is ideal for software development and high-performance applications. This doesn't mean they can't perform each other's tasks, but they won't be as efficient when doing so.
+
+Between strict and permissive languages lies a category of gradually typed languages. These languages allow developers to add types progressively, defining them only when needed. Python (with type hints) and TypeScript exemplify this flexibility. TypR also possesses this property, giving developers the capacity to adjust the balance between freedom and safety. Of course, this doesn't mean TypR is intended to replace R, but rather to work alongside it.
+
+```typr
+# a valid TypR code: strong on safety, weak on freedom
+let num1: int <- 3;
+let num2: int <- 7;
+
+let my_addition <- fn(a: int, b: int): int {
+	a + b
+};
+
+my_addition(num1, num2)
+```
+
+```typr noplayground
+# Also a valid TypR code: weak on safety, strong on freedom
+let num1 <- 3;
+let num2 <- 7;
+
+let my_addition <- function(a, b) {
+	a + b
+};
+
+my_addition(num1, num2)
+```
+
+### Code by design vs code by effort
+
+> Create clean data science code by design, not by effort.
+
+Creating correct code and creating clean code are independent things. Correct code fulfills its purpose while clean code makes the project maintainable and scalable for the long run.
+
+R is great at making correct code for research purpose. But it doesn't give the set of tools needed to make clean code easily, letting package developers hold the responsibility of doing clean code by effort.
+
+"By effort" also mean there is a mental load taking brain resources that could be used for other things directly related to the goal.
+
+That's why TypR delivers a group of tools to make package and app development easier. It also tends to make maintenance and scalability painless. That's why it favors clean code by design. 
+
+### 1. Smart functions by design
+
+Building packages for other users can be hard since we need to know how to expose functionalities to them. Fortunately, with TypR, you don't have to worry which OO system you want (S3, S4, R6, S7) or if you just want to build vanilla code with functions. The main principle is simple:
+
+> All you need are types and functions.
+
+Coding is now about designing your data types and how you manipulate them with functions. TypR will handle the rest.
+
+A great example of its power lies in the capability of a simple function to work with vectorized data through [lifting-based vectorization](https://we-data-ch.github.io/typr.github.io/docs/philosophy/vectorization_by_design).
+
+Another example that shows how functions work for us is a concept called [uniform function call](https://en.wikipedia.org/wiki/Uniform_function_call_syntax). You will understand its power through examples.
+
+By using the power of uniform function call, you have different ways to call your functions (classic, piping, method call). This functionality also supports single dispatch and transpiles to native S3 code.
+
+---
+
+## Why this type system
+
+> The R ecosystem is famous for its flexibility. It is equally famous for the fragility that
+> flexibility can bring. TypR's type system is the deliberate attempt to keep the former while
+> taming the latter — without forcing you to rewrite your data science code.
+
+<!-- truncate -->
+
+### Freedom and safety are a dial, not a switch
+
+Most languages force you to choose: either you type everything, or you type nothing. TypR
+treats typing as a gradual dial. You can write a plain script with inferred variables:
+
+```typr
+let x <- 3;
+let y <- x * 2;
+```
+
+…or add as much precision as a given piece of code needs:
+
+```typr noplayground
+let x: int <- 3;
+let scale <- fn(p: Point, factor: num): Point { ... };
+```
+
+This is what makes TypR tractable for data science: you annotate the *boundaries* — where your
+data enters and leaves, where your package meets the outside world — and let inference carry the
+rest of the burden.
+
+### Types are about the data, not just the syntax
+
+A recurring principle behind the design is that R data already *has* shape. A data frame has
+named columns; a vector has an element type; an S3 object carries a class. The type system is
+designed to make that shape explicit instead of inventing a parallel one.
+
+That's why records, tuples, arrays, vectors and data frames are all first-class members of the
+type grammar rather than afterthoughts:
+
+```typr
+type Point       <- list { x: int, y: int };
+type Pair        <- tuple{int, char};
+type Coordinates <- [#N, num];                    # size-indexed array
+type DataFrame   <- df[#N]{ id: int, active: bool };
+```
+
+The rule of thumb: **if R can hold it, TypR can name it.**
+
+### The sigils of kind
+
+Generic parameters in many languages are uniform symbols — `T`, `U`, `K`. TypR distinguishes
+them by *kind* with leading sigils, so the intent is visible even without reading the
+implementation:
+
+```typr noplayground
+let id <- fn(x: T): T { x };       # T    free type variable
+#N   # "index" generic — an array dimension
+$T   # "label" generic — a field name
+%R   # constrained: must be a Record
+@I   # constrained: must be an Interface
+^S   # constrained: must be a char
+?B   # constrained: must be a bool
+```
+
+Sigils turn a design conversation into code:
+
+```typr noplayground
+type Tibble[N] record;                    # N is a dimension
+let  first_col <- fn(df: df[#N]{ ... }): Vec[#N, ^S] { ... };   # column of characters
+```
+
+This is a small feature with a large payoff for package maintainers — it makes generic code
+self-documenting, and it lets the parser/type-checker reject nonsensical instantiations early.
+
+### Interfaces: structural capacity, no ceremony
+
+TypR uses structural interfaces instead of a mandatory nominal class hierarchy. Anything that
+has the required shape satisfies the interface:
+
+```typr noplayground
+interface { view: (Self) -> char };
+type Drawable <- @I;
+
+fn render <- function(d: Drawable): char { ... };
+```
+
+No inheritance declaration, no base class to inherit from, no `setClass`. This mirrors how data
+science code is *actually* written: you have a data structure, and you ask "does it support what
+I need?" — not "what class hierarchy did it descend from?".
+
+The same structural spirit governs records and unions: a `Point` is a tagged union
+`.Circle(num) | .Square(num)`, and matching over it is a first-class, exhaustiveness-checked
+construct.
+
+### Encapsulation without magic
+
+`opaque` gives you the privacy that R's dynamic objects rarely provide:
+
+```typr
+opaque LmModel <- Foreign<Any>;
+
+@extern stats::coef: (m: LmModel) -> Foreign<Any>;
+```
+
+The type-checker *knows* `LmModel` exists and *refuses* access to its internals — you can only
+interact with it through the signatures you declare. This is how TypR lets you build robust
+package APIs out of inherently untyped R objects: safe at the seam, free inside.
+
+### Kind discipline and phantom parameters
+
+Even the exotic corners of the system serve the same goal. A phantom parameter like
+`opaque Factor<L> <- int` seems useless until you realize it lets you distinguish
+`Factor<Diet>` from `Factor<Treatment>` at compile time while sharing one runtime
+representation. The type system earns its keep by tracking distinctions that *matter to the
+caller* but are invisible at runtime.
+
+### What this buys package developers
+
+Taken together, these choices add up to a specific workflow:
+
+1. Keep your existing R functions and data structures — no rewrite required.
+2. Declare types only at the boundaries: `@extern`, signatures, record constructors.
+3. Let inference and structural checking do the rest.
+4. Ship a package where misuse is caught before `R CMD check` runs, not after.
+
+That is the pragmatic contract TypR is built around: **the type system exists to serve the
+package developer's workflow, not the other way around.**
+
+---
+
+## Vectorization by design
+
+### Introduction
+Vectorization is one of the greatest tools for data manipulation I know and I am happy that R got this system out of the box. It makes computation simple and simplifies translation from formula to code.
+
+Unfortunately I have encountered one limitation: R's vectors are not very compatible with functional programming or object-oriented programming, two paradigms I like when building libraries or applications. This is what TypR's vectorization is improving with the mechanism of `lifting-based vectorization`.
+
+<!-- truncate -->
+
+#### Quick start: vectors and arrays in TypR
+
+Before diving into the details, here is a quick look at how vectors and arrays work in TypR. Both support vectorized arithmetic out of the box:
+
+```typr
+# Creating typed vectors and arrays
+let v1 <- c(1, 2, 3, 4, 5);
+print(2*v1+3);
+
+let a1 <- [1, 2, 3, 4, 5];
+print(2*a1+3);
+```
+
+The `c()` constructor creates a classic R vector, while the bracket notation `[...]` creates a TypR array. Both support element-wise operations like `2*v1+3`, which multiplies each element by 2 and adds 3. The difference becomes more apparent with custom types, as we will see below.
+
+---
+
+### A complete example: the Point type
+
+Throughout this section, we will construct a concept of a 2D geometric point. A point is a mathematical object that has x and y coordinates. We will use the S3 system from R for illustration and then use TypR's type system.
+
+### Vectorization with R
+
+As I said, R makes it pretty easy to vectorize primitive types like integers or characters. 
+
+```r
+# building a vector
+v <- c(1, 2, 3, 4)
+
+# Now we can multiply with a number or add a number
+3*v + 4
+#[1]  7 10 13 16
+```
+
+#### Point construction
+But what happens if we define a Point type?
+
+```r
+# Point type creation with S3 (without validation for simplicity)
+Point <- function(x, y) {
+  structure(
+    list(x = x, y = y),
+    class = "Point"
+  )
+}
+```
+
+We will also define a print method to make a point easier to visualize.
+
+```r
+print.Point <- function(p, ...) {
+  cat("Point<", p$x, ",", p$y, ">\n", sep="")
+  invisible(p)
+}
+```
+
+So we have our Point type!
+
+```r
+Point(3, 4)
+#Point<3,4>
+```
+
+And we will define a `scale` method to scale a point with a number. It will multiply each coordinate with this number.
+
+```r
+scale.Point <- function(p, n) {
+	Point(p$x*n, p$y*n)
+}
+```
+
+It's now functional!
+
+```r
+# we can use it this way
+scale(Point(3, 4), 2)
+#Point<6,8>
+
+# or this way
+Point(3, 4) |> scale(2)
+#Point<6,8>
+```
+
+A little bonus: we will also supercharge the `*` operator for the Point class so scaling can be done using right multiplication with a number.
+
+```r
+# Definition of the multiplication operator for Point 
+`*.Point` <- function(p, n) {
+	scale(p, n)
+}
+
+# Now this works
+Point(3, 4) * 2
+#Point<6,8>
+
+# But the other way around doesn't work
+2 * Point(3, 4)
+#Error
+```
+
+#### Point vectorization
+But what if we want a vector of Point?
+
+```r
+points <- c(Point(1, 2), 
+			Point(3, 4), 
+			Point(5, 6))
+
+points
+
+#$x
+#[1] 1
+#
+#$y
+#[1] 2
+#
+#$x
+#[1] 3
+#
+#$y
+#[1] 4
+#
+#$x
+#[1] 5
+#
+#$y
+#[1] 6
+```
+
+The vector of points loses its structure! We can't access it as expected:
+
+```
+points$x
+#[1] 1
+
+points$y
+#[1] 2
+
+points[1]
+#$x
+#[1] 1
+```
+
+To make a vector of points, we have to store them in a list. In R, a list is a vector of pointers so one can save any structure with them.
+
+```r
+
+points <- list(Point(1, 2), 
+			Point(3, 4), 
+			Point(5, 6))
+
+points
+#[[1]]
+#Point<1,2>
+#
+#[[2]]
+#Point<3,4>
+#
+#[[3]]
+#Point<5,6>
+```
+
+But we aren't keeping the capability of using native vectorial operations anymore.
+
+```r
+# works well
+points[[1]]
+#Point<1,2>
+
+scale(points, 2)
+#Error
+
+points$x
+#NULL
+
+points$y
+#NULL
+```
+
+It's better to directly use vectors inside an S3 object but you have to do some gymnastics for that.
+Because of that, developers should keep in mind they should manually apply vectorization while building functions for objects or functions (which is a mental load by itself).
+
+### What about TypR?
+
+I'm glad you asked!
+
+TypR uses its own vectorization system named `lifting-based vectorization`. This concept exploits the type system of TypR to infer when to apply vectorization.
+
+> The best way to use vectorization is not to think about vectorization.
+
+The developer just has to write their functions for scalar values and TypR will decide when to lift the parameters and the function into a vectorial computation based on how the function is used. It's also compatible with more complex types like named lists or functions. 
+
+#### Point construction
+Let's build our `Point` type and a constructor with TypR:
+
+```typr
+# Type definition
+type Point <- list {
+	x: int,
+	y: int
+};
+
+# Constructor for the Point type
+let new_point <- fn(x: int, y: int): Point {
+	list(x = x, y = y)
+};
+```
+
+We will also define a `print` function for points:
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+# ---------------------------------------
+
+# print function
+let print <- fn(p: Point): Empty {
+  cat("Point<", p$x, ",", p$y, ">", sep="");
+};
+
+print(new_point(3, 4));
+```
+
+Now we can build a point like before:
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+# ---------------------------------------
+
+new_point(3, 4);
+#Point<3,4>
+```
+
+We won't forget to implement the `scale` function.
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+# ---------------------------------------
+
+let scale <- fn(p: Point, n: int): Point {
+	new_point(p$x * n, p$y * n)
+};
+
+new_point(3, 4) 
+	|> scale(2);
+#Point<6,8>
+```
+
+Of course, we also have the capability of implementing the `*` operator:
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let scale <- fn(p: Point, n: int): Point { new_point(p$x * n, p$y * n) };
+# ---------------------------------------
+
+let `*` <- fn(p: Point, n: int): Point {
+	scale(p, n)
+};
+
+new_point(3, 4) * 2;
+#Point<6,8>
+```
+
+#### Point vectorization
+Now what about vectors? TypR has its own way to deal with them. For better understanding, let's make a vector of points:
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+# ---------------------------------------
+
+# creating a vector of points in TypR
+let points <- [new_point(1, 2), 
+			new_point(3, 4), 
+			new_point(5, 6)];
+
+points;
+#typed_vec [3]
+#[1] Point<1,2>
+#[2] Point<3,4>
+#[3] Point<5,6>
+```
+
+We have an array notation syntax like other programming languages. This kind of array automatically exploits the print function for its members.
+
+What's the best part? *TypR's arrays are vectorized by default*! So these operations work:
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let scale <- fn(p: Point, n: int): Point { new_point(p$x * n, p$y * n) };
+let `*` <- fn(p: Point, n: int): Point { scale(p, n) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
+# scaling a group of point with one number
+scale(points, 2);
+#typed_vec [3]
+#[1] Point<2,4>
+#[2] Point<6,8>
+#[3] Point<10,12>
+
+# same but with pipe
+points 
+	|> scale([1, 2, 3]);
+#typed_vec [3]
+#[1] Point<1,2>
+#[2] Point<6,8>
+#[3] Point<15,18>
+
+# same but with the "*" operator
+points * 3;
+#typed_vec [3]
+#[1] Point<3,6>
+#[2] Point<9,12>
+#[3] Point<15,18>
+```
+
+We also have the possibility to work with types by themselves. Let's define the `+` operator that will help adding two points by adding their respective fields.
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
+# Definition of the "+" operator
+let `+` <- fn(p1: Point, p2: Point): Point {
+	new_point(p1$x + p2$x, p1$y + p2$y)
+};
+
+# adding a group of point with a scalar
+points + new_point(1, 1);
+#typed_vec [3]
+#[1] Point<2,3>
+#[2] Point<4,5>
+#[3] Point<6,7>
+
+# adding two group of point of the same type
+points + points;
+#typed_vec [3]
+#[1] Point<2,4>
+#[2] Point<6,8>
+#[3] Point<10,12>
+```
+
+And what about reduction functions? One can use the `reduce` function to reduce the elements of the array.
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let `+` <- fn(p1: Point, p2: Point): Point { new_point(p1$x + p2$x, p1$y + p2$y) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
+# will add all the points
+reduce(points, `+`<Point>);
+#Point<9,12>
+```
+
+We specify the type \<Point\> for the `+` operator because TypR's type system isn't doing this kind of inference yet. But as you can see, it summed all elements of points. One can also use a shortcut by using the `sum` function:
+
+```typr
+# --- setup, from the previous blocks ---
+type Point <- list { x: int, y: int };
+let new_point <- fn(x: int, y: int): Point { list(x = x, y = y) };
+let print <- fn(p: Point): Empty { cat("Point<", p$x, ",", p$y, ">", sep="") };
+let `+` <- fn(p1: Point, p2: Point): Point { new_point(p1$x + p2$x, p1$y + p2$y) };
+let points <- [new_point(1, 2), new_point(3, 4), new_point(5, 6)];
+# ---------------------------------------
+
+points
+	|> sum();
+#Point<9,12>
+```
+
+It automatically uses the `+` operator underneath. If your type implements it, `sum` will work on the vector.
+
+And for functions? We can also do function composition powered by vectors. I won't present examples there but later in another publication.
+
+### Future works
+
+#### Type specific applications
+I would like to create vectorized field accessors to make it easier to work with a vector of named lists:
+
+```typr noplayground
+# will give all the values contained in the x field of each point
+points$x
+# will give all the values contained in the y field of each point
+points$y
+```
+
+It would also be cool to be able to call similar functions with the same parameters. 
+```typr noplayground
+# vector of functions
+let functions <- [`+`, `*`];
+
+functions(3, 4)
+# could return:
+#typed_vec [3]
+#[1] 7
+#[2] 12
+```
+
+It could help with applying a set of statistical models to a specific set of data.
+
+#### Compatibility with other systems
+
+Underneath, TypR's arrays use a custom S3 object for data storage and vectorization. This doesn't invalidate native vectors or data.frames from R, which are faster and more efficient. I want to create a bridge that will help convert them back into native types.
+
+```typr noplayground
+# In the future, Array -> Vector for performances
+let arr <- [1, 2, 3, 4];
+let vec <- arr |> to_vec();
+
+# In the future, Array -> dataframe for performances
+let df <- points |> to_df();
+```
+
+### Conclusion
+
+Even though lifting-based vectorization looks like reinventing the wheel, I truly believe it's a true conceptual heir of the classic way of doing vectorization and a logical continuation of it if R was a typed language.
+
+Now the responsibility of vectorizing functions is no more in the hands of the developer who can now focus on solving the problem. TypR offers a flexible interface to works with vectors.
+
+---
+
+## Generics & Kind Sigils
+
+This page explains the generic type parameters and kind sigils that power TypR's type system.
+
+<!-- truncate -->
+
+### Free generics
+
+A **free generic** is a type parameter that can stand for any type. It is declared with an uppercase letter:
+
+```typr
+let id <- fn(x: T): T { x };         # T is a free generic
+let pair <- fn(a: T, b: U): Tuple[T, U] { :{a, b} };
+```
+
+Free generics have **no constraints** — any type can be substituted. They are the simplest form of polymorphism in TypR.
+
+---
+
+### Kind sigils
+
+Kind sigils are prefix characters that **constrain** what a generic parameter can represent. They encode structural intent directly in the type signature:
+
+| Sigil | Name | Constraint | Example |
+|-------|------|-----------|---------|
+| `#N` | Index | Dimension of an array | `[#N, int]` |
+| `$T` | Label | Name of a field | `$T` |
+| `%R` | Record | Must be a Record | `%R` |
+| `@I` | Interface | Must be an Interface | `@I` |
+| `^S` | String | Must be `char` | `^S` |
+| `?B` | Boolean | Must be `bool` | `?B` |
+
+#### Index generics (`#N`)
+
+The `#N` sigil represents a **dimension** — the size or index of an array. It is used when you need to track or enforce array lengths at the type level:
+
+```typr noplayground
+let head <- fn(v: [#1, T]): T { v[0] };
+
+# Here #N is inferred as 3
+let arr <- [1, 2, 3];
+let first <- head(arr);   # type-checks: #1 matches the first element
+```
+
+Index generics appear prominently in array and dataframe types:
+
+```typr noplayground
+type Vector <- [#N, int];        # vector of ints, length N
+df[N]{ name: char, age: int }    # dataframe with N columns
+```
+
+See [Types](../reference/types.md) for more on array and vector syntax.
+
+#### Label generics (`$T`)
+
+The `$T` sigil represents a **field name** — a compile-time string literal used as a record key:
+
+```typr noplayground
+# $T constrains the generic to a field label
+let get_field <- fn(r: %R, key: $T): Any { r[key] };
+```
+
+Label generics are primarily used internally by the compiler to enforce named field access on records.
+
+#### Record generics (`%R`)
+
+The `%R` sigil constrains a generic to **any record type**:
+
+```typr
+let fields_of <- fn(r: %R): char { "record" };
+
+let p <- :{ x = 1, y = 2 };
+fields_of(p);   # OK — p is a record
+```
+
+This is useful when a function needs to operate on any record without caring about its specific fields.
+
+#### Interface generics (`@I`)
+
+The `@I` sigil constrains a generic to **any interface type**:
+
+```typr noplayground
+type Movable <- interface { mv: (Self, int, int) -> Self };
+
+let move_all <- fn(items: [@I, T], dx: int, dy: int): [@I, T] {
+    # T must be an interface implementor
+    /* ... */
+};
+```
+
+See [Interfaces & Structural Validation](../reference/interfaces.md) for how interfaces work.
+
+#### String generics (`^S`)
+
+The `^S` sigil constrains a generic to the `char` type (strings):
+
+```typr noplayground
+let repeat <- fn(s: ^S, n: int): ^S { /* ... */ };
+```
+
+#### Boolean generics (`?B`)
+
+The `?B` sigil constrains a generic to the `bool` type:
+
+```typr noplayground
+let guard <- fn(condition: ?B, value: T): T { /* ... */ };
+```
+
+---
+
+### Combining generics
+
+Generics can be combined in function signatures to express complex relationships:
+
+```typr
+@map: (a: [#N, T], f: (T) -> U) -> [#N, U];
+```
+
+Here, three different generic forms appear together:
+- `#N` — the array dimension (preserved through the map)
+- `T` — the input element type (free generic)
+- `U` — the output element type (free generic)
+
+The signature enforces that `map` preserves array length while allowing element type transformation.
+
+---
+
+### Generics in type definitions
+
+Generics also appear in type aliases and opaque types:
+
+```typr
+type Option<T> <- .Some(T) | .None;   # free generic
+opaque Factor<L> <- int;               # phantom parameter — L is never used in the body
+```
+
+A **phantom parameter** (like `L` above) exists only for type-level tracking — it appears in signatures but has no runtime representation. This pattern is useful for encoding constraints that are checked at compile time only.
+
+See [Type Constructors & Aliases](type-constructors.md) for more on type definitions.
+
+---
+
+### Summary
+
+| Form | Purpose | Example |
+|------|---------|---------|
+| `T` | Free generic (any type) | `fn(x: T): T` |
+| `#N` | Array dimension / index | `[#N, int]` |
+| `$T` | Field label (compile-time string) | `$T` |
+| `%R` | Constrained to Record | `%R` |
+| `@I` | Constrained to Interface | `@I` |
+| `^S` | Constrained to `char` | `^S` |
+| `?B` | Constrained to `bool` | `?B` |
+
+---
+
+## Type Constructors & Aliases
+
+This page explains how to define new types in TypR using `type`, `opaque`, and `typeconstructor`.
+
+<!-- truncate -->
+
+### Transparent aliases (`type`)
+
+A `type` alias creates a **transparent** name for an existing type. The alias and its underlying type are fully interchangeable:
+
+```typr
+type Meters <- int;
+type Person <- list { name: char, age: int };
+
+# These are equivalent
+let d: Meters <- 42;
+let d: int <- 42;
+```
+
+Transparent aliases are useful for **documentation** and **clarity** — they give semantic meaning to raw types without changing behavior.
+
+---
+
+### Opaque aliases (`opaque`)
+
+An `opaque` alias **hides** the underlying type from external code. This provides stronger encapsulation:
+
+```typr noplayground
+opaque Meters <- int;
+
+let d: Meters <- 42;
+let n: int <- d;   # ERROR: cannot implicitly convert opaque type
+```
+
+Opaque types enforce a boundary: code outside the module where the alias is defined cannot freely mix the opaque type with its underlying type. This prevents accidental misuse of domain-specific values.
+
+---
+
+### Generic type definitions
+
+Both `type` and `opaque` support generic parameters using angle brackets `<T>`:
+
+```typr
+type Option<T> <- .Some(T) | .None;
+opaque Factor<L> <- int;
+```
+
+:::note
+Generic parameters use `<T>` (angle brackets), not `[T]` (square brackets). Square brackets are reserved for array dimensions and index generics.
+:::
+
+#### Phantom parameters
+
+A **phantom parameter** appears in the type definition but not in its body. It exists only for type-level tracking:
+
+```typr
+opaque Factor<L> <- int;   # L never appears in the right-hand side
+```
+
+Phantom parameters are useful when you need to distinguish between values that have the same runtime representation but different semantic meanings. The constraint is enforced at compile time through [signatures](../reference/signatures.md).
+
+---
+
+### Typeconstructors
+
+The `typeconstructor` keyword registers a **generic record constructor** that can be used with the `TypeName[N]{ ... }` syntax:
+
+```typr
+typeconstructor Tibble[N] record;
+typeconstructor Matrix[N, M, T] recursive;
+```
+
+Once registered, you can create parameterized records:
+
+```typr noplayground
+Tibble[3]{ id: int, active: bool }   # record constructor with 3 columns
+Tibble[8]{ name: char, score: num }  # record constructor with 8 columns
+```
+
+#### How typeconstructors differ from type aliases
+
+| Feature | `type` / `opaque` | `typeconstructor` |
+|---------|-------------------|-------------------|
+| Purpose | Name an existing type | Register a generic record constructor |
+| Parameters | `<T>` for type parameters | `[N]` for dimension/label parameters |
+| Result | A type alias | A constructor that creates records |
+| Usage | `let x: MyType <- ...` | `MyType[N]{ field: T }` |
+
+See [Records & Constructors](../reference/records.md) for how constructor calls work with spread operators and named embedding.
+
+---
+
+### The `{...}` rule
+
+A `{ ... }` block following a parameterized type name **always** makes it a record constructor:
+
+```typr noplayground
+Tibble[3]{ id: int, active: bool }   # record constructor
+Tibble[3]                             # just a parameterized alias (no braces)
+```
+
+This distinction is important — the presence or absence of braces changes the semantics entirely.
+
+---
+
+### Relationships with other features
+
+Type constructors and aliases interact with several other TypR features:
+
+- **[Generics & Kind Sigils](generics-kind.md)** — Generic parameters (`<T>`) and kind sigils (`#N`, `%R`, etc.) work together to constrain type parameters
+- **[Signatures](../reference/signatures.md)** — `@extern` and `@signature` use type aliases to declare external function types
+- **[Foreign values](../reference/signatures.md#foreign--opaque-external-r-values)** — `opaque Foreign<T>` is the idiomatic way to wrap external R values
+
+---
+
+### Summary
+
+| Keyword | Purpose | Generic syntax | Example |
+|---------|---------|----------------|---------|
+| `type` | Transparent alias | `<T>` | `type Meters <- int` |
+| `opaque` | Opaque alias | `<T>` | `opaque Meters <- int` |
+| `typeconstructor` | Generic record constructor | `[N]` | `typeconstructor Tibble[N] record` |
+
+---
+
+## Known Pitfalls
+
+This page documents common pitfalls and ambiguities in the TypR parser.
+
+<!-- truncate -->
+
+:::note
+This page is under construction. See the full details in the
+[syntaxe.md](https://github.com/we-data-ch/typr/blob/main/syntaxe.md#14--ambiguïtés--pièges-connus-du-parseur) reference.
+:::
+
+### Semicolon swallowing
+
+Missing a `;` between two instructions could cause the second instruction to be silently absorbed into the first. This has been fixed — the parser now emits a `ForgottenSemicolon` warning.
+
+### `//` is not a comment
+
+TypR only recognizes `#` for comments. A `//` is now caught by a dedicated parser and treated as a comment with a `WrongCommentSyntax` warning.
+
+### Single `=` is never a binary operator
+
+Use `==` for equality testing. A single `=` is only valid in named fields, top-level assignment, and default parameter values.
+
+### `record` vs `tuple` — the shape decides
+
+`list{...}` and `:{...}` produce either a record or a tuple based on the shape of the elements, not the keyword.
+
+### Type aliases need 2+ characters
+
+A single-letter PascalCase alias (e.g., `type A <- int;`) is not parseable. Use at least 2 characters (e.g., `type Ab <- int;`).
+
+---
+
+## The beauty of syntax
+
+Even though `TypR` is based on `R`, it has some quirks that make it a bit different from its counterpart. Some may look negative but others are just beautiful (my own perspective).
+
+### The little down side
+
+The `;` is now mandatory so people can have a better syntax. It can look painful at the beginning but people will be able to put it as a reflex like the `.` at the end of a sentence written in human language. 
+
+There is no more `.` in the naming convention.
+People could no more use `.` in the name of their types or functions. If you want to reuse existing R function that use `.` you can just replace it with `__`
+
+```typr noplayground
+# not allowed
+data.frame(...) 
+
+# works and call the native `data.frame`
+data__frame(...) 
+```
+
+### Booleans!
+
+Now `true` and `false` are admitted boolean notations. Of course `TRUE` and `FALSE` still exist with `T` and `F`.
+
+```typr
+# all valid
+print(TRUE);
+print(T);
+print(true);
+
+# all valid
+print(FALSE);
+print(F);
+print(false);
+```
+
+### Better pipelines
+
+I love the fact that R has a pipeline syntax. Unfortunately it's not as elegant as we want. A pipeline within R generally looks like this:
+
+```r
+data |> f1() |>
+	f2() |>
+	f3() |>
+	f4() |>
+	f5()
+```
+
+With TypR the elegance takes place now one can build more beautiful pipelines like this:
+
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
+data 
+	|> f1()
+	|> f2()
+	|> f3()
+	|> f4()
+	|> f5();
+```
+
+It does exactly the same thing. The difference is the elegance and the readability. 
+
+### Array notation
+
+One key point of TypR is its built-in vector orientation. It was an interesting challenge to build a type system that implements this design (see [vectorization by design](/docs/philosophy/vectorization_by_design) for more details).
+
+To build a vector in R, you just have to use:
+
+```r
+c(1, 2, 3)
+```
+
+With TypR we now have the array notation `[]` to build vectors. 
+
+```typr
+[1, 2, 3]
+```
+
+Compared to `c()`, one can only put side by side elements of the same type without type coercion. I think it makes things more elegant since we have an expected behavior powered with type checking.
+
+### Uniform function call
+
+For those who have the nostalgia of the OOP notation. We have the uniform function call.
+
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
+data 
+	|> f1()
+	|> f2()
+	|> f3()
+	|> f4()
+	|> f5();
+```
+
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
+data 
+	.f1()
+	.f2()
+	.f3()
+	.f4()
+	.f5();
+```
+
+For some, it's simpler and more ergonomic. It goes along with the philosophy of TypR since each function will become an R S3 method by default (so it is still OOP).
+
+### Beautiful Type Constructor
+
+With TypR, one can have better distinction with the help of constructors.
+
+```r
+# classic list constructor in R
+list(
+	a = 8L, 
+	b = 12
+)
+```
+
+We still keep the original syntax but we had another syntax.
+
+```r
+# classic list constructor in TypR
+:{
+	a = 8L, 
+	b = 12
+}
+```
+
+In R, lists are the equivalent of records in other languages.
+
+One can create some personalized lists within the code with the help of a custom list type. You define an alias that targets a list type and you can use this alias to build other types.
+
+```typr
+# Define an alias other a list type
+type Person <- list {
+	name: char,
+	age: int
+};
+```
+
+```typr
+# You can use the alias as a constructor
+Person:{ 
+	name: "Anna", 
+	age: 28
+};
+```
+
+You can also do the same with union type.
+
+```typr
+# Define a record type
+type Person <- list {
+	name: char,
+	age: int
+};
+
+# Build an union type
+type PersonOrInt <- Person | int;
+
+# A scalar member is written as itself
+let n: PersonOrInt <- 7;
+
+# A record member is built through the qualified constructor
+# (useful for autocompletion)
+let p: PersonOrInt <- PersonOrInt.Person:{name: "Bob", age: 12};
+```
+
+### Partial function application
+
+Currying is one of the most powerful elements of functional programming. Languages like haskell do it well. But to be more practical, it's better to be able to pick which parameter to fix with a defined value.
+
+```typr
+# Create a function
+let add <- fn(a: int, b: int): int {
+	a + b
+};
+
+# Create other function from it
+# by fixing some parameters
+let add_b <- \add(a = 10);
+let add_a <- \add(b = 10);
+
+# All can be used
+add(3, 5);
+add_b(4);
+add_a(2);
+```

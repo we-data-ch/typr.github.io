@@ -1,0 +1,76 @@
+# TypR
+
+> A statically typed superset of R that compiles to plain, readable R.
+
+TypR is a statically typed language that compiles to plain R. Programs are
+checked before they run — types, records, sum types, interfaces, modules — and
+the compiler emits ordinary, readable `.R` files that depend on no runtime
+library.
+
+If you are an assistant writing TypR: TypR is **not** R, and it is not Julia,
+even though it borrows from both. Guessing produces code that does not compile.
+Treat the documentation as the authority, and when it does not answer a
+question, say so rather than inventing syntax.
+
+Code fences follow the conventions of the documentation site:
+
+- a `typr` fence is a complete program, checked in CI against the real compiler
+  (`typr check`) — it compiles;
+- `typr compile_fail` marks a deliberate counter-example; CI checks that the
+  compiler *rejects* it. Never present it as valid TypR;
+- `typr noplayground` marks a fragment, a syntax table or a multi-file project:
+  not a complete program, and not compiler-checked;
+- an `r` fence is plain R, shown for comparison or as transpiler output.
+
+Examples are self-contained: when a snippet needs definitions introduced earlier
+on the page, they are repeated in a leading `# --- setup, ... ---` preamble.
+
+Pages are ordered by Diátaxis genre — getting started and FAQ, then tutorials
+(learning by doing), how-to guides (task recipes), reference (the authoritative
+description of the language), then philosophy and deep dives (why the language
+is the way it is).
+
+The compiler is the last word: <https://github.com/we-data-ch/typr>. The syntax
+map at <https://github.com/we-data-ch/typr.github.io/blob/main/syntaxe.md> wins
+over any page below if the two ever disagree.
+
+Every page is listed below. Fetch a page's `.md` URL to get its full Markdown source, or `llms-full.txt` for all of them at once.
+
+## Table of Contents
+
+- [Getting started](https://we-data-ch.github.io/typr.github.io/docs/intro.md): Learn TypR in about ten minutes by writing and running small typed programs, step by step.
+- [FAQ](https://we-data-ch.github.io/typr.github.io/docs/faq.md): Frequently asked questions about TypR for R users.
+- [Types for Beginners](https://we-data-ch.github.io/typr.github.io/docs/tutorials/typr-for-dummies.md): Why types are worth it, explained without jargon: what a type system remembers for you, and when it is overkill.
+- [Create your first TypR package](https://we-data-ch.github.io/typr.github.io/docs/tutorials/first-package.md): Build a complete R package with TypR, from an empty folder to an installable package with types, tests, and documentation.
+- [Migrate an existing R package](https://we-data-ch.github.io/typr.github.io/docs/tutorials/migrate-r-package.md): Add TypR to an R package you already have, one file at a time, without rewriting it.
+- [Model data with TypR types](https://we-data-ch.github.io/typr.github.io/docs/tutorials/typed-data-modeling.md): Model real data with records, unions, interfaces, and generics by building a small contact-list library.
+- [Type existing R functions](https://we-data-ch.github.io/typr.github.io/docs/howto/type-r-functions.md): Add type safety to R functions you already have — base R, your own helpers, or third-party packages — with @ signatures.
+- [Interop with R6/S4/RC](https://we-data-ch.github.io/typr.github.io/docs/howto/interop-r6-s4.md): Use R6, S4, and Reference Class objects from typed TypR code.
+- [Use dplyr/tidyr from TypR](https://we-data-ch.github.io/typr.github.io/docs/howto/use-dplyr-tidyr.md): Call dplyr, tidyr, and the rest of the tidyverse from typed TypR code.
+- [Build, test & document](https://we-data-ch.github.io/typr.github.io/docs/howto/build-and-test.md): The full development workflow of a TypR package: building, testing, and documenting it.
+- [Use raw R blocks](https://we-data-ch.github.io/typr.github.io/docs/howto/r-raw-blocks.md): Write plain R from TypR with raw R blocks and the other escape hatches, and know when to reach for them.
+- [Declare S3/S4 generics](https://we-data-ch.github.io/typr.github.io/docs/howto/generics-signatures.md): Declare the types of R's S3 and S4 generic functions so TypR can check calls into R's object systems.
+- [Reference](https://we-data-ch.github.io/typr.github.io/docs/reference/intro.md): How the reference is organised, and what to read to understand the type system and the main language constructs.
+- [Installation](https://we-data-ch.github.io/typr.github.io/docs/reference/installation.md): Install the TypR compiler as a complement to an existing R installation, and verify it works.
+- [Editor Setup](https://we-data-ch.github.io/typr.github.io/docs/reference/editor-setup.md): Set up TypR in VS Code, RStudio, Positron, or Vim/Neovim, all driven by the typr CLI and the typr lsp language server.
+- [Lexicon & Literals](https://we-data-ch.github.io/typr.github.io/docs/reference/lexicon.md): The fundamental tokens and literal types of TypR.
+- [Bindings & Mutation](https://we-data-ch.github.io/typr.github.io/docs/reference/bindings-mutation.md): How variables are declared, destructured, and reassigned in TypR.
+- [Types](https://we-data-ch.github.io/typr.github.io/docs/reference/types.md): A comprehensive overview of the TypR type system.
+- [Functions](https://we-data-ch.github.io/typr.github.io/docs/reference/functions.md): Function definitions, calling conventions, signatures, and advanced patterns.
+- [Records & Constructors](https://we-data-ch.github.io/typr.github.io/docs/reference/records.md): Record types, constructors, the spread operator, and named type embedding.
+- [Unions, Tags & Pattern Matching](https://we-data-ch.github.io/typr.github.io/docs/reference/unions-patterns.md): Tagged union types and the match expression.
+- [Operators & Precedence](https://we-data-ch.github.io/typr.github.io/docs/reference/operators.md): Every operator in TypR and its precedence rules.
+- [Control Flow](https://we-data-ch.github.io/typr.github.io/docs/reference/control-flow.md): if/else, for/while, and match expressions, and the type safety they add over plain R.
+- [Modules & Imports](https://we-data-ch.github.io/typr.github.io/docs/reference/modules.md): Organise code into modules and import symbols across files.
+- [Interfaces & Structural Validation](https://we-data-ch.github.io/typr.github.io/docs/reference/interfaces.md): Interfaces: describing structural capabilities without modifying the original types.
+- [Signatures, @extern & Foreign](https://we-data-ch.github.io/typr.github.io/docs/reference/signatures.md): Type aliases, opaque types, typeconstructors, and the signature system for declaring types without bodies.
+- [Escape Hatches](https://we-data-ch.github.io/typr.github.io/docs/reference/escape-hatches.md): Dropping out of TypR's type system to write raw R or JavaScript.
+- [TypR vs R — What Really Changes](https://we-data-ch.github.io/typr.github.io/docs/reference/cheatsheet.md): A side-by-side comparison of R and TypR.
+- [Compatibility with R](https://we-data-ch.github.io/typr.github.io/docs/reference/r-typr.md): Why TypR is a companion to R rather than a replacement, and how a TypR package stays an ordinary R package.
+- [Philosophy](https://we-data-ch.github.io/typr.github.io/docs/philosophy/intro.md): Freedom versus safety, and where TypR's gradual typing sits between R and a strict language.
+- [Why this type system](https://we-data-ch.github.io/typr.github.io/docs/philosophy/type-system-design.md): Why the type system is shaped the way it is: keeping R's flexibility while taming its fragility.
+- [Vectorization by design](https://we-data-ch.github.io/typr.github.io/docs/philosophy/vectorization_by_design.md): Why R's vectorization stops at custom types, and how TypR's lifting-based vectorization goes further.
+- [Generics & Kind Sigils](https://we-data-ch.github.io/typr.github.io/docs/concepts/generics-kind.md): Generic type parameters and the kind sigils that power TypR's type system.
+- [Type Constructors & Aliases](https://we-data-ch.github.io/typr.github.io/docs/concepts/type-constructors.md): Defining new types with type, opaque, and typeconstructor.
+- [Known Pitfalls](https://we-data-ch.github.io/typr.github.io/docs/concepts/known-pitfalls.md): Common pitfalls and ambiguities in the TypR parser.
+- [The beauty of syntax](https://we-data-ch.github.io/typr.github.io/docs/philosophy/beautiful_syntax.md): The syntax choices that set TypR apart from R, and the reasoning behind each of them.
