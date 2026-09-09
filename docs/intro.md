@@ -83,9 +83,17 @@ TypR functions are first-class values, and their first argument can become a
 strictly equivalent:
 
 ```typr
-add(5, 3);        # classic call
-(5) |> add(3);    # pipe
-(5).add(3);       # method-call style
+let add <- fn(a: int, b: int): int {
+  a + b
+};
+
+let value1 <- add(5, 3);        # classic call
+let value2 <- (5) |> add(3);    # pipe
+let value3 <- (5).add(3);       # method-call style
+
+print(value1);
+print(value2);
+print(value3);
 ```
 
 Pick whichever reads best. See the [functions reference](reference/functions.md)
