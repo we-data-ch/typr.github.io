@@ -91,16 +91,14 @@ Not necessarily. Types are mainly there for predictability and safety. Many coun
 In the case of TypR, even though, in the future, types will help build faster code, their goal is more about data modeling and safety.
 
 **Still confused about safety?**
-No problem. We will look at four advantages of explicit types through examples. Each one will show errors you can run into with dynamically typed programming languages like R. Then we will see how more predictability can help reduce them. All examples and fixes are presented in pure R first. Later, we will see how TypR makes the fixes much simpler to write and reason about. Here are the advantages of explicit typing:
+No problem. We will look at four advantages of explicit types through examples. Each one will show errors you can run into with dynamically typed programming languages like R. Then we will see how more predictability can help reduce them. All examples and fixes are presented in pure R first then corrected with packages from the tidyverse. This way it is simple to understand (no new language to keep in mind). Here are the advantages of explicit typing:
 
 1. **Errors you can see** before your code runs (or your user sees them).
 2. **Fast feedback loops**: you find out you broke something in seconds, not hours.
 3. **Error messages that make sense** and tell you where the problem lives.
 4. **Better design habits**, because thinking in types forces you to decide what your code actually does before you write it.
 
----
-
-## The scary R examples (a.k.a. "safety" in plain English)
+## R examples
 
 *(All of these use familiar tidyverse packages: dplyr, purrr, forcats, rlang.)*
 
@@ -112,19 +110,21 @@ If you don't know any of these projects, no worries, just take a look. They're a
 
 None of that's AI. It's deterministic automation: you write the rules, the machine enforces them. Types are just the next logical step. They lock the *shape* of your data and the *contracts* of your functions so you can't accidentally break them.
 
-### The feedback loop from hell
+### The long feedback loop
 
-Here's a pattern I guarantee you've lived through. You start with an integer, make some transformation, go back to another integer, except the code silently return a `NA` because we try to transform a whole sentence back to a number. Here it is a silly example that you won't probably ever do, but it generalize to many operation where you start with a type and theoretically ending with an expected type and something happen in the middle (could be a few lines or thousands). The most important thing is that the operation in the middle can take time, like seconds, minutes, hours or more (here represented by `Sys.sleep(6)` that wait 6 seconds). And for operation like that, we want to be sure that the rest of the code will works before running everything, otherwise we will keep losing time. Here's the example:
+Here's a pattern I guarantee you've lived through. You start with a value and you get late an unexpected "NA".
+
+In the example, you start with an integer, make some transformation, got back to another integer... except the code silently return a `NA` because we try to transform a whole sentence back to a number with `as.numeric`. Here it is a silly example that you won't probably ever do, but it generalize to many operation where you start with a type and theoretically ending with an expected type and something happen in the middle (could be a few lines or thousands). The most important thing is that the operation in the middle can take time, like seconds, minutes, hours or more (here represented by `Sys.sleep(6)` that wait 6 seconds). And for operation like that, we want to be sure that the rest of the code will works before running everything, otherwise we will keep losing time. Here's the example:
 
 ```r
 user_count <- 42
 
-Sys.sleep(6)
+Sys.sleep(6) # The long wait
 
 final_report <- user_count |> 
-  paste("Users since 2020:", ...=_) |> 
+  paste("Users since 2020:", ...=_) |> # makes it a character
   toupper() |> 
-  as.numeric()
+  as.numeric() # returns an NA
 ```
 
 You wait. And wait. Maybe you make a coffee. Then, at the very end, you discover that `as.numeric()` silently coughed up `NA` and you missed the coercion warning somewhere in a wall of console output. The whole run is wasted, and that's not even the whole issue. Imagine using `final_report` later as a number (since you used `as.numeric()` to convert it). It will still return `NA`. By the time you realize it, you're already several lines further down and you have to go back step by step to find the issue.
