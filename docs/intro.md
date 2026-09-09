@@ -5,7 +5,7 @@
 This is a tutorial. You will learn TypR by writing and running small programs,
 step by step. It takes about ten minutes to complete this tutorial.
 
-> This page is not a reference — it does not list every construct or all types.
+> This page is not a reference, it does not list every construct or all types.
 > When you want the details, follow the links to the [reference](/docs/reference/intro)
 > at the end of each section.
 
