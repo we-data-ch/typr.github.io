@@ -17,9 +17,7 @@ let id <- fn(x: T): T { x };         # T is a free generic
 let pair <- fn(a: T, b: U): Tuple[T, U] { :{a, b} };
 ```
 
-Free generics have **no constraints** — any type can be substituted. They are the simplest form of polymorphism in TypR.
-
----
+Free generics have **no constraints**, any type can be substituted. They are the simplest form of polymorphism in TypR.
 
 ## Kind sigils
 
@@ -36,7 +34,7 @@ Kind sigils are prefix characters that **constrain** what a generic parameter ca
 
 ### Index generics (`#N`)
 
-The `#N` sigil represents a **dimension** — the size or index of an array. It is used when you need to track or enforce array lengths at the type level:
+The `#N` sigil represents a **dimension**, so the size or index of an array. It is used when you need to track or enforce array lengths at the type level:
 
 ```typr noplayground
 let head <- fn(v: [#1, T]): T { v[0] };
@@ -57,7 +55,7 @@ See [Types](../reference/types.md) for more on array and vector syntax.
 
 ### Label generics (`$T`)
 
-The `$T` sigil represents a **field name** — a compile-time string literal used as a record key:
+The `$T` sigil represents a **field name**, which is a compile-time string literal used as a record key:
 
 ```typr noplayground
 # $T constrains the generic to a field label
@@ -74,7 +72,7 @@ The `%R` sigil constrains a generic to **any record type**:
 let fields_of <- fn(r: %R): char { "record" };
 
 let p <- :{ x = 1, y = 2 };
-fields_of(p);   # OK — p is a record
+fields_of(p);   # OK: p is a record
 ```
 
 This is useful when a function needs to operate on any record without caring about its specific fields.
@@ -110,8 +108,6 @@ The `?B` sigil constrains a generic to the `bool` type:
 let guard <- fn(condition: ?B, value: T): T { /* ... */ };
 ```
 
----
-
 ## Combining generics
 
 Generics can be combined in function signatures to express complex relationships:
@@ -121,13 +117,11 @@ Generics can be combined in function signatures to express complex relationships
 ```
 
 Here, three different generic forms appear together:
-- `#N` — the array dimension (preserved through the map)
-- `T` — the input element type (free generic)
-- `U` — the output element type (free generic)
+- `#N`: the array dimension (preserved through the map)
+- `T`: the input element type (free generic)
+- `U`: the output element type (free generic)
 
 The signature enforces that `map` preserves array length while allowing element type transformation.
-
----
 
 ## Generics in type definitions
 
@@ -138,11 +132,9 @@ type Option<T> <- .Some(T) | .None;   # free generic
 opaque Factor<L> <- int;               # phantom parameter — L is never used in the body
 ```
 
-A **phantom parameter** (like `L` above) exists only for type-level tracking — it appears in signatures but has no runtime representation. This pattern is useful for encoding constraints that are checked at compile time only.
+A **phantom parameter** (like `L` above) exists only for type-level tracking. It appears in signatures but has no runtime representation. This pattern is useful for encoding constraints that are checked at compile time only.
 
 See [Type Constructors & Aliases](type-constructors.md) for more on type definitions.
-
----
 
 ## Summary
 
