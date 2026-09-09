@@ -5,9 +5,10 @@
 > garantie de fraîcheur des exemples, consommation par les LLM, canaux de discussion et de
 > proposition.
 >
-> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1 à 7
-> sont implémentées ; les suivantes sont à faire par une session ultérieure. Les priorités
-> reflètent un arbitrage explicite valeur/coût, pas un ordre de préférence esthétique.
+> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1 à 8
+> sont implémentées, l'action 9 est *décidée* sans être mise en œuvre (c'était son objet) ;
+> les suivantes sont à faire par une session ultérieure. Les priorités reflètent un
+> arbitrage explicite valeur/coût, pas un ordre de préférence esthétique.
 
 ---
 
@@ -60,7 +61,7 @@ trouvé.)
 | 6 | Générer les pages de référence depuis `typr syntax --json` | Moyenne | ✅ Fait (2026-09-09) |
 | 7 | Analytics respectueuses de la vie privée | Moyenne | ✅ Fait (2026-09-09) — en sommeil, voir §2.7 |
 | 8 | Lien « signaler un problème sur cette page » | Basse | ✅ Fait (2026-09-09) |
-| 9 | Versionnement de la doc | Basse | ⏸ Différé — décider le schéma d'URL maintenant |
+| 9 | Versionnement de la doc | Basse | ✅ Schéma d'URL décidé (2026-09-09) — mise en œuvre différée, voir §2.9 |
 | 10 | Section « TypR by example » | Basse | 🚧 À faire |
 | 11 | Internationalisation française | Basse | ⏸ Optionnel |
 | — | Assistant IA conversationnel (widget de chat) | — | ❌ Écarté — voir §2.3 |
@@ -633,19 +634,81 @@ avec le site servi localement et Chrome headless :
 | Rendu HTML statique (avant hydratation) | `href` valide, titre replié sur le chemin du fichier |
 | Largeur mobile | les deux liens s'empilent au lieu de rogner la zone cliquable |
 
-### 2.9 — Action 9 : versionnement de la doc *(différé, mais à décider maintenant)*
+---
 
-Docusaurus sait versionner. **Ne pas le faire tout de suite** : ça double le coût de
-maintenance de chaque page, pour un langage dont la syntaxe bouge encore.
+### 2.9 — ✅ Action 9 : versionnement de la doc *(schéma décidé le 2026-09-09 ; mise en œuvre différée)*
 
-Mais **décider le schéma d'URL dès maintenant**, parce que le changer après coup casse tous les
-liens entrants. Le besoin deviendra réel dès qu'un utilisateur installera une release taguée
-pendant que la doc décrit `develop` — et le `repository_dispatch: typr-release` de
-`deploy.yml` montre que le couplage doc/release est déjà pensé.
+**L'action demandait une décision, pas une fonctionnalité.** Docusaurus sait versionner, mais
+le faire aujourd'hui doublerait le coût de maintenance de chaque page pour un langage dont la
+syntaxe bouge encore. Ce qui ne peut pas attendre, c'est le **schéma d'URL** : le changer après
+coup casse tous les liens entrants, et un lien vers une page de doc vit plus longtemps que la
+version qu'elle décrit.
+
+**La décision, en une phrase : `/docs/<page>` ne désignera jamais autre chose que la dernière
+release.**
+
+| URL | Contenu | Existe |
+|---|---|---|
+| `/docs/<page>` | la **dernière release** | aujourd'hui, et toujours |
+| `/docs/next/<page>` | `develop`, non publié | à partir du jour où l'on versionne |
+| `/docs/<x.y>/<page>` | une release plus ancienne | pas avant 1.0 — voir plus bas |
+| `/llms.txt`, `/llms-full.txt`, `/docs/<page>.md` | la dernière release | aujourd'hui, et toujours |
+
+**Le bon schéma est le défaut, et c'est ce qui rend la décision peu coûteuse.** Dès que
+`versioned_docs/` existe, Docusaurus sert la dernière version figée sous `/docs/` et bascule la
+version courante vers `/docs/next/`. Autrement dit : **aucune URL existante ne bouge le jour du
+basculement** — c'est la doc de `develop` qui déménage, et elle n'a aujourd'hui aucun lien
+entrant. Il n'y a donc rien à configurer maintenant ; il y a une chose à ne pas faire plus tard,
+`lastVersion: 'current'`, qui ferait décrire `develop` par `/docs/` et enverrait le lecteur sur
+une syntaxe que son compilateur ne connaît pas. Le commentaire est posé dans
+`docusaurus.config.ts`, à l'endroit exact où quelqu'un « corrigerait » la configuration.
+
+**Trois arbitrages complémentaires :**
+
+- **Granularité `x.y`, pas `x.y.z`.** Le langage bouge par mineure ; un instantané par patch
+  ferait dix copies d'une même syntaxe. La version exacte (`0.5.10`) reste affichée sur la page
+  d'accueil, où `deploy.yml` la synchronise déjà depuis `Cargo.toml`.
+- **Une seule release publiée à la fois, avant 1.0.** Au moment de versionner pour `0.6`,
+  l'instantané `0.5` est supprimé, pas archivé — il reste dans l'historique git, qui est sa
+  place. Conséquence heureuse : **aucune URL `/docs/<x.y>/` n'est jamais publiée**, donc aucune
+  ne pourra casser. L'espace d'URL se limite à deux chemins, `/docs/` et `/docs/next/`. On
+  gardera plusieurs versions (`onlyIncludeVersions`) quand des utilisateurs resteront
+  volontairement sur une version ancienne, c'est-à-dire après 1.0.
+- **`next` reste `next` dans l'URL** — c'est la convention Docusaurus, que le lecteur reconnaît.
+  C'est l'**étiquette** du menu déroulant qui doit dire `develop 🚧`, le chemin non.
+
+**Le déclencheur n'est pas une date, c'est un fait observable :** le jour où un bloc ` ```typr `
+ne peut plus être vrai à la fois pour la release et pour `develop`. Le workflow
+`examples-develop.yml` de l'action 2 est déjà l'instrument qui le signale — quand son
+`::warning` nocturne ne dénonce plus un bug mais un changement de langage assumé, la doc a deux
+publics et il est temps de couper.
+
+**Ce qui a été vérifié, en construisant réellement le site versionné** (`docusaurus docs:version
+0.5` sur une copie de travail, puis `npm run build`) — parce que la valeur de cette action est
+justement dans ce qu'on ne voit pas venir :
+
+| Constat | Effet |
+|---|---|
+| `/docs/*` = l'instantané, `/docs/next/*` = `develop`, sans aucune configuration | le contrat ci-dessus **est** le défaut |
+| « Edit this page » et « Report an issue » suivent le bon fichier (`versioned_docs/version-0.5/intro.md` d'un côté, `docs/intro.md` de l'autre) | rien à changer côté actions 8 et 3 |
+| `includeOrder` (`docs/<id>.md`) ne correspond plus à `versioned_docs/version-0.5/…` | **`llms.txt` perd l'ordre Diátaxis en silence** : tout bascule dans `includeUnmatchedLast` |
+| `versions: 'auto'` du plugin llms préfixe à la racine (`/next/docs/…`) là où Docusaurus préfixe après `/docs` (`/docs/next/…`), et les liens de `next/llms.txt` pointent vers les pages stables | ne pas l'utiliser : **un seul jeu de fichiers, celui de la release** |
+| `SOURCES` de `check-typr-blocks.mjs` ne connaît que `docs/` | les deux vérifications d'exemples deviennent inversées : c'est l'**instantané** que la release doit valider, `docs/` que la nuit doit prévenir |
+| La collection `docs` de `.pages.yml` pointe sur `docs/` | une correction faite depuis un téléphone atterrirait dans `next` et **n'apparaîtrait jamais sur le site publié** |
+| Coût mesuré | +37 pages HTML (62 → 99), 11 → 16 Mo de sortie, +1,4 Mo d'index de recherche (chargé paresseusement, et seulement par qui lit cette version) |
+
+Deux de ces six lignes échouent **sans rien casser visiblement** — l'ordre de `llms.txt` et le
+CMS. C'est exactement ce qu'une décision prise d'avance sert à éviter : le jour du basculement,
+personne ne les redécouvrira sous pression.
+
+**Le runbook complet est dans `CONTRIBUTING.md`, section « Versionnement de la documentation »** :
+le contrat d'URL, les quatre tentations à refuser, et les huit étapes du basculement avec les
+extraits de configuration exacts. Il vit là plutôt qu'ici parce que c'est le fichier qu'ouvre
+celui qui va le faire, pas celui qui a décidé de ne pas le faire.
 
 Rappel de `../CLAUDE.md` : les versions sont fixées en un seul endroit,
-`Cargo.toml [workspace.package].version`, propagées par `nu publish.nu sync`. La doc doit
-consommer cette valeur, jamais en redéfinir une.
+`Cargo.toml [workspace.package].version`, propagées par `nu publish.nu sync`. La doc **consomme**
+cette valeur — `deploy.yml` la récupère déjà pour la page d'accueil — elle n'en définit jamais une.
 
 ---
 

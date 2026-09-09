@@ -74,6 +74,17 @@ const config: Config = {
     [
       'classic',
       {
+        // Le site n'est pas versionné, et c'est un choix (plan-phase2 §2.9).
+        // Le schéma d'URL, lui, est arrêté : `/docs/<page>` ne désignera jamais
+        // autre chose que la **dernière release**, et la doc de `develop`
+        // déménagera sous `/docs/next/` le jour où l'on versionnera. C'est le
+        // comportement par défaut de Docusaurus dès que `versioned_docs/`
+        // existe — il n'y a donc rien à ajouter ici pour l'obtenir, seulement
+        // une chose à ne pas faire : `lastVersion: 'current'`, qui ferait
+        // décrire `develop` par `/docs/` et enverrait le lecteur sur une
+        // syntaxe que son compilateur ne connaît pas. Le runbook complet (et
+        // les pièges mesurés, dont ceux du plugin llms) est dans
+        // CONTRIBUTING.md, « Versionnement de la documentation ».
         docs: {
           sidebarPath: './sidebars.ts',
           beforeDefaultRehypePlugins: [rehypeShikiTypR],
@@ -138,6 +149,12 @@ const config: Config = {
         title: 'TypR',
         description:
           'A statically typed superset of R that compiles to plain, readable R.',
+        // `docsDir` reste la source de ces fichiers le jour où le site sera
+        // versionné : ils devront alors décrire la **release** (donc
+        // `versioned_docs/version-<x.y>`), pas `develop` — un modèle écrit pour
+        // le compilateur que l'utilisateur a installé. Ne pas passer par
+        // `versions: 'auto'` : le plugin préfixe les versions à la racine du
+        // site là où Docusaurus les préfixe après `/docs`. Voir CONTRIBUTING.md.
         // Ordre de lecture repris de la barre latérale — voir src/llms/order.ts.
         includeOrder: docOrderFromSidebars(sidebars),
         includeUnmatchedLast: true,
