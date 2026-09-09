@@ -3074,6 +3074,155 @@ Only `#` is recognized. There is **no** `//` syntax — a `.ty` file containing 
 
 ---
 
+### Reserved words
+
+Everything below is **generated** from the compiler's syntax manifest, the same
+single source of truth the editor grammars are built from. A keyword that is not
+in this list is not a keyword: it is an ordinary identifier. See
+[Where these tables come from](#where-these-tables-come-from).
+
+<!-- BEGIN GENERATED lexicon — généré depuis syntaxes/typr.syntax.json par scripts/gen-syntax-reference.mjs ; ne pas éditer à la main -->
+
+#### Control-flow keywords
+
+| Keyword | Meaning |
+|---|---|
+| `if` | Conditional. An expression, not a statement — it returns the value of the taken branch. |
+| `else` | Alternative branch of an `if`; chains as `else if`. |
+| `match` | Exhaustive pattern match over tags, types, records, tuples and `_`. |
+| `for` | Iteration over a collection: `for (item in items) { ... };`. |
+| `while` | Loop while a condition holds. |
+| `loop` | Unconditional loop, left with `break`. |
+| `break` | Leaves the innermost loop. |
+| `next` | Skips to the next iteration. The R spelling — TypR has no `continue`. |
+| `return` | Early return. The last expression of a block is already its value, so it is rarely needed. |
+
+#### Declaration keywords
+
+| Keyword | Meaning |
+|---|---|
+| `let` | Binds a value. The name must be `snake_case`. |
+| `fn` | Typed function literal — the return type is mandatory: `fn(x: int): int { ... }`. |
+| `function` | R's untyped function form. Accepted, and typed as `UnknownFunction`. |
+| `type` | Transparent type alias. The name must be `PascalCase`. |
+| `opaque` | Opaque alias: the underlying type is hidden from callers. |
+| `typeconstructor` | Registers a generic record/recursive constructor: `typeconstructor Tibble[N] record;`. |
+| `recursive` | Kind of a `typeconstructor` whose parameters may recur: `typeconstructor Matrix[N, M, T] recursive;`. |
+| `interface` | Structural capability: any type carrying the listed functions satisfies it. |
+| `record` | Record literal type (`record { x: int }`), and the record kind of a `typeconstructor`. |
+| `object` | Third spelling of the record literal type, alongside `list { ... }` and `record { ... }`. |
+| `module` | Declares a module, transpiled to an R environment. |
+| `mod` | Pulls in a module held in another file: `mod utils;`. |
+| `import` | Imports a module as a whole: `import Math;`, `import Math as M;`. |
+| `use` | Four grammars in one keyword: `use M::f;`, `use M::{f, g as h};`, `use M::*;` and the legacy R adapter `use("dplyr", c("filter"));`. |
+| `extern` | Opens a raw R body whose signature TypR checks: `extern (x: int) -> int r#"..."#`. |
+| `embed` | Named type embedding on a record field: `list { embed coords: Position }`. A soft keyword — a field genuinely named `embed` still parses. |
+
+#### Block heads
+
+| Form | Meaning |
+|---|---|
+| `R { ... }` | Escape hatch: a block of raw R, left untouched by the transpiler. |
+| `JS { ... }` | Escape hatch for the JavaScript target. |
+| `Test { ... }` | Test block, transpiled to testthat. `Test[...]` is the file-level form. |
+
+#### Annotations
+
+| Annotation | Meaning |
+|---|---|
+| `@export` | Exports the binding from the generated R package (roxygen2 `@export`). |
+| `@pub` | Makes a module member visible outside its `module`. |
+| `@testable` | Exposes a private member as `M$.test_<name>` under `typr build --test` only. |
+| `@extern` | Declares an R function that already exists: `@extern stats::sd: (x: [Any, num]) -> num;`. |
+| `@importFrom` | Hoists a roxygen2 `@importFrom`: `@importFrom dplyr filter select;`. |
+
+#### Constants
+
+| Constant | Meaning |
+|---|---|
+| `true` | Boolean truth. `TRUE` is the R spelling of the same value. |
+| `TRUE` | R spelling of `true`. |
+| `false` | Boolean falsity. `FALSE` is the R spelling of the same value. |
+| `FALSE` | R spelling of `false`. |
+| `null` | Absence of a value (R's `NULL`) — distinct from `na`. |
+| `NULL` | R spelling of `null`. |
+| `na` | Missing value (R's `NA`) — distinct from `null`. |
+| `NA` | R spelling of `na`. |
+
+#### Primitive types
+
+| Type | Meaning |
+|---|---|
+| `int` | Integer. |
+| `num` | Floating-point number. |
+| `char` | Character string. |
+| `bool` | Boolean. |
+| `logic` | Accepted alias of `bool`. |
+| `Any` | Top type — every value satisfies it. |
+| `Empty` | Bottom type — no value satisfies it. The return type of a side-effect-only function. |
+| `Self` | Inside an `interface`, the type that implements it. |
+
+#### Built-in type names
+
+| Type | Meaning |
+|---|---|
+| `Vec[...]` | Native R vector: `Vec[num]`, `Vec[#N, num]`. |
+| `Array[...]` | S3 array with an indexed size: `Array[3, int]`. Short form: `[#N, int]`. |
+| `Tuple[...]` | Positional tuple: `Tuple[int, char]`, variadic `Tuple[T..., U]`. |
+| `Record[...]` | Bracket record type: `Record[name: char]`, variadic `Record[Fs..., id: int]`. |
+| `UnknownFunction` | The type given to an R function TypR knows nothing about. |
+| `dataframe[...]{...}` | Data frame with typed columns: `dataframe[#N]{ name: char }`. |
+| `data.frame` | R's own data-frame name, accepted as a type. |
+| `data__frame` | The `__` spelling of `data.frame` — `__` becomes `.` in the emitted R. |
+| `list { ... }` | Record literal type: `list { x: int, y: int }`. |
+| `tuple { ... }` | Tuple literal type: `tuple { int, char }`. |
+| `df[...]{...}` | Short spelling of `dataframe`. |
+
+#### Built-in constructors
+
+| Form | Meaning |
+|---|---|
+| `c(...)` | R's vector constructor. |
+| `seq[...]` | Sequence literal. The range sugar `1:10` desugars to the R `seq(1, 10, 1)`. |
+| `Class(...)` | Type denoting an existing R class: `Class("data.frame", "tbl")`. |
+| `library(...)` | Declares an R package dependency, as in R. |
+
+#### Kind sigils
+
+A sigil prefixes a single-uppercase-letter generic to fix its kind.
+
+| Example | Kind | Sigil |
+|---|---|---|
+| `#N` | Number | `#` |
+| `%R` | Record | `%` |
+| `@I` | Interface | `@` |
+| `^S` | String | `^` |
+| `?B` | Boolean | `?` |
+| `$L` | Label | `$` |
+
+Reserved for future kinds and **not parsed today**: `~`, `&`, `!`. Each is already a live operator, so writing one as a sigil does not do what it looks like.
+
+<!-- END GENERATED lexicon -->
+
+---
+
+### Where these tables come from
+
+TypR's lexemes are described once, in the compiler
+([`components/syntax/mod.rs`](https://github.com/we-data-ch/typr/blob/main/crates/typr-core/src/components/syntax/mod.rs)),
+and every grammar is generated from that manifest — VS Code, Vim, the
+playground, and this site's own syntax colouring. The tables above are generated
+from the very same file, so a keyword cannot exist in the compiler and be
+missing here, nor survive here after the language drops it: the check runs in
+CI, in both directions.
+
+What the manifest does *not* hold is what each lexeme **means**. Those one-line
+glosses live in this repository (`scripts/syntax-glossary.mjs`), and adding a
+keyword to TypR without writing its line of documentation fails this site's
+build.
+
+---
+
 ## Bindings & Mutation
 
 This page covers how variables are declared, destructured, and reassigned in TypR.
@@ -3671,16 +3820,97 @@ This page covers all operators in TypR and their precedence rules.
 
 <!-- truncate -->
 
-### Precedence
+### Inventory
 
-Precedence from strongest (evaluated first) to weakest. Note that member access / pipe binds **more tightly** than arithmetic, unlike most languages.
+Everything in this section is **generated** from the compiler's syntax manifest —
+the same single source of truth the editor grammars are built from. An operator
+that is not listed here does not exist in TypR; see
+[Where these tables come from](#where-these-tables-come-from).
+
+<!-- BEGIN GENERATED operators — généré depuis syntaxes/typr.syntax.json par scripts/gen-syntax-reference.mjs ; ne pas éditer à la main -->
+
+#### Precedence
+
+From strongest (evaluated first) to weakest. Member access and the pipe bind **more tightly** than arithmetic, unlike most languages.
 
 | Rank | Operators | Role |
-|------|-----------|------|
-| 4 (strong) | `.` `\|>` `$` `::` `as!` `in` | member access / UFCS, pipe, validating cast |
-| 3 | `*` `/` `%` `@` | multiplicative, matrix product |
+|---|---|---|
+| 4 (strongest) | `as!` `in` `\|>` `::` `$` `.` | member access / UFCS, pipe, membership, validating cast |
+| 3 | `*` `/` `%` | multiplicative |
 | 2 | `+` `-` | additive |
-| 1 (weak) | `== != < > <= >=`, `and/&&/&`, `or/\|\|/\|`, `%op%` | comparison, logical, custom operators |
+| 1 (weakest) | `and` `or` `==` `!=` `<=` `>=` `<` `>` `&&` `\|\|` `&` `\|` `%op%` | comparison, logical, custom operators |
+
+Only infix operators have a precedence. `<-`, `->`, `=`, `...` and `;` never take part in a binary expression, so they appear in the tables below and not here.
+
+#### Binding, arrows and separators
+
+| Token | Meaning |
+|---|---|
+| `<-` | Binds, in `let` and `type`. Never an operator inside an expression. |
+| `->` | Return type of a function type: `(x: int) -> int`. |
+| `=>` | Arm separator in a `match`. |
+| `=` | Named-field and default-value separator (`greeting: char = "Hi"`). Never a comparison — that is `==`. |
+| `;` | Ends an instruction. Omitting it is tolerated with a warning, except on the last expression of a block. |
+| `,` | Separates arguments, fields and type parameters. |
+| `:` | Type annotation (`x: int`), and the range operator (`1:10`, `1:2:10`). |
+
+#### Access and pipe
+
+| Operator | Meaning |
+|---|---|
+| `::` | Module member access. A historical alias of `$`, which it parses to. |
+| `$` | Record field and module member access. |
+| `.` | UFCS call `x.f(y)` ≡ `f(x, y)`, and positional tuple access `t.1` (1-based). |
+| `\|>` | Pipe: `x \|> f()` ≡ `f(x)`. |
+| `\(x) ...` | R 4.1's lambda shorthand. |
+
+#### Arithmetic
+
+| Operator | Meaning |
+|---|---|
+| `+` | Addition; also type-level arithmetic on indices (`type Combined <- A + B;`). |
+| `-` | Subtraction, and unary minus. |
+| `*` | Multiplication. |
+| `/` | Division. |
+| `%` | Modulo. |
+
+#### Comparison and logic
+
+| Operator | Meaning |
+|---|---|
+| `==` | Equality. |
+| `!=` | Inequality. |
+| `<=` | Less than or equal. |
+| `>=` | Greater than or equal. |
+| `<` | Less than. |
+| `>` | Greater than. |
+| `&&` | Logical *and* (scalar), spelled `and` in words. |
+| `\|\|` | Logical *or* (scalar), spelled `or` in words. |
+| `&` | Vectorized *and*, as in R. |
+| `!` | Negation as a prefix; postfixed to an expression (`x!;`) it is the mutation sugar. |
+| `\|` | Union of types (`.A(int) \| .B`), and the vectorized *or* of R. |
+
+#### Cast and word operators
+
+| Operator | Meaning |
+|---|---|
+| `as!` | Validating cast: calls the generated `validate_T(x)` at runtime. |
+| `as` | Renames on import: `import Math as M;`, `use Math::{sin as s};`. Never a cast — that is `as!`. |
+| `and` | Logical *and*, word spelling of `&&`. |
+| `or` | Logical *or*, word spelling of `\|\|`. |
+| `in` | Membership. Iterates in `for (x in xs)`, and refines in the conditional type `T if T1 in T2`. |
+
+#### Spread and blocks
+
+| Token | Meaning |
+|---|---|
+| `...` | Runtime spread and variadic parameter. |
+| `..` | Nominal spread, in a record literal: `Point:{ ..source, x = 1 }`. |
+| `@{` | Opens a vectorized block, `@{ ... }@`. |
+| `}@` | Closes a vectorized block. |
+| `%op%` | R-style custom infix operator, declared with a backquoted name: `` `%+%` ``. |
+
+<!-- END GENERATED operators -->
 
 ---
 
@@ -3740,6 +3970,8 @@ xs as! [Any, int];          # cast to an inline structural type (not an alias)
 
 The following doubled operators were removed from the tokenizer: `++ -- ** // %% @@ .. $$ |>>`, as well as `@`/`@@`/`=` in infix position. None had typing/transpilation branches or a stdlib `` `op` `` signature to support them. A stray `//` (common C-style comment mistake) is now recognized by a dedicated parser and treated as a valid comment (see [Known Pitfalls](../concepts/known-pitfalls)).
 
+There is no exponentiation operator: `^` is the String kind sigil and nothing else. `@` is not a matrix product either — it only ever appears as the prefix of an annotation (`@pub`, `@export`) or of the Interface kind sigil, and in the `@{ ... }@` vectorized block.
+
 ---
 
 ### Arithmetic on types
@@ -3748,6 +3980,23 @@ The following doubled operators were removed from the tokenizer: `++ -- ** // %%
 type Combined <- A + B;      # Type::Operator on indices/dimensions
 T if T1 in T2                 # conditional type (experimental refinement)
 ```
+
+---
+
+### Where these tables come from
+
+The inventory above is derived from
+[`components/syntax/mod.rs`](https://github.com/we-data-ch/typr/blob/main/crates/typr-core/src/components/syntax/mod.rs)
+in the compiler, via `typr syntax --json`. Hand-maintained operator tables are
+exactly how six copies of TypR's syntax drifted apart before the manifest
+existed — this one listed `@` as a matrix product long after the tokenizer had
+dropped it.
+
+Two things are *not* in the manifest and stay on this side: the one-line meaning
+of each operator, and the precedence ranks, which live in
+`Op::get_binding_power`. Both are kept in `scripts/syntax-glossary.mjs`, keyed by
+lexeme, and CI fails when a key has no matching lexeme in the manifest — so an
+operator TypR no longer has cannot keep a row in the table above.
 
 ---
 
