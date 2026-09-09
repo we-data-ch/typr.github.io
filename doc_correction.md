@@ -5,8 +5,9 @@
 > des exécutions. Chaque entrée porte un repro minimal exécutable tel quel.
 >
 > Établi le **2026-09-09**, en triant les 45 blocs ` ```typr noplayground ` restants après la
-> mise en place du contrôle CI des exemples (`plan-phase2.md` action 2). Deux sont corrigés
-> (D, F — 2026-09-09). Les quatre autres attendent un arbitrage ou un fix compilateur.
+> mise en place du contrôle CI des exemples (`plan-phase2.md` action 2). Trois sont corrigés
+> (D, F — 2026-09-09 ; E — 2026-09-09). Les trois autres attendent un arbitrage ou un fix
+> compilateur.
 
 ---
 
@@ -33,7 +34,7 @@ Quatre sont des erreurs de documentation, deux sont des trous du compilateur.
 | [B](#b--docsreferencefunctionsmd131--closures) | `docs/reference/functions.md:131` | compilateur | `cases/` dans `we-data-ch/typr` |
 | [C](#c--docsphilosophyintromd25--functiona-b-présenté-comme-du-typr-valide) | `docs/philosophy/intro.md:25` | doc — **décision de langage d'abord** | à trancher |
 | ~~[D](#d--docsphilosophybeautiful_syntaxmd174--constructeur-dunion)~~ | `docs/philosophy/beautiful_syntax.md:174` | ~~doc~~ **corrigé** | ~~une ligne~~ |
-| [E](#e--docsconceptstype-constructorsmd28--opaque) | `docs/concepts/type-constructors.md:28` | doc | réécriture en deux blocs |
+| ~~[E](#e--docsconceptstype-constructorsmd28--opaque)~~ | `docs/concepts/type-constructors.md:28` | ~~doc~~ **corrigé** | ~~réécriture en deux blocs~~ |
 | ~~[F](#f--docsreferenceoperatorsmd33--pipe)~~ | `docs/reference/operators.md:33` | ~~doc~~ **corrigé** | ~~une ligne~~ |
 
 ---
@@ -221,6 +222,8 @@ Avec `Person` défini dans un préambule `# --- setup, ... ---`, le bloc devient
 ---
 
 ## E · `docs/concepts/type-constructors.md:28` — `opaque`
+
+> ✅ **Corrigé le 2026-09-09.** Bloc remplacé par deux blocs, `noplayground` retiré, passe la CI.
 
 **Bloc actuel :**
 

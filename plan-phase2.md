@@ -5,7 +5,7 @@
 > garantie de fraîcheur des exemples, consommation par les LLM, canaux de discussion et de
 > proposition.
 >
-> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1, 2, 3 et 4
+> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1 à 5
 > sont implémentées ; les suivantes sont à faire par une session ultérieure. Les priorités
 > reflètent un arbitrage explicite valeur/coût, pas un ordre de préférence esthétique.
 
@@ -56,7 +56,7 @@ trouvé.)
 | 2 | Vérifier les blocs ` ```typr ` contre le vrai compilateur en CI | **Haute** | ✅ Fait (2026-09-09) |
 | 3 | Rendre la doc « AI-ready » : `llms.txt`, copie Markdown, MCP | **Haute** | ✅ Fait (2026-09-09) — sauf MCP, voir §2.3 |
 | 4 | Activer GitHub Discussions et le lier depuis le site | Haute | ✅ Fait (2026-09-09) |
-| 5 | Processus RFC dans `we-data-ch/typr` + section « Design proposals » | Moyenne | 🚧 À faire |
+| 5 | Processus RFC dans `we-data-ch/typr` + section « Design proposals » | Moyenne | ✅ Fait (2026-09-09) |
 | 6 | Générer les pages de référence depuis `typr syntax --json` | Moyenne | 🚧 À faire |
 | 7 | Analytics respectueuses de la vie privée | Moyenne | 🚧 À faire |
 | 8 | Lien « signaler un problème sur cette page » | Basse | 🚧 À faire |
@@ -313,22 +313,81 @@ est le signal qu'il faut en faire une RFC.
 
 ---
 
-### 2.5 — Action 5 : processus RFC et section « Design proposals »
+### 2.5 — ✅ Action 5 : processus RFC et section « Design proposals » *(fait le 2026-09-09)*
 
-La forme éprouvée pour un langage (Rust, Python PEP, Swift Evolution) :
+**Le problème.** Les décisions de langage se prenaient quelque part entre des notes de
+workspace en français (`../typR/spécifications/`, `../typR/ai_context/*.md`), des issues et la
+tête du mainteneur. Rien de public, donc rien d'argumentable : un contributeur qui n'est pas
+d'accord avec un choix de conception n'avait pas d'endroit où le dire, et six mois plus tard
+« pourquoi TypR fait comme ça ? » n'avait pour réponse qu'un souvenir.
 
-- un dossier `rfcs/` **dans `we-data-ch/typr`**, pas dans le dépôt de doc : les propositions
-  sont revues comme du code ;
-- un `rfcs/0000-template.md` et une PR par proposition ; la discussion vit dans la PR, le
-  statut est porté par un label (`rfc-draft` / `rfc-accepted` / `rfc-rejected`) ;
-- la matière existe déjà dans `../typR/spécifications/` et `../typR/ai_context/*.md` — ces
-  notes de design sont aujourd'hui internes au workspace ; les RFC en seraient la face
-  publique ;
-- côté site : une section **« Design proposals »** qui liste les RFC acceptées et pointe vers
-  le dépôt. Genre Diátaxis : *explication* — donc sous `docs/philosophy/` ou une rubrique
-  dédiée, **surtout pas** mélangée à `reference/`.
-- les idées encore floues, qui ne méritent pas encore une RFC, vont dans la catégorie
-  **Ideas** des Discussions (action 4).
+**Ce qui a été fait — dans `we-data-ch/typr`** (les propositions se relisent comme du code,
+donc elles vivent avec le compilateur, pas ici) :
+
+- **`rfcs/README.md`** — le processus. Il tient sur une frontière, énoncée telle quelle :
+  *si la réponse à « que fait TypR ici ? » change, c'est une RFC ; si le compilateur ne fait
+  que rattraper une réponse déjà donnée, c'est une issue.* Le reste en découle — un tableau
+  à trois portes (issue / Ideas / RFC), le cycle de vie, et les critères qui ne sont **pas**
+  ceux de Rust : le R engendré reste lisible, le R qui marche continue de marcher, on dit ce
+  que fait le code non annoté, les messages d'erreur font partie du design.
+- **`rfcs/0000-template.md`** — le gabarit. Sections classiques (résumé, motivation,
+  explication guide/référence, alternatives, art antérieur) plus trois rubriques propres à
+  TypR : **le R émis** pour chaque exemple, **le typage graduel** (que devient le code non
+  annoté ?), et une **liste de vérification d'implémentation** qui renvoie aux invariants
+  existants — un cas dans `cases/`, `typr syntax --write` si un lexème bouge, `syntaxe.md`
+  synchronisé dans ses deux copies, la PR de doc dans la même release.
+- **Numérotation = numéro de la PR.** Rien à réserver, rien à renuméroter, pas deux
+  propositions qui se disputent le `0003`. Un fichier `0000-…` est une RFC en cours ; un
+  fichier numéroté est une RFC acceptée.
+- **`rfcs/` est l'ensemble accepté.** Une RFC refusée n'y entre pas : sa PR est close, avec le
+  texte et le raisonnement lisibles dedans. C'est cet invariant qui permet au site de lister
+  l'état des propositions **sans tenir une seconde liste à la main** — même réflexe que
+  l'inventaire `--noplayground` de l'action 2.
+- **`CONTRIBUTING.md`** — une section « Proposer un changement de langage (RFC) », en français
+  comme le reste du fichier. Au passage, le paragraphe « les blocs de code TypR ne sont pas
+  encore vérifiés contre le compilateur » a été corrigé : il décrivait le monde d'avant
+  l'action 2, dans le fichier même qui explique aux contributeurs ce que la CI vérifie.
+- **`.github/pull_request_template.md`** — une entrée « Si cette PR est une RFC », qui rappelle
+  de ne pas force-pusher par-dessus une relecture (les fils se posent sur les phrases, pas sur
+  des lignes de code).
+- **`rfcs/0000-calling-untyped-r-functions.md`** — une première RFC en brouillon, tirée du
+  point C de `doc_correction.md` : `function(a, b)` se définit mais ne s'appelle pas, alors que
+  `docs/philosophy/intro.md` la présente comme « also a valid TypR code ». Le fond a été vérifié
+  contre `typr` 0.5.10 pendant la rédaction, et la vérification a **élargi le diagnostic** :
+  `Type::UnknownFunction` est un placeholder d'arité **zéro**, donc le trou ne touche pas
+  seulement les `function(...)` de l'utilisateur mais **tous les noms de base R préchargés non
+  typés** (`Position(1, 2)` échoue exactement pareil, `Position()` passe). La transpilation,
+  elle, est déjà correcte : seul le type checker bloque. C'est ce qui rend la question
+  arbitrable — ce n'était pas un design, c'était un placeholder qui n'a jamais reçu de liste de
+  paramètres.
+
+**Ce qui a été fait — côté site :**
+
+- **`docs/philosophy/design-proposals.md`** — genre Diátaxis *explication*, donc sous
+  `philosophy/` et surtout pas dans `reference/`. Elle explique les trois portes, le cycle de
+  vie, et pointe vers **trois requêtes GitHub vivantes** (le dossier `rfcs/`, les PR ouvertes
+  `rfc-draft`, les PR closes `rfc-rejected`) plutôt que vers un tableau recopié qui aurait
+  divergé dès la première RFC. Elle dit aussi qu'**acceptée ≠ livrée**, avec le champ
+  `Implemented in:` de l'en-tête comme seul juge.
+- **`sidebars.ts`** — la page entre dans la catégorie Philosophy, donc aussi dans `llms.txt` à
+  sa place (l'ordre vient de la barre latérale, action 3).
+- **`docs/faq.md` question 35** — une quatrième porte après Q&A / Ideas / issues, avec la même
+  frontière que le README des RFC. La question 35 est devenue le point de tri complet du projet.
+- **`docs/philosophy/intro.md`** — une section finale « Disagreeing with any of this ». C'est la
+  page qui porte les partis pris ; c'est là qu'on est quand on n'est pas d'accord.
+
+**Les trois étiquettes existent** sur le dépôt, créées le 2026-09-09 :
+`rfc-draft` (vert), `rfc-accepted` (bleu), `rfc-rejected` (rouge).
+
+**Ce qui reste, et qui n'est pas du code.** Comme pour les Discussions de l'action 4, un
+processus vide ne s'amorce pas tout seul : la RFC en brouillon est là pour ça — elle donne au
+processus sa première PR, et à `doc_correction.md` §C la décision qui le débloque. Elle attend
+dans l'arbre de travail de `we-data-ch/typr`, non commitée ; c'est sa PR qui lui donnera son
+numéro.
+
+**Vérifié :** `npm run typecheck`, `npm run build` et `npm run check:examples` passent
+(181 blocs + 3 contre-exemples), et la nouvelle page apparaît dans `build/llms.txt` à sa place
+dans l'ordre Diátaxis.
 
 ---
 
