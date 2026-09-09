@@ -36,6 +36,32 @@ const config: Config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
+  // Mesure d'audience (plan-phase2 §2.7) — GoatCounter, sans cookie et sans
+  // identifiant persistant, donc sans bandeau de consentement à gérer.
+  //
+  // **En sommeil par défaut, et c'est le point important** : l'adresse de
+  // collecte vient d'une variable d'environnement lue ici, au build. Tant
+  // qu'elle est vide — `npm start`, un build local, une PR — src/analytics
+  // n'injecte aucun script et n'émet aucune requête. Allumer la mesure ne
+  // demande aucun changement de code : on définit la variable de dépôt
+  // GOATCOUNTER_ENDPOINT (voir .github/workflows/deploy.yml et CONTRIBUTING.md).
+  //
+  // Ce n'est pas un secret : la valeur finit dans le JavaScript public du
+  // site. La ranger dans `secrets` masquerait juste les journaux de CI, en
+  // laissant croire à une confidentialité qui n'existe pas.
+  customFields: {
+    analytics: {
+      endpoint: process.env.GOATCOUNTER_ENDPOINT ?? '',
+      // count.js refuse de compter depuis localhost ; ce drapeau est là pour
+      // qui veut vérifier la mesure de bout en bout avant de l'allumer.
+      allowLocal: process.env.GOATCOUNTER_ALLOW_LOCAL === '1',
+    },
+  },
+
+  // Les pages vues : Docusaurus est une SPA, un chargement de script ne suffit
+  // pas à compter les pages suivantes. Voir src/analytics/client.ts.
+  clientModules: ['./src/analytics/client.ts'],
+
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
@@ -253,6 +279,14 @@ const config: Config = {
               // doit quand même être ajouté.
               label: 'llms.txt',
               to: 'pathname:///llms.txt',
+            },
+            {
+              // Le pied de page est l'endroit où l'on cherche ce lien. Il pointe
+              // vers la FAQ plutôt que vers une page dédiée : la réponse tient en
+              // un paragraphe, et une page « Privacy » de quatre lignes se serait
+              // périmée sans que personne la relise.
+              label: 'Privacy',
+              to: '/docs/faq#site-analytics',
             },
           ],
         },

@@ -165,6 +165,8 @@ const Home: React.FC = () => {
 				</a>
 			</div>
 		)}
+		<script data-goatcounter="https://wedata.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
         <h1 style={styles.title}>
           Type hints for R
         </h1>

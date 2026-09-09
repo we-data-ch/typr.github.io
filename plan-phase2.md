@@ -5,7 +5,7 @@
 > garantie de fraîcheur des exemples, consommation par les LLM, canaux de discussion et de
 > proposition.
 >
-> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1 à 6
+> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1 à 7
 > sont implémentées ; les suivantes sont à faire par une session ultérieure. Les priorités
 > reflètent un arbitrage explicite valeur/coût, pas un ordre de préférence esthétique.
 
@@ -58,7 +58,7 @@ trouvé.)
 | 4 | Activer GitHub Discussions et le lier depuis le site | Haute | ✅ Fait (2026-09-09) |
 | 5 | Processus RFC dans `we-data-ch/typr` + section « Design proposals » | Moyenne | ✅ Fait (2026-09-09) |
 | 6 | Générer les pages de référence depuis `typr syntax --json` | Moyenne | ✅ Fait (2026-09-09) |
-| 7 | Analytics respectueuses de la vie privée | Moyenne | 🚧 À faire |
+| 7 | Analytics respectueuses de la vie privée | Moyenne | ✅ Fait (2026-09-09) — en sommeil, voir §2.7 |
 | 8 | Lien « signaler un problème sur cette page » | Basse | 🚧 À faire |
 | 9 | Versionnement de la doc | Basse | ⏸ Différé — décider le schéma d'URL maintenant |
 | 10 | Section « TypR by example » | Basse | 🚧 À faire |
@@ -473,19 +473,113 @@ dans `/docs/reference/operators.md`.
 
 ---
 
-### 2.7 — Action 7 : analytics respectueuses de la vie privée
+### 2.7 — ✅ Action 7 : analytics respectueuses de la vie privée *(fait le 2026-09-09)*
 
-Plausible, GoatCounter ou Umami — sans cookie, sans bandeau de consentement à gérer.
+**Ce qu'on cherche à savoir, et rien d'autre.** Quelles pages sont lues, et —
+maintenant que la recherche existe — **quelles recherches ne renvoient aucun
+résultat**. La seconde est la meilleure source d'idées de roadmap documentaire
+qui soit : elle dit ce que les lecteurs viennent chercher et ne trouvent pas,
+ce qu'aucun compteur de pages vues ne peut révéler.
 
-Ce qu'on veut réellement savoir : **quelles pages sont lues**, et surtout, maintenant que la
-recherche existe, **quelles recherches ne renvoient aucun résultat**. C'est la meilleure source
-d'idées de roadmap documentaire qui soit — elle dit ce que les gens cherchent et ne trouvent
-pas.
+**Le choix : GoatCounter.** Gratuit pour l'open-source, hébergé, sans cookie et
+sans identifiant persistant — donc **sans bandeau de consentement**, qui est le
+vrai coût caché d'une mesure d'audience. Plausible Cloud (9 €/mois) a une
+meilleure interface ; sa version auto-hébergeable demande un VPS, Postgres et
+ClickHouse, ce qui n'a aucun sens pour un site statique. Le palier gratuit
+d'Umami saute au moment précis où le trafic décolle, c'est-à-dire au moment où
+l'on ne veut pas perdre son historique.
 
-C'est aussi le seul argument sérieux pour **repasser à Algolia DocSearch** plus tard (gratuit
-pour l'open-source) : la tolérance aux fautes de frappe et les analytics de recherche
-intégrées. À faire seulement si le besoin se manifeste — la recherche locale de l'action 1
-couvre le cas nominal.
+**La décision de fond : en sommeil par défaut.** L'adresse de collecte vient de
+la variable d'environnement `GOATCOUNTER_ENDPOINT`, lue au build et recopiée
+dans `customFields`. Tant qu'elle est vide — `npm start`, un build local, une
+PR — aucun script tiers n'est injecté et aucune requête n'est émise. Il n'y a
+pas de « mode désactivé » à maintenir : il n'y a rien à désactiver. Allumer la
+mesure, c'est définir une **variable de dépôt** (pas un secret : la valeur finit
+dans le JavaScript public du site, la ranger dans `secrets` ne masquerait que
+les journaux de CI en laissant croire à une confidentialité qui n'existe pas) et
+redéployer. Aucun changement de code.
+
+**Ce qui a été fait.**
+
+- **`src/analytics/goatcounter.ts`** — le transport. Chargement paresseux de
+  `count.js` au premier hit réel, donc après l'hydratation ; **Do Not Track
+  honoré explicitement** (count.js ne le fait plus de lui-même, et comme c'est
+  nous qui décidons de le charger, c'est à nous de ne pas le charger) ; tout
+  échec avalé — un bloqueur, un réseau coupé, un compte supprimé ne doivent ni
+  casser la page ni polluer la console.
+- **`src/analytics/client.ts`** — les pages vues, en `clientModules`. Le point
+  non évident : **count.js compte au chargement du script, ce qui ne se produit
+  qu'une fois dans une SPA.** Sans `no_onload` + un comptage manuel sur
+  `onRouteDidUpdate`, on ne mesurerait que les pages d'atterrissage. Le baseUrl
+  est retiré du chemin — le tableau de bord n'a que faire de le répéter, et
+  l'historique survit ainsi à un futur domaine propre. Une ancre du sommaire et
+  le `?q=` réécrit à chaque frappe changent aussi la route : seul le `pathname`
+  compte.
+- **`src/theme/SearchPage/`** — l'évènement de recherche. Le rendu n'est pas
+  touché, on enveloppe l'original.
+
+**Le point délicat : distinguer « zéro résultat » de « pas encore de résultat ».**
+Le composant de `@easyops-cn/docusaurus-search-local` garde ses résultats dans un
+`useState` privé, sans contexte ni rappel, et cherche dans un web worker dont le
+module n'a pas d'alias `@theme/` : l'éjecter en entier pour connaître un nombre
+de résultats coûterait 200 lignes à resynchroniser à chaque montée de version du
+plugin. On lit donc son rendu — **par la structure, jamais par le texte** :
+compter des `<article>` survit à une traduction, pas la recherche d'un « No
+documents were found », et les classes sont des modules CSS aux noms hachés.
+
+Mais tant que l'index se télécharge, la page ne rend aucun `<article>` — un
+compte naïf y verrait une recherche infructueuse. Or le composant ne rend son
+paragraphe de décompte **qu'une fois les résultats connus** : la présence d'un
+`<p>` dans la zone de résultats est l'accusé de réception qui autorise à
+conclure. Sans lui on se tait. Un faux « aucun résultat » empoisonnerait
+exactement le signal qu'on cherche à lire, et il vaut mieux ne rien mesurer que
+mesurer faux.
+
+**Limite assumée : la liste déroulante de la navbar n'est pas instrumentée.**
+Elle se rafraîchit à chaque frappe et son gabarit « aucun résultat » n'est
+identifiable que par une classe hachée — un crochet fragile qui, le jour où il
+casse en silence, dirait « personne ne cherche rien qui manque ». Pire que pas
+de mesure. Le lecteur qui ne trouve rien dans la liste et valide arrive sur
+`/search` (`explicitSearchResultPath`), où il est compté.
+
+- **`docs/faq.md` question 36** et un lien **Privacy** en pied de page. La
+  réponse ne demande pas au lecteur de la croire sur parole : elle lui dit quoi
+  regarder dans l'onglet réseau (`gc.zgo.at/count.js`, le seul tiers que le site
+  puisse contacter) et lui donne les deux sorties — DNT, et `skipgc` dans le
+  `localStorage`, l'opt-out natif de count.js.
+- **`CONTRIBUTING.md`** — comment allumer la mesure, et comment la vérifier en
+  local avant de l'allumer (`GOATCOUNTER_ALLOW_LOCAL=1`, parce que count.js
+  refuse de compter depuis `localhost`).
+
+**Vérifié — de bout en bout, pas seulement à la compilation.** `npm run
+typecheck`, `npm run build`, `npm run check:examples` (181 blocs + 3
+contre-exemples) et `npm run check:syntax` passent. Puis, avec un faux point de
+collecte local et Chrome headless :
+
+| Cas | Résultat observé |
+|---|---|
+| Build sans la variable | aucun hit, `count.js` jamais demandé |
+| Page de doc | un hit, `p=/docs/reference/records` — baseUrl bien retiré |
+| Navigation SPA | un hit par page, pas seulement à l'atterrissage |
+| `/search?q=zzzqqxnotfound` | `search-empty: zzzqqxnotfound`, `e=true` |
+| `/search?q=Trait  objects` | `search: trait objects` — normalisation appliquée |
+| `navigator.doNotTrack = '1'` | aucun hit, `count.js` jamais demandé (contrôle sans DNT : un hit) |
+
+Les hypothèses faites sur `count.js` ont été relues dans le fichier réel et non
+supposées : `window.goatcounter = window.goatcounter || {}` (nos réglages
+survivent au chargement), `no_onload`, `allow_local`, et l'opt-out `skipgc`.
+
+**Ce qui reste, et qui n'est pas du code.** Créer le compte GoatCounter et poser
+la variable — cinq minutes, sans lesquelles tout ce qui précède ne mesure rien.
+Et, une fois quelques semaines de données accumulées, relire la liste des
+`search-empty:` : c'est la roadmap documentaire de la phase 3, écrite par les
+lecteurs.
+
+C'est aussi le seul argument sérieux pour **repasser à Algolia DocSearch** plus
+tard (gratuit pour l'open-source) : la tolérance aux fautes de frappe et les
+analytics de recherche intégrées. À faire seulement si le besoin se manifeste —
+la recherche locale de l'action 1 couvre le cas nominal, et elle est maintenant
+instrumentée.
 
 ---
 
@@ -552,3 +646,9 @@ dérive » et « rendre la dérive impossible », prendre la seconde.
 
 Les actions 3, 4, 5 relèvent d'un autre principe : **s'appuyer sur GitHub plutôt que sur une
 infrastructure**, parce que le site est statique et que le mainteneur est peu nombreux.
+
+L'action 7 en ajoute un troisième, qui ne vaut que pour elle : **mesurer sans surveiller**. Une
+mesure d'audience qui exige un bandeau de consentement a déjà perdu — elle coûte à chaque
+visiteur pour renseigner le mainteneur. Le corollaire pratique est le mode par défaut : la
+mesure est en sommeil tant que personne ne l'allume, et un build qui ne sait pas où envoyer ses
+données n'en envoie pas.

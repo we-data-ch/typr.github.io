@@ -168,7 +168,17 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # La mesure d'audience (plan-phase2 §2.7) est en sommeil tant que cette
+      # variable est vide : sans elle, aucun script tiers n'est injecté et le
+      # site n'émet aucune requête de mesure. C'est une *variable* de dépôt et
+      # pas un secret — la valeur finit dans le JavaScript public du site, la
+      # ranger dans `secrets` ne masquerait que les journaux de CI.
+      #
+      # Elle est passée aussi aux builds de PR, sans conséquence : ceux-là ne
+      # sont jamais publiés, donc jamais visités.
       - name: Build
+        env:
+          GOATCOUNTER_ENDPOINT: ${{ vars.GOATCOUNTER_ENDPOINT }}
         run: npm run build
 
       # Sur une PR on s'arrête ici : le build a validé les liens et le MDX,

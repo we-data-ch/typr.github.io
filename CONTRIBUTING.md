@@ -172,3 +172,41 @@ du parseur. Elle fait autorité sur le comportement réel — mais elle contient
 aussi des notes d'implémentation qui n'ont pas leur place dans la doc publique.
 En cas de doute entre une page du site et `syntaxe.md`, c'est `syntaxe.md` qui
 décrit le compilateur.
+
+## Mesure d'audience
+
+Le site peut compter ses pages vues avec [GoatCounter](https://www.goatcounter.com)
+— sans cookie, sans identifiant persistant, donc sans bandeau de consentement.
+**Elle est éteinte par défaut et il n'y a rien à faire pour la garder éteinte** :
+tout est piloté par une variable d'environnement lue au build, et tant qu'elle
+est vide (`npm start`, un build local, une PR), aucun script tiers n'est injecté
+et aucune requête n'est émise.
+
+Pour l'allumer, une fois le compte GoatCounter créé : définir la **variable de
+dépôt** (Settings → Secrets and variables → Actions → *Variables*)
+
+```
+GOATCOUNTER_ENDPOINT = https://<compte>.goatcounter.com/count
+```
+
+C'est délibérément une variable et pas un secret : la valeur finit dans le
+JavaScript public du site, et la ranger dans `secrets` ne masquerait que les
+journaux de CI en laissant croire à une confidentialité qui n'existe pas.
+Le prochain déploiement suffit ; aucun changement de code.
+
+Pour vérifier la mesure de bout en bout avant de l'allumer, en local :
+
+```bash
+GOATCOUNTER_ENDPOINT=https://<compte>.goatcounter.com/count \
+GOATCOUNTER_ALLOW_LOCAL=1 npm run build && npm run serve
+```
+
+Le second drapeau est nécessaire : `count.js` refuse de compter depuis
+`localhost`. Et c'est bien `npm run build`, pas `npm start` — c'est au build que
+la variable est lue.
+
+Ce qui est mesuré, et pourquoi, est décrit dans `src/analytics/goatcounter.ts` ;
+ce que le visiteur en voit est en question 36 de la FAQ. Deux choses seulement :
+les pages lues, et **les recherches qui ne renvoient aucun résultat**
+(`src/theme/SearchPage/`) — la meilleure source d'idées de roadmap documentaire
+qui soit, puisqu'elle dit ce que les lecteurs cherchent et ne trouvent pas.

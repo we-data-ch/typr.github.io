@@ -470,3 +470,22 @@ Use [GitHub issues](https://github.com/we-data-ch/typr/issues) instead when you 
 And when what you want is a **change to the language itself** — new syntax, a different typing rule, a change to the generated R — that goes through a written proposal, reviewed in the open: see [Design proposals](philosophy/design-proposals.md). The rule of thumb: if the answer to "what does TypR do here?" changes, it is a proposal; if the compiler is failing to do what the documentation already says, it is a bug report.
 
 Elsewhere: [Reddit r/rstats](https://www.reddit.com/r/rstats/).
+
+---
+
+## About this site
+
+### 36. Does this documentation site track me? {#site-analytics}
+
+No cookies, no consent banner, no advertising trackers, no third-party fonts, no embedded players—in any state of the site.
+
+Audience measurement, when it is switched on, is [GoatCounter](https://www.goatcounter.com). What leaves your browser is the page path, the page title, the referrer, the screen width, and the URL's query string. From your IP address and User-Agent, GoatCounter derives a coarse country and browser and then keeps only a salted hash of them, with the salt rotated through the day—enough to tell repeat views apart, not enough to follow you between days or across sites. No cookie is set and nothing persists in your browser.
+
+The one custom measurement is **searches run on the [search page](/search)**: the query, lowercased and truncated, and whether it returned anything. That last part is the point. A question the documentation cannot answer is the most useful thing a documentation site can learn about itself, and it is invisible from page views alone.
+
+Two ways out, both honoured:
+
+- If your browser sends **Do Not Track**, the analytics script is never loaded at all—not loaded and ignored, simply never requested.
+- Otherwise, run `localStorage.setItem('skipgc', 't')` in your browser console and this site stops counting you on this browser, for good.
+
+Whether measurement is running right now is something you can check rather than take on trust: open your browser's network tab and look for `gc.zgo.at/count.js`. It is the only third-party request this site is able to make.
