@@ -5,7 +5,7 @@
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">Getting started | TypR</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://we-data-ch.github.io/typr.github.io/img/typr.png"><meta data-rh="true" name="twitter:image" content="https://we-data-ch.github.io/typr.github.io/img/typr.png"><meta data-rh="true" property="og:url" content="https://we-data-ch.github.io/typr.github.io/docs/intro"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Getting started | TypR"><meta data-rh="true" name="description" content="Learn TypR in about ten minutes by writing and running small typed programs, step by step."><meta data-rh="true" property="og:description" content="Learn TypR in about ten minutes by writing and running small typed programs, step by step."><link data-rh="true" rel="icon" href="/typr.github.io/img/typr.ico"><link data-rh="true" rel="canonical" href="https://we-data-ch.github.io/typr.github.io/docs/intro"><link data-rh="true" rel="alternate" href="https://we-data-ch.github.io/typr.github.io/docs/intro" hreflang="en"><link data-rh="true" rel="alternate" href="https://we-data-ch.github.io/typr.github.io/docs/intro" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Getting started","item":"https://we-data-ch.github.io/typr.github.io/docs/intro"}]}</script><link rel="alternate" type="application/rss+xml" href="/typr.github.io/blog/rss.xml" title="TypR RSS Feed">
 <link rel="alternate" type="application/atom+xml" href="/typr.github.io/blog/atom.xml" title="TypR Atom Feed"><link rel="stylesheet" href="/typr.github.io/assets/css/styles.54ce7566.css">
-<script src="/typr.github.io/assets/js/runtime~main.b543f226.js" defer="defer"></script>
+<script src="/typr.github.io/assets/js/runtime~main.a0ffc763.js" defer="defer"></script>
 <script src="/typr.github.io/assets/js/main.d7aecc4b.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -32,7 +32,7 @@ a compiler checks your types, and the output is ordinary R.</p>
 <li><strong>The <code>typr</code> compiler.</strong> Head to the <a href="/typr.github.io/docs/reference/installation">installation guide</a>
 and come back once <code>typr --version</code> prints a version number.</li>
 </ul>
-<p>Everything else — IDE, editor, RStudio — is optional.</p>
+<p>Everything else (IDE, editor, RStudio) is optional.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="1-say-hello">1. Say hello<a href="#1-say-hello" class="hash-link" aria-label="Direct link to 1. Say hello" title="Direct link to 1. Say hello">​</a></h2>
 <p>Create a file called <code>hello.ty</code> in an empty folder:</p>
 <div class="language-typr codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e1e4e8;--prism-background-color:#24292e"><div class="codeBlockContent_m3Ux"><pre tabindex="0" class="codeBlock_qGQc thin-scrollbar"><code class="codeBlockLines_p187"><span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D"># hello.ty</span></span>
@@ -41,7 +41,7 @@ and come back once <code>typr --version</code> prints a version number.</li>
 <p>Transpile it from the terminal:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e1e4e8;--prism-background-color:#24292e"><div class="codeBlockContent_m3Ux"><pre tabindex="0" class="codeBlock_qGQc thin-scrollbar"><code class="codeBlockLines_p187"><span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">typr</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> build</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> hello.ty</span></span></code></pre></div></div>
 <p>TypR generates plain R code. If you look at the files produced, you will see
-an ordinary <code>hello.R</code> file — nothing exotic. That generated code is what runs, anywhere
+an ordinary <code>hello.R</code> file, nothing exotic. That generated code is what runs, anywhere
 R runs.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="2-store-a-value">2. Store a value<a href="#2-store-a-value" class="hash-link" aria-label="Direct link to 2. Store a value" title="Direct link to 2. Store a value">​</a></h2>
 <p>In TypR, you declare a name with <code>let</code> and assign it with <code>&lt;-</code>, like in R. A
@@ -60,11 +60,9 @@ The compiler uses these declarations to catch mistakes before the code runs:</p>
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">print</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">add</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">5</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">3</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">));</span></span></code></pre></div></div>
 <p>You did not have to annotate <code>add</code> itself: the compiler infers it. You only
-annotate what matters for clarity or safety. For example, swapping <code>b</code> for a
-string would now fail at compile time instead of at runtime.</p>
+annotate what matters for clarity or safety. For example, swapping <code>b</code> for a charcter type would now fail at compile time instead of at runtime.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="4-call-the-same-function-three-ways">4. Call the same function three ways<a href="#4-call-the-same-function-three-ways" class="hash-link" aria-label="Direct link to 4. Call the same function three ways" title="Direct link to 4. Call the same function three ways">​</a></h2>
-<p>TypR functions are first-class values, and their first argument can become a
-&quot;receiver&quot;. Thanks to uniform function call syntax, the three calls below are
+<p>TypR functions are first-class values, and their first argument can become a &quot;receiver&quot;. Thanks to uniform function call syntax, the three calls below are
 strictly equivalent:</p>
 <div class="language-typr codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e1e4e8;--prism-background-color:#24292e"><div class="codeBlockContent_m3Ux"><pre tabindex="0" class="codeBlock_qGQc thin-scrollbar"><code class="codeBlockLines_p187"><span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">let</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> add </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">&lt;-</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> fn</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70">a</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">, </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70">b</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">): </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">  a </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">+</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> b</span></span>
@@ -86,7 +84,7 @@ for more on function types and higher-order functions.</p>
 <span class="line"><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70">  age</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">int</span></span>
 <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div></div>
 <p>Because TypR uses structural types, a function that only needs the <code>age</code> field
-accepts <em>any</em> value that has one — including lists with extra
+accepts <em>any</em> value that has one, including lists with extra
 fields. See the <a href="/typr.github.io/docs/reference/types">types reference</a> for structural subtyping.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="6-write-a-function-on-your-type">6. Write a function on your type<a href="#6-write-a-function-on-your-type" class="hash-link" aria-label="Direct link to 6. Write a function on your type" title="Direct link to 6. Write a function on your type">​</a></h2>
 <div class="language-typr codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e1e4e8;--prism-background-color:#24292e"><div class="codeBlockContent_m3Ux"><pre tabindex="0" class="codeBlock_qGQc thin-scrollbar"><code class="codeBlockLines_p187"><span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D"># --- setup, from the previous step ---</span></span>
@@ -126,10 +124,10 @@ function. TypR never forces an all-or-nothing choice.</p>
 <p>See <a href="/typr.github.io/docs/reference/r-typr">Working with R and TypR</a> for the full walkthrough.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="where-to-go-next">Where to go next<a href="#where-to-go-next" class="hash-link" aria-label="Direct link to Where to go next" title="Direct link to Where to go next">​</a></h2>
 <ul>
-<li><strong><a href="/typr.github.io/docs/faq">FAQ</a></strong> — common questions, comparisons, and practical answers</li>
-<li><strong><a href="/typr.github.io/docs/reference/intro">Reference</a></strong> — types, functions, control flow</li>
-<li><strong><a href="/typr.github.io/docs/philosophy/intro">Philosophy</a></strong> — why TypR is designed this way</li>
-<li><strong><a href="/typr.github.io/blog">Blog</a></strong> — R and TypR, vectorization, testing, OOP</li>
+<li><strong><a href="/typr.github.io/docs/faq">FAQ</a></strong>: common questions, comparisons, and practical answers</li>
+<li><strong><a href="/typr.github.io/docs/reference/intro">Reference</a></strong>: types, functions, control flow</li>
+<li><strong><a href="/typr.github.io/docs/philosophy/intro">Philosophy</a></strong>: why TypR is designed this way</li>
+<li><strong><a href="/typr.github.io/blog">Blog</a></strong>: R and TypR, vectorization, testing, OOP</li>
 </ul>
 <p>Stuck on something, or want to share what you built? Head to
 <a href="https://github.com/we-data-ch/typr/discussions" target="_blank" rel="noopener noreferrer">GitHub Discussions</a> — questions go
