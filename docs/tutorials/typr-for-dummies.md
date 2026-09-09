@@ -58,7 +58,7 @@ let age: int <- 12;
 age <- data__frame(a=[4], b=["cat"]);
 ``` 
 
-*dot (`.`) in TypR can't be used as variable name. They define methods. So any function that used them should be replaced by double underscores (`__`)*
+*dot (`.`) in TypR can't be used as variable name. They define methods. So any function that used them should be replaced by double underscores (`__`). See the [Beautiful syntax](/docs/philosophy/beautiful_syntax) section*
 
 The logic is simple: we want predictability so no code can change the meaning of the variable. We avoid unexpected changes. In our example, age is always a number, which makes sense. You don't want your colleagues changing it to a character because mathematical operations won't work on it. You will get an error later in the code rather than where the problem started. This is a long explanation, but the examples coming up will make it much clearer. In case you are confused, only the type is fixed. You can still change the value later in TypR:
 
