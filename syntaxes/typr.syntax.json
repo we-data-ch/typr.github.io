@@ -1,0 +1,511 @@
+{
+  "schema_version": 1,
+  "language": {
+    "id": "typr",
+    "name": "typR",
+    "scope_name": "source.typr",
+    "extensions": [
+      ".ty"
+    ],
+    "line_comment": "#"
+  },
+  "sigils": [
+    {
+      "sigil": "#",
+      "kind": "Number",
+      "scope_suffix": "number",
+      "reserved": false,
+      "note": null
+    },
+    {
+      "sigil": "%",
+      "kind": "Record",
+      "scope_suffix": "record",
+      "reserved": false,
+      "note": null
+    },
+    {
+      "sigil": "@",
+      "kind": "Interface",
+      "scope_suffix": "interface",
+      "reserved": false,
+      "note": null
+    },
+    {
+      "sigil": "^",
+      "kind": "String",
+      "scope_suffix": "string",
+      "reserved": false,
+      "note": null
+    },
+    {
+      "sigil": "?",
+      "kind": "Boolean",
+      "scope_suffix": "boolean",
+      "reserved": false,
+      "note": null
+    },
+    {
+      "sigil": "$",
+      "kind": "Label",
+      "scope_suffix": "label",
+      "reserved": false,
+      "note": null
+    },
+    {
+      "sigil": "~",
+      "kind": "Reserved",
+      "scope_suffix": "reserved",
+      "reserved": true,
+      "note": "Reserved by sigils.md §3.2.1 for a future kind, not parsed yet. Already live as an operator, so generators must not emit it."
+    },
+    {
+      "sigil": "&",
+      "kind": "Reserved",
+      "scope_suffix": "reserved",
+      "reserved": true,
+      "note": "Reserved by sigils.md §3.2.1 for a future kind, not parsed yet. Already live as an operator, so generators must not emit it."
+    },
+    {
+      "sigil": "!",
+      "kind": "Reserved",
+      "scope_suffix": "reserved",
+      "reserved": true,
+      "note": "Reserved by sigils.md §3.2.1 for a future kind, not parsed yet. Already live as an operator, so generators must not emit it."
+    }
+  ],
+  "rules": [
+    {
+      "name": "strings.raw-r",
+      "scope": "string.quoted.other.raw.typr",
+      "kind": "span",
+      "begin": "r#\"",
+      "end": "\"#",
+      "escapes": false,
+      "note": "`extern (...) -> T r#\"...\"#` raw R body — verbatim, no escape processing. Ahead of `comments` so its inner `#` never opens one."
+    },
+    {
+      "name": "comments",
+      "scope": "comment.line.number-sign.typr",
+      "kind": "match",
+      "pattern": "#(?!(?:Self|[A-Z])(?![A-Za-z0-9_])).*$",
+      "vim": "#%(%(Self|[A-Z])[A-Za-z0-9_]@!)@!.*$",
+      "note": "TypR comments are `#` only — never `//`, which the parser rejects outright (`wrong_comment` in parsing/mod.rs). The lookahead is the one place a regex grammar has to guess where the parser uses context: `#N` and `#Self` are the Number kind sigil, so they are left to `types.sigil-generic`; anything else after `#` opens a comment."
+    },
+    {
+      "name": "strings.double",
+      "scope": "string.quoted.double.typr",
+      "kind": "span",
+      "begin": "\"",
+      "end": "\"",
+      "escapes": true,
+      "note": null
+    },
+    {
+      "name": "strings.single",
+      "scope": "string.quoted.single.typr",
+      "kind": "span",
+      "begin": "'",
+      "end": "'",
+      "escapes": true,
+      "note": null
+    },
+    {
+      "name": "strings.backtick",
+      "scope": "string.quoted.other.backtick.typr",
+      "kind": "span",
+      "begin": "`",
+      "end": "`",
+      "escapes": false,
+      "note": "R-style non-syntactic name (`parsing/elements.rs::quoted_variable`)."
+    },
+    {
+      "name": "numbers.float",
+      "scope": "constant.numeric.float.typr",
+      "kind": "match",
+      "pattern": "\\b[0-9]+\\.[0-9]+\\b",
+      "vim": "<[0-9]+\\.[0-9]+>",
+      "note": "`parsing/elements.rs::number` — digits, a dot, digits. No exponent form exists."
+    },
+    {
+      "name": "numbers.integer",
+      "scope": "constant.numeric.integer.typr",
+      "kind": "match",
+      "pattern": "\\b[0-9]+\\b",
+      "vim": "<[0-9]+>",
+      "note": null
+    },
+    {
+      "name": "annotations",
+      "scope": "storage.modifier.annotation.typr",
+      "kind": "annotations",
+      "lexemes": [
+        "@export",
+        "@pub",
+        "@testable",
+        "@extern",
+        "@importFrom"
+      ],
+      "note": "Visibility/interop annotations (RFC-TR-032). Ahead of the `@T` interface sigil and of any bare-`@` rule, both of which would eat their `@`."
+    },
+    {
+      "name": "keywords.control",
+      "scope": "keyword.control.typr",
+      "kind": "words",
+      "lexemes": [
+        "if",
+        "else",
+        "match",
+        "for",
+        "while",
+        "loop",
+        "break",
+        "next",
+        "return"
+      ],
+      "note": "No `continue`: the loop-skip keyword is `next;` (R spelling), `parsing/elements.rs::next_exp`."
+    },
+    {
+      "name": "keywords.declaration",
+      "scope": "keyword.declaration.typr",
+      "kind": "words",
+      "lexemes": [
+        "let",
+        "fn",
+        "function",
+        "type",
+        "opaque",
+        "typeconstructor",
+        "recursive",
+        "interface",
+        "record",
+        "object",
+        "module",
+        "mod",
+        "import",
+        "use",
+        "extern",
+        "embed"
+      ],
+      "note": "No `impl`/`trait`/`struct`/`enum`/`where`/`mut`/`pub`: none has ever existed in TypR — they were Rust leftovers in the hand-written grammars. Visibility is spelled with the `@pub`/`@export` annotations."
+    },
+    {
+      "name": "keywords.cast",
+      "scope": "keyword.operator.cast.typr",
+      "kind": "words",
+      "lexemes": [
+        "as!",
+        "as"
+      ],
+      "note": "`as!` first, or the `as` alternative eats its prefix."
+    },
+    {
+      "name": "keywords.operator-word",
+      "scope": "keyword.operator.word.typr",
+      "kind": "words",
+      "lexemes": [
+        "and",
+        "or",
+        "in"
+      ],
+      "note": "Word-spelled operators (`components/language/operators.rs::bool_op`/`op`)."
+    },
+    {
+      "name": "constants",
+      "scope": "constant.language.typr",
+      "kind": "words",
+      "lexemes": [
+        "true",
+        "TRUE",
+        "false",
+        "FALSE",
+        "null",
+        "NULL",
+        "na",
+        "NA"
+      ],
+      "note": "Both spellings are real: `parsing/elements.rs` accepts the R form and the lowercase TypR form. No `NaN`/`Inf` — the parser has a tag for neither."
+    },
+    {
+      "name": "types.primitive",
+      "scope": "support.type.primitive.typr",
+      "kind": "words",
+      "lexemes": [
+        "int",
+        "num",
+        "char",
+        "bool",
+        "logic",
+        "Any",
+        "Empty",
+        "Self"
+      ],
+      "note": "`logic` is the accepted alias of `bool` (`parsing/types.rs::boolean_type`)."
+    },
+    {
+      "name": "types.builtin",
+      "scope": "support.type.builtin.typr",
+      "kind": "words",
+      "lexemes": [
+        "Vec",
+        "Array",
+        "Tuple",
+        "Record",
+        "UnknownFunction",
+        "dataframe",
+        "data.frame",
+        "data__frame",
+        "list",
+        "tuple"
+      ],
+      "note": "No `Option`/`Result`/`List`/`Matrix`: TypR has none of them. These are the names usable bare in a type position; the ones that only exist in front of a delimiter are in `types.constructor` and `keywords.block`."
+    },
+    {
+      "name": "types.builtin-indexed",
+      "scope": "support.type.builtin.typr",
+      "kind": "words",
+      "lexemes": [
+        "df"
+      ],
+      "followed_by": "\\s*\\[",
+      "note": "`df` is a type name the parser accepts bare too (`parsing/types.rs::dataframe_type`), but `df` is also the single most common data-frame *variable* name in R. Coloring it only in `df[...]` under-colors a bare `x: df` annotation; the alternative over-colors every `df` in every program, which is worse. `dataframe`, the unambiguous spelling, stays in `types.builtin`."
+    },
+    {
+      "name": "types.constructor",
+      "scope": "support.function.builtin.typr",
+      "kind": "words",
+      "lexemes": [
+        "c",
+        "seq",
+        "Class",
+        "library"
+      ],
+      "followed_by": "\\s*[\\[(]",
+      "note": "The parser only ever matches these glued to their opening delimiter (`c(`, `seq[`, `Class(`, `library(`), so the delimiter is part of the rule. Without it, every variable named `c` would be colored as a builtin."
+    },
+    {
+      "name": "keywords.block",
+      "scope": "keyword.other.block.typr",
+      "kind": "words",
+      "lexemes": [
+        "R",
+        "JS",
+        "Test"
+      ],
+      "followed_by": "\\s*[\\[{]",
+      "note": "Escape-hatch and test block heads: `R { ... }`, `JS { ... }`, `Test { ... }`, `Test[...]`. Delimiter-guarded for the same reason as `types.constructor` — and `R` in particular is a single uppercase letter, i.e. also a valid generic name, so an unguarded rule would fight `types.generic`."
+    },
+    {
+      "name": "types.variant",
+      "scope": "entity.name.type.variant.typr",
+      "kind": "match",
+      "pattern": "\\.[A-Z][A-Za-z0-9_]*\\b",
+      "vim": "\\.[A-Z][A-Za-z0-9_]*>",
+      "note": "Union-variant tag, `.Variant` (`parsing/elements.rs::tag_exp`)."
+    },
+    {
+      "name": "types.sigil-generic",
+      "scope": "entity.name.type.parameter.typr",
+      "kind": "sigils",
+      "note": "Sigil + generic. A generic name is a *single* uppercase letter or `Self` (`parsing/types.rs::upper_case_generic`), so the rule stops there instead of running on into a PascalCase alias."
+    },
+    {
+      "name": "types.generic",
+      "scope": "entity.name.type.parameter.typr",
+      "kind": "match",
+      "pattern": "\\b[A-Z](?![A-Za-z0-9_])",
+      "vim": "<[A-Z][A-Za-z0-9_]@!",
+      "note": null
+    },
+    {
+      "name": "types.alias",
+      "scope": "entity.name.type.typr",
+      "kind": "match",
+      "pattern": "\\b[A-Z][A-Za-z0-9_]+\\b",
+      "vim": "<[A-Z][A-Za-z0-9_]+>",
+      "note": "PascalCase alias / type-constructor name (`parsing/types.rs::pascal_case_no_space`)."
+    },
+    {
+      "name": "operators.arrow",
+      "scope": "keyword.operator.arrow.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "->",
+        "=>"
+      ],
+      "note": "Ahead of comparison and arithmetic, which own `-`, `=` and `>`."
+    },
+    {
+      "name": "operators.bind",
+      "scope": "keyword.operator.assignment.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "<-"
+      ],
+      "note": "Ahead of comparison, whose `<` would otherwise split `<-`."
+    },
+    {
+      "name": "operators.comparison",
+      "scope": "keyword.operator.comparison.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "==",
+        "!=",
+        "<=",
+        ">=",
+        "<",
+        ">"
+      ],
+      "note": null
+    },
+    {
+      "name": "operators.logical",
+      "scope": "keyword.operator.logical.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "&&",
+        "||",
+        "&",
+        "!"
+      ],
+      "note": "After comparison, so `!=` is not read as `!` then `=`. `|` belongs to `operators.type-union`, which it doubles as."
+    },
+    {
+      "name": "operators.pipe",
+      "scope": "keyword.operator.pipe.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "|>"
+      ],
+      "note": "No `|>>`: it has no type-checking or transpiling arm and no stdlib signature — see the tokenizer purge note on `operators.rs::op`."
+    },
+    {
+      "name": "operators.type-union",
+      "scope": "keyword.operator.type-union.typr",
+      "kind": "match",
+      "pattern": "\\|(?!>)",
+      "vim": "\\|\\>@!",
+      "note": null
+    },
+    {
+      "name": "operators.custom",
+      "scope": "keyword.operator.custom.typr",
+      "kind": "match",
+      "pattern": "%[^%\\s]*%",
+      "vim": "\\%[^%\\s]*\\%",
+      "note": "R-style custom infix (`operators.rs::custom_op`). Ahead of the bare `%` modulo."
+    },
+    {
+      "name": "operators.arithmetic",
+      "scope": "keyword.operator.arithmetic.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "+",
+        "-",
+        "*",
+        "/",
+        "%"
+      ],
+      "note": "No `^`/`++`/`--`/`**`/`//`: `op()` recognizes none of them. `^` is the String kind sigil and nothing else — the hand-written grammars listed it as exponentiation, which TypR does not have."
+    },
+    {
+      "name": "operators.vectorial-block",
+      "scope": "keyword.operator.vectorial.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "@{",
+        "}@"
+      ],
+      "note": "`@{ ... }@` vectorized block (`parsing/elements.rs::vectorial_bloc`)."
+    },
+    {
+      "name": "operators.spread",
+      "scope": "keyword.operator.spread.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "...",
+        ".."
+      ],
+      "note": "`...` runtime spread / variadic, `..` nominal spread (`Point:{ ..source }`). Longest-first inside the rule, and ahead of `operators.access`'s `.`."
+    },
+    {
+      "name": "operators.access",
+      "scope": "keyword.operator.access.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "::",
+        "$",
+        "."
+      ],
+      "note": null
+    },
+    {
+      "name": "operators.assign",
+      "scope": "keyword.operator.assignment.typr",
+      "kind": "symbols",
+      "lexemes": [
+        "="
+      ],
+      "note": "Bare `=` is never an infix operator in TypR — only a binder, a named-field separator and a default-value separator. Last of the `=`-shaped rules so `==`, `=>` and `!=` are already claimed."
+    },
+    {
+      "name": "operators.lambda",
+      "scope": "keyword.operator.lambda.typr",
+      "kind": "match",
+      "pattern": "\\\\(?=[({:])",
+      "vim": "\\\\[({:]@=",
+      "note": "`\\(x) ...` lambda shorthand (`parsing/elements.rs::lambda`)."
+    },
+    {
+      "name": "functions.call",
+      "scope": "entity.name.function.typr",
+      "kind": "match",
+      "pattern": "\\b([a-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+      "vim": "<[a-z_][A-Za-z0-9_]*\\s*\\(@=",
+      "note": "After every keyword rule, so `if (`/`while (` stay keywords."
+    },
+    {
+      "name": "variables.parameter",
+      "scope": "variable.parameter.typr",
+      "kind": "match",
+      "pattern": "\\b([a-z_][A-Za-z0-9_]*)\\s*(?=:(?!:))",
+      "vim": "<[a-z_][A-Za-z0-9_]*\\s*%(:%(:@!))@=",
+      "note": "`(?!:)` keeps the `x` of `x::y` out — that is namespace access, not an annotation."
+    },
+    {
+      "name": "variables.other",
+      "scope": "variable.other.typr",
+      "kind": "match",
+      "pattern": "\\b[a-z_][A-Za-z0-9_]*\\b",
+      "vim": "<[a-z_][A-Za-z0-9_]*>",
+      "note": "An identifier starts lowercase-or-underscore and continues in `[A-Za-z0-9_]` — no dots, unlike R (`parsing/elements.rs::starting_char`/`body_char`). `data.frame` is a single dedicated tag, not an identifier."
+    },
+    {
+      "name": "punctuation.terminator",
+      "scope": "punctuation.terminator.typr",
+      "kind": "symbols",
+      "lexemes": [
+        ";"
+      ],
+      "note": null
+    },
+    {
+      "name": "punctuation.separator",
+      "scope": "punctuation.separator.typr",
+      "kind": "symbols",
+      "lexemes": [
+        ",",
+        ":"
+      ],
+      "note": null
+    },
+    {
+      "name": "punctuation.brackets",
+      "scope": "punctuation.section.brackets.typr",
+      "kind": "match",
+      "pattern": "[\\[\\](){}]",
+      "vim": "[][(){}]",
+      "note": null
+    }
+  ]
+}

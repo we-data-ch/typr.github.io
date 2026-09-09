@@ -13,7 +13,11 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "check:examples": "node scripts/check-typr-blocks.mjs"
+    "check:examples": "node scripts/check-typr-blocks.mjs",
+    "syntax:reference": "node scripts/gen-syntax-reference.mjs",
+    "check:syntax": "node scripts/gen-syntax-reference.mjs --check",
+    "prestart": "npm run syntax:reference",
+    "prebuild": "npm run syntax:reference"
   },
   "dependencies": {
     "@docusaurus/core": "3.8.1",

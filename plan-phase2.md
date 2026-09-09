@@ -5,7 +5,7 @@
 > garantie de fraîcheur des exemples, consommation par les LLM, canaux de discussion et de
 > proposition.
 >
-> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1 à 5
+> Rédigé le **2026-09-09** à l'issue d'une discussion avec Fabrice. Les actions 1 à 6
 > sont implémentées ; les suivantes sont à faire par une session ultérieure. Les priorités
 > reflètent un arbitrage explicite valeur/coût, pas un ordre de préférence esthétique.
 
@@ -57,7 +57,7 @@ trouvé.)
 | 3 | Rendre la doc « AI-ready » : `llms.txt`, copie Markdown, MCP | **Haute** | ✅ Fait (2026-09-09) — sauf MCP, voir §2.3 |
 | 4 | Activer GitHub Discussions et le lier depuis le site | Haute | ✅ Fait (2026-09-09) |
 | 5 | Processus RFC dans `we-data-ch/typr` + section « Design proposals » | Moyenne | ✅ Fait (2026-09-09) |
-| 6 | Générer les pages de référence depuis `typr syntax --json` | Moyenne | 🚧 À faire |
+| 6 | Générer les pages de référence depuis `typr syntax --json` | Moyenne | ✅ Fait (2026-09-09) |
 | 7 | Analytics respectueuses de la vie privée | Moyenne | 🚧 À faire |
 | 8 | Lien « signaler un problème sur cette page » | Basse | 🚧 À faire |
 | 9 | Versionnement de la doc | Basse | ⏸ Différé — décider le schéma d'URL maintenant |
@@ -391,24 +391,85 @@ dans l'ordre Diátaxis.
 
 ---
 
-### 2.6 — Action 6 : générer les pages de référence depuis le compilateur
+### 2.6 — ✅ Action 6 : générer les pages de référence depuis le compilateur *(fait le 2026-09-09)*
 
-`typr syntax --json` est **déjà la source de vérité unique** des grammaires d'éditeur (voir
-`../CLAUDE.md` : `crates/typr-core/src/components/syntax/mod.rs`, avec deux tests qui
-verrouillent l'invariant dans les deux sens). Les tableaux d'opérateurs et de mots-clés de
-`docs/reference/operators.md` et `docs/reference/lexicon.md` sont, eux, maintenus à la main.
+**Le problème.** `typr syntax --json` est **déjà la source de vérité unique** des grammaires
+d'éditeur (`crates/typr-core/src/components/syntax/mod.rs`, avec deux tests qui verrouillent
+l'invariant dans les deux sens). Les tableaux d'opérateurs et de mots-clés de
+`docs/reference/operators.md` et `docs/reference/lexicon.md` étaient, eux, recopiés à la main —
+la sixième copie de la syntaxe, celle que le manifeste n'avait pas encore absorbée. Elle avait
+déjà dérivé : le tableau de priorités annonçait `@` comme **produit matriciel**, alors que
+`@`/`@@` ont été retirés du tokenizer (`operators.rs::op()`) et que le manifeste ne connaît que
+`+ - * / %`.
 
-Les dériver du manifeste supprimerait la possibilité même de la dérive, au lieu de se contenter
-de la détecter. La CI récupère déjà `typr.tmLanguage.json` depuis `raw.githubusercontent.com` :
-le même mécanisme peut récupérer le manifeste JSON et générer un partiel MDX inclus dans la
-page.
+**Ce qui a été fait.**
 
-Même logique que l'action 2 : **rendre l'erreur impossible plutôt que la signaler**.
+- **`syntaxes/typr.syntax.json`** — le manifeste, commité à côté de la grammaire, et poussé par
+  la release au même titre qu'elle (voir plus bas). Le build ne dépend donc d'aucun réseau : une
+  PR, un `npm run build` hors ligne et la CI lisent le même fichier.
+- **`scripts/gen-syntax-reference.mjs`** — sans dépendance, comme le script de l'action 2. Il
+  dérive du manifeste les inventaires des deux pages : mots-clés de contrôle et de déclaration,
+  entêtes de blocs, annotations, constantes, types primitifs et intégrés, constructeurs, sigils
+  de kind, et tout l'inventaire des opérateurs et de la ponctuation.
+- **`npm run syntax:reference`** (réécrit), **`npm run check:syntax`** (échoue sur dérive), et
+  `prestart`/`prebuild` qui régénèrent — un `npm run build` ne peut pas publier un tableau
+  périmé, même si le commit l'était.
 
-À noter aussi : `syntaxe.md` à la racine est la carte de syntaxe autoritative (elle prime sur
-`docs/` en cas de désaccord) et elle est **mirroir** de `../typR/typr/syntaxe.md` — les deux
-doivent rester synchronisées quand le langage change. Un contrôle CI de cette synchronisation
-serait un petit gain facile.
+**La décision de fond : le manifeste ne porte pas la prose.** Il dit *quels lexèmes existent*,
+jamais ce qu'ils veulent dire. Une table de mots-clés nus aurait été une régression documentaire.
+Les deux moitiés sont donc recollées sous une **clôture à double sens**, dans
+`scripts/syntax-glossary.mjs` (une glose par lexème, plus les rangs de priorité, qui vivent dans
+`Op::get_binding_power` et pas dans le manifeste) :
+
+| Situation | Effet |
+|---|---|
+| Un lexème du manifeste sans glose | échec — mot-clé ajouté au langage, jamais documenté |
+| Une glose sans lexème | échec — mot-clé retiré du langage, toujours documenté |
+| Une *règle* nouvelle, ni glosée ni exemptée | échec — une règle ne peut pas passer inaperçue |
+
+C'est exactement la paire de tests du compilateur (`components::syntax::tests`) transportée
+jusqu'à la doc. Ajouter un mot-clé à TypR sans écrire sa ligne de documentation casse désormais
+la CI de ce dépôt. Les exemptions existent (les règles regex : chaînes, nombres, génériques,
+commentaires) mais sont **déclarées une par une**, comme la liste `NOT_A_LEXEME` du compilateur.
+
+**Pourquoi pas un partiel MDX importé.** C'était le plan initial ; il aurait cassé l'action 3.
+`docusaurus-plugin-llms` lit le **Markdown source**, pas le rendu : un `<Operators />` importé
+aurait laissé `llms-full.txt` avec un composant JSX à la place des tableaux — c'est-à-dire
+retiré l'inventaire de la syntaxe précisément du fichier destiné aux modèles qui ne connaissent
+pas le langage. Le texte généré est donc écrit **dans les pages elles-mêmes**, entre deux
+marqueurs HTML.
+
+**Côté release du compilateur.** Le job `grammar` recopiait `typr.tmLanguage.json` vers les deux
+sites. Il pousse maintenant aussi le manifeste vers la doc — et lui seul, le playground ne lisant
+que la grammaire TextMate via Shiki. Le manifeste n'étant *pas un fichier du dépôt* (il n'existe
+qu'en sortie de `typr syntax --json`), le job prend le binaire de la release pour le rendre, comme
+le font déjà `docker` et `rstudio` ; d'où `needs: [verify, release]`. Ce changement attend sur la
+branche locale **`syntax-manifest-to-docs`** de `we-data-ch/typr` (non poussée) : `release.yml`
+n'existe que sur `main`, qui est release-only.
+
+**Trois contrôles CI ajoutés à `deploy.yml`** :
+
+- `check:syntax`, **bloquant** — il ne dépend ni du réseau ni d'une release, seulement de deux
+  fichiers du dépôt ;
+- le manifeste commité comparé à `typr syntax --json` du compilateur de référence (le binaire est
+  déjà téléchargé par le job `examples`) — simple avertissement, comme pour la grammaire : entre
+  deux releases la copie a le droit d'être en retard. Tant que la release installée ne connaît pas
+  `typr syntax`, l'étape émet un `::notice` et passe ;
+- **`syntaxe.md` comparé à celui du compilateur** — le petit gain facile identifié ici. Les deux
+  copies sont identiques aujourd'hui ; deux copies d'un même fichier finissent toujours par
+  diverger si personne ne regarde.
+
+**Ce qui reste.** Le manifeste gagnerait à avoir un chemin canonique dans le dépôt du compilateur
+(`typr syntax --write` ne rend aujourd'hui que les grammaires), ce qui lui donnerait le même
+verrou `cargo test` qu'elles et permettrait à la doc de le comparer par `raw.githubusercontent.com`
+comme la grammaire, sans binaire. Petit changement Rust, à faire quand le module `syntax` aura
+rejoint `develop` — il n'est pour l'instant que sur `main`.
+
+**Vérifié :** `npm run typecheck`, `npm run build`, `npm run check:examples` (181 blocs + 3
+contre-exemples) et `npm run check:syntax` passent ; les trois modes d'échec de la clôture ont été
+déclenchés sur un manifeste trafiqué ; les `|` des opérateurs (`|>`, `||`, `|`) sont correctement
+échappés et rendus dans le HTML ; les tableaux générés apparaissent bien dans `llms-full.txt` et
+dans `/docs/reference/operators.md`.
 
 ---
 

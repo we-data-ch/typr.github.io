@@ -75,6 +75,28 @@ jobs:
           echo "::notice title=Exemples vérifiés::oracle = compilateur TypR $TYPR_TAG"
           npm run check:examples
 
+      # Le manifeste de syntaxe n'existe pas comme fichier dans le dépôt du
+      # compilateur — il n'est que la sortie de `typr syntax --json`. On ne peut
+      # donc pas le récupérer par `raw.githubusercontent.com` comme la
+      # grammaire ; on le redemande au binaire, qui est déjà là.
+      #
+      # Simple avertissement, comme pour la grammaire : entre deux releases, la
+      # copie a le droit d'être en retard. Ce qui bloque, c'est la cohérence
+      # entre le manifeste *commité* et les pages (`check:syntax`, job `build`).
+      - name: Manifeste de syntaxe — vérifier qu'il suit la release
+        run: |
+          UPSTREAM=$(mktemp)
+          if ! typr syntax --json > "$UPSTREAM" 2>/dev/null; then
+            echo "::notice title=Manifeste non vérifié::le compilateur $TYPR_TAG ne connaît pas encore « typr syntax »."
+            exit 0
+          fi
+          if diff -q "$UPSTREAM" syntaxes/typr.syntax.json > /dev/null; then
+            echo "syntaxes/typr.syntax.json est identique au manifeste de $TYPR_TAG."
+          else
+            echo "::warning title=Manifeste décalé::syntaxes/typr.syntax.json diffère de « typr syntax --json » sous $TYPR_TAG. La release le repousse normalement toute seule ; sinon, voir syntaxes/README.md."
+            diff "$UPSTREAM" syntaxes/typr.syntax.json | head -40 || true
+          fi
+
   build:
     name: Build and deploy
     needs: examples
@@ -99,7 +121,33 @@ jobs:
         run: |
           sed -i "s/version [0-9]*\.[0-9]*\.[0-9]*/version $TYPR_VERSION/" src/pages/index.tsx
 
-# La grammaire est un fichier *généré* par le compilateur et recopié ici
+      # Les inventaires de syntaxe des pages de référence sont *dérivés* du
+      # manifeste, pas recopiés à la main. Bloquant, et à raison : ici rien ne
+      # dépend du réseau ni d'une release, seulement de deux fichiers du dépôt.
+      # Un échec veut dire qu'un mot-clé a bougé sans que sa ligne de doc suive.
+      - name: Inventaires de syntaxe — vérifier qu'ils suivent le manifeste
+        run: npm run check:syntax
+
+      # `syntaxe.md` est la carte de syntaxe autoritative (elle prime sur
+      # `docs/` en cas de désaccord) et elle est le miroir de celle du
+      # compilateur. Deux copies d'un même fichier finissent toujours par
+      # diverger si personne ne regarde ; on regarde.
+      - name: syntaxe.md — vérifier le miroir du dépôt du compilateur
+        run: |
+          UPSTREAM=$(mktemp)
+          if ! curl -sfL -o "$UPSTREAM" \
+            https://raw.githubusercontent.com/we-data-ch/typr/develop/syntaxe.md; then
+            echo "::warning title=syntaxe.md non vérifié::impossible de récupérer la copie du compilateur."
+            exit 0
+          fi
+          if diff -q "$UPSTREAM" syntaxe.md > /dev/null; then
+            echo "syntaxe.md est identique à we-data-ch/typr@develop."
+          else
+            echo "::warning title=syntaxe.md décalé::syntaxe.md diffère de we-data-ch/typr@develop. Les deux copies doivent bouger ensemble quand le langage change."
+            diff "$UPSTREAM" syntaxe.md | head -40 || true
+          fi
+
+      # La grammaire est un fichier *généré* par le compilateur et recopié ici
       # par sa release ; l'éditer à la main ferait revivre la divergence que le
       # manifeste a supprimée. On ne bloque pas le build pour autant : entre deux
       # releases, la copie a le droit d'être en retard sur `develop`.
