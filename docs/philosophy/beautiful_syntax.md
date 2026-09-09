@@ -23,14 +23,14 @@ Now `true` and `false` are admitted boolean notations. Of course `TRUE` and `FAL
 
 ```typr noplayground
 # all valid
-TRUE
-T
-true
+print(TRUE);
+print(T);
+print(true);
 
 # all valid
-FALSE
-F
-false
+print(FALSE);
+print(F);
+print(false);
 ```
 
 ## Better pipelines
