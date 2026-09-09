@@ -2307,8 +2307,8 @@ mypackage/
   mypackage.Rproj
 ```
 
-The `TypR/` folder is the only addition. Everything else — `DESCRIPTION`,
-`NAMESPACE`, `R/`, `man/`, `tests/` — is standard R.
+The `TypR/` folder is the only addition. Everything else, `DESCRIPTION`,
+`NAMESPACE`, `R/`, `man/`, `tests/`, is standard R.
 
 ### Step 1: Build the package
 
@@ -2389,7 +2389,7 @@ testthat::test_local()
 
 :::tip
 Place `Test` blocks directly after the functions they test. This keeps
-logic and tests side by side — the transpiler extracts them into
+logic and tests side by side and the transpiler extracts them into
 `tests/testthat/` automatically.
 :::
 
@@ -2426,8 +2426,7 @@ devtools::install()
 devtools::check()
 ```
 
-The package installs and checks like any standard R package. CRAN, R CMD check,
-and pkgdown all see regular R code — TypR is invisible at this stage.
+The package installs and checks like any standard R package. CRAN, R CMD check, and pkgdown all see regular R code, TypR is invisible at this stage.
 
 ### Step 5: Use modules for clean organization
 
@@ -2463,7 +2462,7 @@ TypR never forces an all-or-nothing choice.
 |---------|----------|
 | `main.ty` not found | Ensure `TypR/main.ty` exists (mandatory entry point) |
 | Collision with `R/` file | TypR overwrites `R/<name>.R` when `TypR/<name>.ty` exists. Do not edit generated files by hand. |
-| Missing type errors | Run `typr build` — the compiler reports type errors before generating R code |
+| Missing type errors | Run `typr build` and the compiler reports type errors before generating R code |
 | `@importFrom` not in NAMESPACE | Run `devtools::document()` after `typr build` |
 
 ### Where to go next
