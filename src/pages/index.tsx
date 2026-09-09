@@ -166,12 +166,11 @@ const Home: React.FC = () => {
 			</div>
 		)}
         <h1 style={styles.title}>
-          R's types for data sciences
+          Type hints for R
         </h1>
 
         <p style={styles.tagline}>
-          A modern type system for R, designed to improve safety, ease package
-          maintenance, and encourage explicit, long-lasting data modeling.
+		  Types for long-lasting works: packages, Shiny app or ETL pipeline.
         </p>
 
         <div style={styles.grid}>

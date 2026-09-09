@@ -74,6 +74,28 @@ const config: Config = {
     ],
   ],
 
+  // Recherche plein-texte locale : l'index lunr est construit au `docusaurus
+  // build` et servi en statique — pas de service externe, fonctionne sur
+  // GitHub Pages et hors ligne.
+  themes: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        hashed: true,
+        language: ['en'],
+        indexDocs: true,
+        indexBlog: true,
+        indexPages: true,
+        docsRouteBasePath: '/docs',
+        blogRouteBasePath: '/blog',
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+        searchResultLimits: 8,
+        searchResultContextMaxLength: 60,
+      },
+    ],
+  ],
+
   themeConfig: {
     // Replace with your project's social card
     image: 'img/typr.png',
@@ -104,6 +126,10 @@ const config: Config = {
         {
           href: 'https://github.com/we-data-ch/typr',
           label: 'GitHub',
+          position: 'right',
+        },
+        {
+          type: 'search',
           position: 'right',
         },
       ],
