@@ -1,3 +1,7 @@
+---
+description: "Defining new types with type, opaque, and typeconstructor."
+---
+
 # Type Constructors & Aliases
 
 This page explains how to define new types in TypR using `type`, `opaque`, and `typeconstructor`.

@@ -1,3 +1,7 @@
+---
+description: "A comprehensive overview of the TypR type system."
+---
+
 # Types
 
 This page provides a comprehensive overview of the TypR type system.

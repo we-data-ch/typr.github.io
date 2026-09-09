@@ -1,3 +1,7 @@
+---
+description: "Why TypR is a companion to R rather than a replacement, and how a TypR package stays an ordinary R package."
+---
+
 # Compatibility with R
  
 ## TypR Is Not a Replacement for R — It’s a Companion to R

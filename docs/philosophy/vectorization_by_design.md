@@ -1,3 +1,7 @@
+---
+description: "Why R's vectorization stops at custom types, and how TypR's lifting-based vectorization goes further."
+---
+
 # Vectorization by design
  
 ## Introduction

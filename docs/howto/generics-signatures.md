@@ -1,6 +1,7 @@
 ---
 sidebar_position: 6
 title: Declare S3/S4 generics
+description: "Declare the types of R's S3 and S4 generic functions so TypR can check calls into R's object systems."
 ---
 
 # How to declare S3 and S4 generics in TypR

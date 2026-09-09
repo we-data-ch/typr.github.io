@@ -1,6 +1,7 @@
 ---
 sidebar_position: 4
 title: Build, test & document
+description: "The full development workflow of a TypR package: building, testing, and documenting it."
 ---
 
 # How to build, test, and document a TypR package

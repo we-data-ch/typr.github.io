@@ -1,3 +1,7 @@
+---
+description: "Freedom versus safety, and where TypR's gradual typing sits between R and a strict language."
+---
+
 # Philosophy
 
 ## Freedom vs Safety

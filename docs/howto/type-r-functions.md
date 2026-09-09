@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
 title: Type existing R functions
+description: "Add type safety to R functions you already have — base R, your own helpers, or third-party packages — with @ signatures."
 ---
 
 # How to type existing R functions with `@` signatures

@@ -1,3 +1,7 @@
+---
+description: "Common pitfalls and ambiguities in the TypR parser."
+---
+
 # Known Pitfalls
 
 This page documents common pitfalls and ambiguities in the TypR parser.

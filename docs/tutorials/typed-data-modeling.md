@@ -1,6 +1,7 @@
 ---
 sidebar_position: 3
 title: Model data with TypR types
+description: "Model real data with records, unions, interfaces, and generics by building a small contact-list library."
 ---
 
 # Model data with TypR types

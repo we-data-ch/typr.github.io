@@ -1,3 +1,7 @@
+---
+description: "The fundamental tokens and literal types of TypR."
+---
+
 # Lexicon & Literals
 
 This page covers the fundamental tokens and literal types in TypR.

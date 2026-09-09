@@ -1,6 +1,7 @@
 ---
 sidebar_position: 2
 title: Migrate an existing R package
+description: "Add TypR to an R package you already have, one file at a time, without rewriting it."
 ---
 
 # Migrate an existing R package to TypR

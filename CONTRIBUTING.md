@@ -6,18 +6,27 @@ Site Docusaurus publié sur https://we-data-ch.github.io/typr.github.io/
 
 ```bash
 npm ci
-npm start          # rechargement à chaud
-npm run build      # ce que la CI exécute — à lancer avant d'ouvrir une PR
+npm start              # rechargement à chaud
+npm run check:examples # compile chaque bloc ```typr — nécessite le binaire `typr`
+npm run build          # ce que la CI exécute — à lancer avant d'ouvrir une PR
 ```
 
 ## Ce que la CI vérifie
 
-Toute PR vers `main` construit le site en entier sans le déployer. Le
-déploiement n'a lieu qu'après la fusion.
+Toute PR vers `main` compile d'abord **tous les exemples**, puis construit le
+site en entier sans le déployer. Le déploiement n'a lieu qu'après la fusion.
 
 `onBrokenLinks` est réglé sur `throw` : un lien interne mort **fait échouer la
 construction**. C'est volontaire — mais ça veut dire qu'un lien cassé bloque
 aussi tout déploiement ultérieur. Lance `npm run build` avant de pousser.
+
+Le job `Check typr examples` de `deploy.yml` passe chaque bloc ` ```typr ` au
+vrai compilateur (`typr check`) et bloque le build s'il en reste un qui ne
+compile pas. Son oracle est la **dernière release** de `we-data-ch/typr` — la
+version que le lecteur a réellement installée. Un second workflow,
+`examples-develop.yml`, refait la même chose chaque nuit contre `develop` et
+n'émet qu'un `::warning` : c'est le préavis « la prochaine release va casser tel
+exemple », pas un garde-fou.
 
 ## Éditer depuis un navigateur (ou un téléphone)
 
@@ -75,27 +84,81 @@ générée par le compilateur (`syntaxes/typr.tmLanguage.json`, appliquée au bu
 par `src/syntax/shiki.ts`) — et c'est aussi cette langue qui décide de l'ajout
 du bouton « playground ».
 
-Deux mots-clés se posent après la langue :
+Trois mots-clés se posent après la langue :
 
-| Mot-clé | Effet |
-|---|---|
-| `autorun` | le playground compile et exécute le bloc dès l'ouverture |
-| `noplayground` | pas de bouton du tout |
+| Mot-clé | Ce que le lecteur voit | Ce que la CI vérifie |
+|---|---|---|
+| *(aucun)* | bouton « playground » | le bloc **compile** |
+| `autorun` | le playground exécute le bloc dès l'ouverture | le bloc **compile** |
+| `noplayground` | pas de bouton | rien — le bloc est ignoré |
+| `compile_fail` | bandeau « This example does not compile » + bouton | le bloc **échoue à compiler** |
 
-`noplayground` sert aux blocs qui ne sont pas des programmes complets : une
+`noplayground` sert aux blocs qui ne sont **pas des programmes complets** : une
 expression de type isolée, un corps remplacé par `/* ... */`, une ligne de
 syntaxe hors contexte. Sans lui, le bouton envoie le lecteur vers une erreur de
-compilation. Le reste de la chaîne est décrit dans `INTEGRATION.md` du dépôt du
-playground.
+compilation.
 
-Les blocs **ne sont pas vérifiés contre le compilateur** au build. Un exemple
-peut donc devenir faux silencieusement quand le langage évolue. Deux
-conséquences :
+`compile_fail` sert à autre chose, et la distinction compte : au bloc **complet
+dont le refus par le compilateur est la démonstration** — « voici ce que TypR
+n'accepte pas ». Emprunté à rustdoc, il fait deux choses que `noplayground` ne
+faisait pas :
 
-- vérifie tout exemple que tu ajoutes avec un `typr check` réel ;
-- ne recopie pas un exemple depuis une page ancienne sans le retester.
+- il **le dit au lecteur**, par un bandeau au-dessus du code. Sans ça, un
+  contre-exemple est indiscernable d'un exemple, et le lecteur pressé recopie du
+  code que le compilateur refuse ;
+- il **reste vérifié, à l'envers** : la CI exige que le bloc échoue. Le jour où
+  le langage change et où le contre-exemple se met à compiler, le job le
+  signale — sinon le bandeau mentirait, et personne ne s'en apercevrait.
 
-Rendre ces blocs vérifiables en CI est le prochain chantier de ce dépôt.
+Le bouton « playground » est conservé : le bandeau a prévenu, et l'erreur *est*
+la démonstration — cliquer donne le message exact du compilateur. `compile_fail`
+l'emporte sur `noplayground` : c'est une assertion, pas une dispense.
+
+Le reste de la chaîne est décrit dans `INTEGRATION.md` du dépôt du playground.
+
+### Vérification des exemples
+
+Tout bloc ` ```typr ` **sans** `noplayground` est passé au compilateur en CI par
+`scripts/check-typr-blocks.mjs` — dans le sens normal, ou à l'envers pour un
+`compile_fail`. Localement :
+
+```bash
+npm run check:examples                       # tout
+npm run check:examples -- --only reference/  # un dossier
+npm run check:examples -- --list             # ce qui serait vérifié (et dans quel sens)
+npm run check:examples -- --noplayground     # inventaire de ce qui est exclu
+node scripts/check-typr-blocks.mjs --typr ./target/release/typr  # binaire précis
+```
+
+Le script écrit chaque bloc dans un fichier temporaire et lui applique
+`typr check`, puis réécrit les positions du diagnostic en lignes du fichier
+Markdown. Les blocs sont vérifiés **un par un, jamais concaténés** : les
+exemples du playground sont volontairement auto-suffisants (préambule
+`# --- setup, ... ---` quand ils ont besoin d'une définition d'un bloc
+précédent), et les concaténer masquerait justement les blocs incomplets.
+
+Trois issues quand un bloc ne compile pas — et la question à se poser est
+toujours la même : *qu'est-ce que ce bloc est censé démontrer ?*
+
+- l'exemple est simplement faux → **corrige-le** ;
+- le refus du compilateur *est* la démonstration → **`compile_fail`**, et le
+  lecteur voit enfin que c'est voulu ;
+- ce n'a jamais été un programme complet (fragment, ligne de syntaxe isolée) →
+  **`noplayground`**.
+
+Un `compile_fail` qui se met à compiler est signalé lui aussi, avec le message
+« marqué `compile_fail`, mais le bloc compile ». C'est le cas intéressant : le
+langage a bougé sous un contre-exemple qui, sans ce garde-fou, aurait continué à
+afficher un bandeau faux pendant des mois.
+
+`--noplayground` liste ce qui reste exclu : chacun de ces blocs est soit une
+limite connue du parser, soit un exemple à corriger un jour, soit un
+contre-exemple qui gagnerait à passer en `compile_fail`. L'inventaire est
+recalculé à la demande plutôt que tenu à la main dans un fichier, qui se
+périmerait dès la PR suivante.
+
+`typr check` n'a pas besoin de R : il se contente d'un avertissement quand
+`Rscript` est absent.
 
 ## Ne pas commiter
 

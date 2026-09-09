@@ -1,3 +1,7 @@
+---
+description: "Set up TypR in VS Code, RStudio, Positron, or Vim/Neovim, all driven by the typr CLI and the typr lsp language server."
+---
+
 # Editor Setup
 
 TypR ships first-class integrations for three editors: **VS Code** (and

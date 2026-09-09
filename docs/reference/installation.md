@@ -1,3 +1,7 @@
+---
+description: "Install the TypR compiler as a complement to an existing R installation, and verify it works."
+---
+
 # Installation
 
 TypR is installed as a complement to R.

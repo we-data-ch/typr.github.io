@@ -1,3 +1,7 @@
+---
+description: "Generic type parameters and the kind sigils that power TypR's type system."
+---
+
 # Generics & Kind Sigils
 
 This page explains the generic type parameters and kind sigils that power TypR's type system.

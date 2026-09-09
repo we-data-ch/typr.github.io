@@ -1,3 +1,7 @@
+---
+description: "Dropping out of TypR's type system to write raw R or JavaScript."
+---
+
 # Escape Hatches
 
 This page covers the mechanisms for dropping out of TypR's type system to write raw R or JavaScript code.

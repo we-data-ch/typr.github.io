@@ -1,3 +1,7 @@
+---
+description: "Why the type system is shaped the way it is: keeping R's flexibility while taming its fragility."
+---
+
 # Why this type system
 
 > The R ecosystem is famous for its flexibility. It is equally famous for the fragility that

@@ -1,3 +1,7 @@
+---
+description: "Tagged union types and the match expression."
+---
+
 # Unions, Tags & Pattern Matching
 
 This page covers tagged union types and the `match` expression in TypR.

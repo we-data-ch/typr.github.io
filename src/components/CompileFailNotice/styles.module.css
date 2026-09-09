@@ -1,0 +1,49 @@
+/* Bandeau d'un bloc ```typr compile_fail.
+
+   Ambre plutôt que rouge : l'exemple n'est pas cassé, il est *voulu* faux. Un
+   rouge d'erreur ferait croire à un défaut de la page. Les couleurs sont
+   écrites en dur au lieu de --ifm-color-warning, qui vire au jaune illisible
+   sur le fond clair des blocs. */
+
+.notice {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #7a4b00;
+  background-color: #fff4e0;
+  border-bottom: 1px solid #f0d4a3;
+  /* Le conteneur du bloc arrondit ses coins et masque le débordement : le
+     bandeau épouse donc le haut du bloc sans rayon à lui. */
+  border-radius: inherit;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+[data-theme='dark'] .notice {
+  color: #f2c67a;
+  background-color: #3a2c12;
+  border-bottom-color: #5c471d;
+}
+
+.icon {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  /* `baseline` sur le conteneur aligne le texte ; l'icône, elle, n'a pas de
+     ligne de base utile — on la recale à la main sur la hauteur d'x. */
+  align-self: center;
+}
+
+.detail {
+  opacity: 0.85;
+}
+
+@media print {
+  .notice {
+    color: #000;
+    background-color: transparent;
+  }
+}

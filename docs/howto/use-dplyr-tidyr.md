@@ -1,6 +1,7 @@
 ---
 sidebar_position: 3
 title: Use dplyr/tidyr from TypR
+description: "Call dplyr, tidyr, and the rest of the tidyverse from typed TypR code."
 ---
 
 # How to use dplyr/tidyr from TypR

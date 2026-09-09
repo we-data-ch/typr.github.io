@@ -1,6 +1,7 @@
 ---
 sidebar_position: 5
 title: Use raw R blocks
+description: "Write plain R from TypR with raw R blocks and the other escape hatches, and know when to reach for them."
 ---
 
 # How to use raw R blocks in TypR

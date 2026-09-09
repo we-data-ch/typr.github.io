@@ -1,6 +1,7 @@
 ---
 sidebar_position: 2
 title: Interop with R6/S4/RC
+description: "Use R6, S4, and Reference Class objects from typed TypR code."
 ---
 
 # How to interoperate with R6, S4, and Reference Classes

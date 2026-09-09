@@ -1,3 +1,7 @@
+---
+description: "if/else, for/while, and match expressions, and the type safety they add over plain R."
+---
+
 ## Control flow
 
 ### if / else

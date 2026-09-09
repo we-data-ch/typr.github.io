@@ -1,3 +1,7 @@
+---
+description: "Type aliases, opaque types, typeconstructors, and the signature system for declaring types without bodies."
+---
+
 # Signatures, @extern & Foreign
 
 This page covers type aliases, opaque types, typeconstructors, and the signature system for declaring types without bodies.

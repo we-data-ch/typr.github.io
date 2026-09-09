@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
 title: Types for Beginners
+description: "Why types are worth it, explained without jargon: what a type system remembers for you, and when it is overkill."
 ---
 
 # Types for Beginners, at last I'm understanding types
@@ -48,7 +49,7 @@ age <- data.frame(a=4, b="cat")
 
 *TypR won't*
 
-```typr
+```typr compile_fail
 let age: int <- 12;
 
 age <- data__frame(a=[4], b=["cat"]);

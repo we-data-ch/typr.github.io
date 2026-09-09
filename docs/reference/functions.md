@@ -1,3 +1,7 @@
+---
+description: "Function definitions, calling conventions, signatures, and advanced patterns."
+---
+
 # Functions
 
 This page covers function definitions, calling conventions, signatures, and advanced patterns in TypR.

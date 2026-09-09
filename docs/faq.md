@@ -435,17 +435,27 @@ Yes, via the companion `typr_runner` package. Otherwise: command line, any compa
 
 Not originally. It grew from academic interest in type systems and industrial frustration with code that must survive production. However, as AI writes more code, the expensive part shifts from writing to **trusting** (reviewing, validating, and maintaining). A strict type system becomes a free automatic checker over generated code, and concise syntax means less for a human to misread. LLMs also tend to perform better with strongly typed languages.
 
+### 33. How do I get an AI assistant to write correct TypR?
+
+Give it the documentation. Models have not seen TypR in training — asked for TypR, they produce R or Julia with a few keywords changed. This site publishes itself in the formats assistants read:
+
+- [`llms.txt`](pathname:///llms.txt) — an index of every page, one line each, in reading order.
+- [`llms-full.txt`](pathname:///llms-full.txt) — the whole documentation as a single Markdown file, to paste or load into a context window.
+- Any page's Markdown source, at its own URL plus `.md` (for instance `/docs/reference/types.md`). The **Copy as Markdown** button at the top of each page copies it for you.
+
+Point your assistant at `llms-full.txt` when you start a TypR project, and give it the reference page for whatever you are working on. Then let the compiler do the rest: `typr check` is the arbiter, and it is much cheaper to run than to review generated code by hand.
+
 ---
 
 ## Status
 
-### 33. Is TypR production-ready?
+### 34. Is TypR production-ready?
 
 Not yet. TypR is **alpha-stage**. It is still new and needs work before it is ready for general use. Feedback is actively solicited—especially the skeptical kind.
 
 Do not use it unless you really need it, and you are really sure you need it.
 
-### 34. Where can I discuss TypR or give feedback?
+### 35. Where can I discuss TypR or give feedback?
 
 - [GitHub Discussions](https://github.com/we-data-ch/typr/discussions)
 - [GitHub issues](https://github.com/we-data-ch/typr/issues)

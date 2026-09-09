@@ -1,3 +1,7 @@
+---
+description: "Every operator in TypR and its precedence rules."
+---
+
 # Operators & Precedence
 
 This page covers all operators in TypR and their precedence rules.
@@ -30,12 +34,15 @@ mod$member         # record field / module access — "::" is a historical alias
 
 ### Comparison with R
 
-```typr noplayground
-# TypR
-data |> filter(x > 0) |> mean()
+```typr
+# --- setup ---
+let data <- [1, 2, 3, -4];
+
+# TypR — filter takes a real function, not a captured expression
+let r <- data |> filter(fn(x: int): bool { x > 0 }) |> mean();
 ```
 ```r
-# R
+# R — dplyr captures the expression (NSE)
 data |> filter(x > 0) |> mean()
 # or with magrittr: data %>% filter(...) %>% mean()
 ```

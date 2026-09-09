@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
 title: Create your first TypR package
+description: "Build a complete R package with TypR, from an empty folder to an installable package with types, tests, and documentation."
 ---
 
 # Create your first TypR package

@@ -22,8 +22,62 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # Les exemples de la doc sont compilés par le vrai compilateur, avant tout
+  # build. Une doc qui ment coûte plus cher qu'une doc absente : on bloque.
+  #
+  # L'oracle est la *release* de `we-data-ch/typr`, pas `develop` — c'est la
+  # version que le lecteur a réellement installée. Le préavis sur le langage à
+  # venir est le rôle du workflow `examples-develop.yml`, qui n'avertit
+  # qu'en `::warning` et ne bloque personne.
+  # ---------------------------------------------------------------------------
+  examples:
+    name: Check typr examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Sur un repository_dispatch, la release qui nous réveille porte déjà son
+      # numéro : on la vise directement plutôt que de faire confiance à
+      # « latest », qui peut ne pas encore avoir basculé.
+      - name: Install the released TypR compiler
+        env:
+          DISPATCH_VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${DISPATCH_VERSION:-}" ]; then
+            TAG="v$DISPATCH_VERSION"
+          else
+            # En deux temps : `grep -m1` ferme le tube et ferait échouer curl
+            # sous `pipefail`.
+            LATEST=$(curl -sSfL https://api.github.com/repos/we-data-ch/typr/releases/latest)
+            TAG=$(printf '%s' "$LATEST" | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+          fi
+          [ -n "$TAG" ] || { echo "::error::aucune release trouvée pour we-data-ch/typr"; exit 1; }
+          echo "Compilateur de référence : $TAG"
+          echo "TYPR_TAG=$TAG" >> "$GITHUB_ENV"
+
+          mkdir -p "$RUNNER_TEMP/typr-bin"
+          curl -sSfL \
+            "https://github.com/we-data-ch/typr/releases/download/$TAG/typr-$TAG-x86_64-unknown-linux-gnu.tar.gz" \
+            | tar -xz -C "$RUNNER_TEMP/typr-bin"
+          chmod +x "$RUNNER_TEMP/typr-bin/typr"
+          echo "$RUNNER_TEMP/typr-bin" >> "$GITHUB_PATH"
+
+      # `typr check` n'a pas besoin de R : il se contente d'un avertissement
+      # quand Rscript est absent. Rien à installer de plus.
+      - name: Check every ```typr block
+        run: |
+          echo "::notice title=Exemples vérifiés::oracle = compilateur TypR $TYPR_TAG"
+          npm run check:examples
+
   build:
     name: Build and deploy
+    needs: examples
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

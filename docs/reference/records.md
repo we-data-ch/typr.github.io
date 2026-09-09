@@ -1,3 +1,7 @@
+---
+description: "Record types, constructors, the spread operator, and named type embedding."
+---
+
 # Records & Constructors
 
 This page covers record types, constructors, spread operators, and named type embedding in TypR.
@@ -67,7 +71,7 @@ Tibble[3]                             # just a parameterized alias (no braces)
 
 Two violations are caught explicitly:
 
-```typr noplayground
+```typr compile_fail
 Df[8, int]{ name: char }        # SyntaxError::RecordConstructorIndex
 Array[5, { a: int }]             # SyntaxError::RecordInRecursiveParams
 ```

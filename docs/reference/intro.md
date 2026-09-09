@@ -1,3 +1,7 @@
+---
+description: "How the reference is organised, and what to read to understand the type system and the main language constructs."
+---
+
 # Reference
  
 ## Going further

@@ -14,9 +14,10 @@
  * bloc du site n'en utilise.
  *
  * Ce composant est aussi le dernier à voir la metastring de la fence (`autorun`,
- * `noplayground` — voir `src/playground/meta.tsx`) : `CodeBlockMetadata` ne la
- * transporte pas, et `@theme/CodeBlock/Buttons` ne reçoit qu'un `className`. Il
- * la republie donc dans un contexte, pour le bouton « playground ».
+ * `noplayground`, `compile_fail` — voir `src/playground/meta.tsx`) :
+ * `CodeBlockMetadata` ne la transporte pas, et `@theme/CodeBlock/Buttons` ne
+ * reçoit qu'un `className`. Il la republie donc dans un contexte, pour le
+ * bouton « playground » et pour le bandeau `compile_fail`.
  */
 import React from 'react';
 import clsx from 'clsx';
@@ -29,6 +30,7 @@ import {
 import Container from '@theme/CodeBlock/Container';
 import Buttons from '@theme/CodeBlock/Buttons';
 import {CodeBlockMetaProvider} from '@site/src/playground/meta';
+import CompileFailNotice from '@site/src/components/CompileFailNotice';
 import styles from './styles.module.css';
 
 /**
@@ -75,6 +77,9 @@ export default function CodeBlockJSX({
     <CodeBlockContextProvider metadata={metadata} wordWrap={wordWrap}>
       <CodeBlockMetaProvider metastring={metastring}>
         <Container as="div" className={metadata.className}>
+          {/* Avant le code, pas après : le lecteur doit savoir qu'il regarde un
+              contre-exemple *avant* de le lire, pas une fois recopié. */}
+          <CompileFailNotice />
           <div className={styles.codeBlockContent}>
             <pre
               ref={wordWrap.codeBlockRef}

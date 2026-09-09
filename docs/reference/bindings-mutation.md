@@ -1,3 +1,7 @@
+---
+description: "How variables are declared, destructured, and reassigned in TypR."
+---
+
 # Bindings & Mutation
 
 This page covers how variables are declared, destructured, and reassigned in TypR.

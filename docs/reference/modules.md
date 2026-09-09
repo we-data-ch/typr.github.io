@@ -1,3 +1,7 @@
+---
+description: "Organise code into modules and import symbols across files."
+---
+
 # Modules & Imports
 
 This page covers how to organize code into modules and import symbols in TypR.

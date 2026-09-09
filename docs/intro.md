@@ -1,3 +1,7 @@
+---
+description: "Learn TypR in about ten minutes by writing and running small typed programs, step by step."
+---
+
 # Getting started
 
 This is a tutorial. You will learn TypR by writing and running small programs,

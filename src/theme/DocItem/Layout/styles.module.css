@@ -1,0 +1,29 @@
+/* Reprise de la feuille d'origine (`docItemContainer`, `docItemCol`), plus la
+   ligne d'outils ajoutée par le swizzle. */
+
+.docItemContainer header + *,
+.docItemContainer article > *:first-child {
+  margin-top: 0;
+}
+
+@media (min-width: 997px) {
+  .docItemCol {
+    max-width: 75% !important;
+  }
+}
+
+/* Fil d'Ariane à gauche, bouton de copie à droite. Le bouton est poussé par sa
+   propre marge automatique plutôt que par `justify-content: space-between` :
+   sur une page sans fil d'Ariane, il resterait sinon collé à gauche. */
+.docItemToolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  /* 0.8rem : exactement la marge que portait le <nav> et qu'on lui retire
+     ci-dessous, pour que rien ne bouge sur les pages existantes. */
+  margin-bottom: 0.8rem;
+}
+
+.docItemToolbar > :global(.theme-doc-breadcrumbs) {
+  margin-bottom: 0;
+}

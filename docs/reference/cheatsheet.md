@@ -1,3 +1,7 @@
+---
+description: "A side-by-side comparison of R and TypR."
+---
+
 # TypR vs R — What Really Changes
 
 A side-by-side comparison of R and TypR.

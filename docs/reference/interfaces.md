@@ -1,3 +1,7 @@
+---
+description: "Interfaces: describing structural capabilities without modifying the original types."
+---
+
 # Interfaces & Structural Validation
 
 This page covers interfaces in TypR — a way to describe structural capabilities without modifying the original types.

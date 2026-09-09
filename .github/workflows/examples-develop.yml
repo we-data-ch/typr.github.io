@@ -1,0 +1,65 @@
+name: Examples vs. develop
+
+# Préavis, pas garde-fou.
+#
+# `deploy.yml` vérifie les exemples contre la *release* — la version que le
+# lecteur a installée. Ce workflow-ci les vérifie contre `we-data-ch/typr@develop`,
+# c'est-à-dire contre le langage à venir : il dit « la prochaine release va
+# casser tel exemple » pendant qu'il est encore temps de le corriger, sans
+# jamais bloquer une PR de contenu.
+#
+# Il compile le compilateur depuis les sources (quelques minutes), d'où le
+# rythme quotidien plutôt qu'un déclenchement à chaque push.
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: examples-develop
+  cancel-in-progress: true
+
+jobs:
+  examples-develop:
+    name: Check typr examples against develop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Checkout the compiler (develop)
+        uses: actions/checkout@v4
+        with:
+          repository: we-data-ch/typr
+          ref: develop
+          path: compiler
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: compiler
+
+      - name: Build typr from source
+        working-directory: compiler
+        run: cargo build --release -p typr-cli
+
+      - name: Check every ```typr block against develop
+        id: check
+        continue-on-error: true
+        env:
+          TYPR_BIN: ${{ github.workspace }}/compiler/target/release/typr
+        run: npm run check:examples
+
+      # Le job reste vert : ce n'est pas une régression de la doc, c'est un
+      # préavis sur le langage. L'avertissement suffit à le rendre visible.
+      - name: Report as a warning
+        if: steps.check.outcome == 'failure'
+        run: |
+          echo "::warning title=La doc va casser à la prochaine release::Au moins un bloc \`\`\`typr ne compile plus avec we-data-ch/typr@develop. Voir le log de l'étape précédente pour le détail bloc par bloc."

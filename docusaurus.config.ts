@@ -1,6 +1,14 @@
+import * as fs from 'fs';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import rehypeShikiTypR, {CODE_COLORS} from './src/syntax/shiki';
+import sidebars from './sidebars';
+import {docOrderFromSidebars} from './src/llms/order';
+
+// Préambule commun à `llms.txt` et `llms-full.txt`. Il vit dans un .md à part
+// plutôt qu'en littéral ici : c'est de la prose destinée à être lue (par un
+// modèle), elle se relit et se corrige mieux hors du fichier de config.
+const LLMS_PREAMBLE = fs.readFileSync('./src/llms/preamble.md', 'utf8').trim();
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -71,6 +79,45 @@ const config: Config = {
           customCss: './src/css/custom.css',
         },
       } satisfies Preset.Options,
+    ],
+  ],
+
+  // Documentation « AI-ready » (plan-phase2 §2.3). Au `docusaurus build`, le
+  // plugin écrit dans le dossier de sortie :
+  //   - `llms.txt`      — l'index : une ligne par page, dans l'ordre Diátaxis ;
+  //   - `llms-full.txt` — la doc entière en un seul Markdown, à charger dans une
+  //                       fenêtre de contexte ;
+  //   - `<route>.md`    — la source Markdown de chaque page, à côté du HTML
+  //                       (`/docs/intro` ↔ `/docs/intro.md`). C'est ce que copie
+  //                       le bouton « Copy as Markdown » (src/components/CopyPageButton).
+  //
+  // Le blog est délibérément exclu : ces fichiers servent à faire écrire du TypR
+  // correct, et les billets sont datés (certains portent encore des fences
+  // ```julia) — les y verser reviendrait à apprendre au modèle une syntaxe
+  // périmée. La matière de fond des billets est reprise dans docs/philosophy/.
+  plugins: [
+    [
+      'docusaurus-plugin-llms',
+      {
+        docsDir: 'docs',
+        includeBlog: false,
+        generateLLMsTxt: true,
+        generateLLMsFullTxt: true,
+        // Les .md par page — ce sont eux que `llms.txt` référence (addMdExtension),
+        // et eux que le bouton de copie va chercher.
+        generateMarkdownFiles: true,
+        preserveDirectoryStructure: true,
+        addMdExtension: true,
+        removeDuplicateHeadings: true,
+        title: 'TypR',
+        description:
+          'A statically typed superset of R that compiles to plain, readable R.',
+        // Ordre de lecture repris de la barre latérale — voir src/llms/order.ts.
+        includeOrder: docOrderFromSidebars(sidebars),
+        includeUnmatchedLast: true,
+        rootContent: `${LLMS_PREAMBLE}\n\nEvery page is listed below. Fetch a page's \`.md\` URL to get its full Markdown source, or \`llms-full.txt\` for all of them at once.`,
+        fullRootContent: `${LLMS_PREAMBLE}\n\nThe full text of every documentation page follows, in reading order.`,
+      },
     ],
   ],
 
@@ -177,6 +224,13 @@ const config: Config = {
             {
               label: 'GitHub',
               href: 'https://github.com/we-data-ch/typr.github.io',
+            },
+            {
+              // `pathname://` : un fichier du dossier de sortie, pas une route
+              // — le routeur ne doit pas essayer de le rendre, mais le baseUrl
+              // doit quand même être ajouté.
+              label: 'llms.txt',
+              to: 'pathname:///llms.txt',
             },
           ],
         },

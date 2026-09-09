@@ -1,3 +1,7 @@
+---
+description: "The syntax choices that set TypR apart from R, and the reasoning behind each of them."
+---
+
 # The beauty of syntax
 
 Even though `TypR` is based on `R`, it has some quirks that make it a bit different from its counterpart. Some may look negative but others are just beautiful (my own perspective).
@@ -21,7 +25,7 @@ data__frame(...)
 
 Now `true` and `false` are admitted boolean notations. Of course `TRUE` and `FALSE` still exist with `T` and `F`.
 
-```typr noplayground
+```typr
 # all valid
 print(TRUE);
 print(T);
@@ -171,15 +175,22 @@ Person:{
 
 You can also do the same with union type.
 
-```typr noplayground
+```typr
+# Define a record type
+type Person <- list {
+	name: char,
+	age: int
+};
+
 # Build an union type
 type PersonOrInt <- Person | int;
 
-# You can use the alias to build the 
-# elements with their own constructor
-# Useful for autocompletion
-PersonOrInt.7;
-PersonOrInt.Person:{name: "Bob", age: 12};
+# A scalar member is written as itself
+let n: PersonOrInt <- 7;
+
+# A record member is built through the qualified constructor
+# (useful for autocompletion)
+let p: PersonOrInt <- PersonOrInt.Person:{name: "Bob", age: 12};
 ```
 
 ## Partial function application
