@@ -55,7 +55,7 @@ age <- data.frame(a=4, b="cat")
 ```typr
 let age: int <- 12;
 
-age <- data__frame(a=4, b="cat");
+age <- data__frame(a=[4], b=["cat"]);
 ``` 
 
 *dot (`.`) in TypR can't be used as variable name. They define methods. So any function that used them should be replaced by double underscores (`__`)*
