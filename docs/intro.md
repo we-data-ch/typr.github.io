@@ -134,12 +134,7 @@ types all the way through.
 With an inline `Test` block, logic and tests stay side by side. During
 transpilation the block is extracted into a standard testthat file:
 
-```typr
-# --- setup, from the previous steps ---
-type Person <- list { name: char, age: int };
-let is_adult <- fn(p: Person): bool { p$age >= 18 };
-# --------------------------------------
-
+```typr noplayground
 Test {
   test_that("is_adult works", {
     let alice <- new_person("Alice", 25);
