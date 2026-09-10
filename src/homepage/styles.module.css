@@ -23,6 +23,10 @@
 }
 
 .paneLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--typr-border);
   font-size: 0.75rem;
@@ -34,6 +38,23 @@
 
 .pane_accent .paneLabel {
   color: var(--typr-accent);
+}
+
+/* Le lien « Run in playground » : discret, il ne doit pas rivaliser avec le
+   label de langage, mais rester lisible au survol. Casse normale — le reste
+   du figcaption est en petites capitales, un lien ne l'est pas. */
+.paneRun {
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--typr-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.paneRun:hover {
+  color: var(--typr-accent);
+  text-decoration: none;
 }
 
 .paneBody {

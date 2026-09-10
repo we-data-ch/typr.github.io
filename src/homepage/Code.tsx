@@ -8,6 +8,8 @@
 import React, {type ReactNode} from 'react';
 import clsx from 'clsx';
 import {usePluginData} from '@docusaurus/useGlobalData';
+import {useColorMode} from '@docusaurus/theme-common';
+import {buildPlaygroundUrl} from '@site/src/playground/url';
 import {PLUGIN_NAME, type Snippet, type SnippetMap} from './shared';
 import styles from './styles.module.css';
 
@@ -34,6 +36,28 @@ const LANG_LABELS: Record<string, string> = {
   text: 'Compiler',
 };
 
+/** Le lien « Run in Playground » sous un bloc TypR — jamais sous un bloc R,
+ *  bash ou texte : ceux-là ne sont pas du code que le playground sait lire. */
+function RunInPlayground({snippet}: {snippet: Snippet}) {
+  const {colorMode} = useColorMode();
+  if (snippet.lang !== 'typr') {
+    return null;
+  }
+  const href = buildPlaygroundUrl(snippet.code, {autorun: true, theme: colorMode});
+  if (!href) {
+    return null;
+  }
+  return (
+    <a
+      className={styles.paneRun}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer">
+      Run in playground →
+    </a>
+  );
+}
+
 export function CodePane({
   snippet: key,
   label,
@@ -51,7 +75,8 @@ export function CodePane({
   return (
     <figure className={clsx(styles.pane, styles[`pane_${tone}`], className)}>
       <figcaption className={styles.paneLabel}>
-        {label ?? LANG_LABELS[snippet.lang] ?? snippet.lang}
+        <span>{label ?? LANG_LABELS[snippet.lang] ?? snippet.lang}</span>
+        <RunInPlayground snippet={snippet} />
       </figcaption>
       <div
         className={styles.paneBody}
