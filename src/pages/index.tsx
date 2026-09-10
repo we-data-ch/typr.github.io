@@ -196,6 +196,13 @@ export default function Home(): ReactNode {
           ]}
           caption="The compiler turns typed source into the R code you ship."
         />
+
+        <p className={styles.lockInNote}>
+          <strong>Zero lock-in.</strong> The generated <code>main.R</code> is
+          plain, idiomatic R — no TypR runtime, no added dependency. Stop
+          using TypR any time, and the code you shipped keeps running exactly
+          as it did.
+        </p>
       </Section>
 
       {/* Pourquoi les types sont-ils importants ? */}

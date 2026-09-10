@@ -445,7 +445,7 @@ Give it the documentation. Models have not seen TypR in training — asked for T
 - [`llms-full.txt`](pathname:///llms-full.txt) — the whole documentation as a single Markdown file, to paste or load into a context window.
 - Any page's Markdown source, at its own URL plus `.md` (for instance `/docs/reference/types.md`). The **Copy as Markdown** button at the top of each page copies it for you.
 
-Point your assistant at `llms-full.txt` when you start a TypR project, and give it the reference page for whatever you are working on. Then let the compiler do the rest: `typr check` is the arbiter, and it is much cheaper to run than to review generated code by hand.
+Point your assistant at `llms-full.txt` when you start a TypR project, and give it the reference page for whatever you are working on. Then let the compiler do the rest: `typr check` is the arbiter, and it is much cheaper to run than to review generated code by hand. If your client supports [MCP](https://modelcontextprotocol.io), skip the copy-paste entirely and give it direct access to the compiler — see [Connect an AI assistant via MCP](howto/mcp-server.md).
 
 ---
 

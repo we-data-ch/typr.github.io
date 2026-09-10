@@ -225,6 +225,26 @@
   }
 }
 
+/* Le rassurance juste après le pipeline : ce que devient le code généré si on
+   arrête d'utiliser TypR. Un badge, pas une alerte — c'est une bonne
+   nouvelle, pas un avertissement. */
+.lockInNote {
+  max-width: 34rem;
+  margin: 2rem auto 0;
+  padding: 0.85rem 1.25rem;
+  border: 1px solid var(--typr-accent-border);
+  border-radius: 10px;
+  background: var(--typr-accent-soft);
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ifm-font-color-base);
+}
+
+.lockInNote code {
+  font-size: 0.9em;
+}
+
 /* --- appel à l'action final ---------------------------------------------- */
 
 .cta {

@@ -28,7 +28,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'How-To Guides',
-      items: ['howto/type-r-functions', 'howto/interop-r6-s4', 'howto/use-dplyr-tidyr', 'howto/build-and-test', 'howto/r-raw-blocks', 'howto/generics-signatures'],
+      items: ['howto/type-r-functions', 'howto/interop-r6-s4', 'howto/use-dplyr-tidyr', 'howto/build-and-test', 'howto/r-raw-blocks', 'howto/generics-signatures', 'howto/mcp-server'],
     },
     {
       type: 'category',
