@@ -29,3 +29,81 @@ is the way it is).
 The compiler is the last word: <https://github.com/we-data-ch/typr>. The syntax
 map at <https://github.com/we-data-ch/typr.github.io/blob/main/syntaxe.md> wins
 over any page below if the two ever disagree.
+
+## Common R → TypR transformations
+
+Each pair below is checked against the real compiler (`typr check`). Do not
+invent variations on the TypR side — if a construct is not shown here or in
+the pages that follow, look it up rather than guessing.
+
+**Function definition.** Every parameter and the return type are annotated;
+the body has no `return()` and no trailing comma:
+
+```r
+calculate <- function(x) {
+  x * 2
+}
+```
+
+```typr
+let calculate <- fn(x: num): num {
+  x * 2.0
+};
+```
+
+**Structural type (not a TS `interface`, not a Rust `struct`).** `list {
+... }` after `type X <-` declares fields and generates a validated
+constructor (`X:{ ... }`) — a plain R `list()` has no such check:
+
+```r
+person <- list(name = "Alice", age = 25)
+```
+
+```typr
+type Person <- list {
+  name: char,
+  age: int
+};
+
+let alice <- Person:{ name: "Alice", age: 25 };
+```
+
+**Pipe.** TypR's `|>` is a native operator with its own precedence rules
+(tighter than arithmetic) — it is not magrittr's `%>%`, and there is no
+`.`/`_` placeholder:
+
+```r
+total <- 5 %>% add(3)
+```
+
+```typr
+let add <- fn(a: int, b: int): int {
+  a + b
+};
+
+let total <- (5) |> add(3);
+```
+
+**Sum types and exhaustive matching.** R has no tagged union; TypR expresses
+one with `.Tag(payload) | .OtherTag` and destructures it with `match`, which
+the compiler checks for exhaustiveness:
+
+```r
+area <- function(shape) {
+  switch(shape$kind,
+    circle = pi * shape$r^2,
+    square = shape$side^2
+  )
+}
+```
+
+```typr
+type Shape <- .Circle(num) | .Square(num);
+
+let area <- fn(s: Shape): num {
+  match s {
+    .Circle(r) => 3.14159 * r * r,
+    .Square(side) => side * side
+  }
+};
+```

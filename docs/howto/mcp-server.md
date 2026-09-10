@@ -59,6 +59,20 @@ them — for project-wide context (existing modules, types defined elsewhere)
 the assistant still needs the files themselves, the same as any other editing
 task.
 
+The server also publishes two read-only **resources**:
+
+| Resource | What it holds |
+|---|---|
+| `typr://lexicon` | Every keyword, literal and primitive type, one line each — the same table as [Lexicon](../reference/lexicon.md) |
+| `typr://operators` | Every operator and sigil, with precedence — the same table as [Operators](../reference/operators.md) |
+
+They exist for the moment a `check`/`build` diagnostic mentions a sigil or
+operator the assistant does not recognize (`?B`, `%R`, `|>`) — it can read the
+resource and look the token up in the same turn, instead of guessing or
+leaving the session to search the docs site. Most MCP clients list resources
+alongside tools automatically; consult your client's docs if yours does not
+surface them.
+
 ## Why not just tell it to run `typr check` in a terminal?
 
 You can — nothing above is required. MCP mainly saves the round trip: the
