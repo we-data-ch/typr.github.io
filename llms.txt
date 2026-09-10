@@ -50,6 +50,7 @@ Every page is listed below. Fetch a page's `.md` URL to get its full Markdown so
 - [Build, test & document](https://we-data-ch.github.io/typr.github.io/docs/howto/build-and-test.md): The full development workflow of a TypR package: building, testing, and documenting it.
 - [Use raw R blocks](https://we-data-ch.github.io/typr.github.io/docs/howto/r-raw-blocks.md): Write plain R from TypR with raw R blocks and the other escape hatches, and know when to reach for them.
 - [Declare S3/S4 generics](https://we-data-ch.github.io/typr.github.io/docs/howto/generics-signatures.md): Declare the types of R's S3 and S4 generic functions so TypR can check calls into R's object systems.
+- [Connect an AI assistant via MCP](https://we-data-ch.github.io/typr.github.io/docs/howto/mcp-server.md): Give Claude Code, Claude Desktop, Cursor or any MCP client direct access to the TypR compiler, so it checks its own generated code instead of guess...
 - [Reference](https://we-data-ch.github.io/typr.github.io/docs/reference/intro.md): How the reference is organised, and what to read to understand the type system and the main language constructs.
 - [Installation](https://we-data-ch.github.io/typr.github.io/docs/reference/installation.md): Install the TypR compiler as a complement to an existing R installation, and verify it works.
 - [Editor Setup](https://we-data-ch.github.io/typr.github.io/docs/reference/editor-setup.md): Set up TypR in VS Code, RStudio, Positron, or Vim/Neovim, all driven by the typr CLI and the typr lsp language server.
