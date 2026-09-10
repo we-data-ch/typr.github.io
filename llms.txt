@@ -34,6 +34,84 @@ The compiler is the last word: <https://github.com/we-data-ch/typr>. The syntax
 map at <https://github.com/we-data-ch/typr.github.io/blob/main/syntaxe.md> wins
 over any page below if the two ever disagree.
 
+## Common R → TypR transformations
+
+Each pair below is checked against the real compiler (`typr check`). Do not
+invent variations on the TypR side — if a construct is not shown here or in
+the pages that follow, look it up rather than guessing.
+
+**Function definition.** Every parameter and the return type are annotated;
+the body has no `return()` and no trailing comma:
+
+```r
+calculate <- function(x) {
+  x * 2
+}
+```
+
+```typr
+let calculate <- fn(x: num): num {
+  x * 2.0
+};
+```
+
+**Structural type (not a TS `interface`, not a Rust `struct`).** `list {
+... }` after `type X <-` declares fields and generates a validated
+constructor (`X:{ ... }`) — a plain R `list()` has no such check:
+
+```r
+person <- list(name = "Alice", age = 25)
+```
+
+```typr
+type Person <- list {
+  name: char,
+  age: int
+};
+
+let alice <- Person:{ name: "Alice", age: 25 };
+```
+
+**Pipe.** TypR's `|>` is a native operator with its own precedence rules
+(tighter than arithmetic) — it is not magrittr's `%>%`, and there is no
+`.`/`_` placeholder:
+
+```r
+total <- 5 %>% add(3)
+```
+
+```typr
+let add <- fn(a: int, b: int): int {
+  a + b
+};
+
+let total <- (5) |> add(3);
+```
+
+**Sum types and exhaustive matching.** R has no tagged union; TypR expresses
+one with `.Tag(payload) | .OtherTag` and destructures it with `match`, which
+the compiler checks for exhaustiveness:
+
+```r
+area <- function(shape) {
+  switch(shape$kind,
+    circle = pi * shape$r^2,
+    square = shape$side^2
+  )
+}
+```
+
+```typr
+type Shape <- .Circle(num) | .Square(num);
+
+let area <- fn(s: Shape): num {
+  match s {
+    .Circle(r) => 3.14159 * r * r,
+    .Square(side) => side * side
+  }
+};
+```
+
 Every page is listed below. Fetch a page's `.md` URL to get its full Markdown source, or `llms-full.txt` for all of them at once.
 
 ## Table of Contents
@@ -51,6 +129,7 @@ Every page is listed below. Fetch a page's `.md` URL to get its full Markdown so
 - [Use raw R blocks](https://we-data-ch.github.io/typr.github.io/docs/howto/r-raw-blocks.md): Write plain R from TypR with raw R blocks and the other escape hatches, and know when to reach for them.
 - [Declare S3/S4 generics](https://we-data-ch.github.io/typr.github.io/docs/howto/generics-signatures.md): Declare the types of R's S3 and S4 generic functions so TypR can check calls into R's object systems.
 - [Connect an AI assistant via MCP](https://we-data-ch.github.io/typr.github.io/docs/howto/mcp-server.md): Give Claude Code, Claude Desktop, Cursor or any MCP client direct access to the TypR compiler, so it checks its own generated code instead of guess...
+- [Type Shiny apps](https://we-data-ch.github.io/typr.github.io/docs/howto/shiny-integration.md): Type reactive values and modules in a Shiny app built with TypR.
 - [Reference](https://we-data-ch.github.io/typr.github.io/docs/reference/intro.md): How the reference is organised, and what to read to understand the type system and the main language constructs.
 - [Installation](https://we-data-ch.github.io/typr.github.io/docs/reference/installation.md): Install the TypR compiler as a complement to an existing R installation, and verify it works.
 - [Editor Setup](https://we-data-ch.github.io/typr.github.io/docs/reference/editor-setup.md): Set up TypR in VS Code, RStudio, Positron, or Vim/Neovim, all driven by the typr CLI and the typr lsp language server.

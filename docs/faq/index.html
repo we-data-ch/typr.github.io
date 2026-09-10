@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">FAQ | TypR</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://we-data-ch.github.io/typr.github.io/img/typr.png"><meta data-rh="true" name="twitter:image" content="https://we-data-ch.github.io/typr.github.io/img/typr.png"><meta data-rh="true" property="og:url" content="https://we-data-ch.github.io/typr.github.io/docs/faq"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="FAQ | TypR"><meta data-rh="true" name="description" content="Frequently asked questions about TypR for R users."><meta data-rh="true" property="og:description" content="Frequently asked questions about TypR for R users."><link data-rh="true" rel="icon" href="/typr.github.io/img/typr.ico"><link data-rh="true" rel="canonical" href="https://we-data-ch.github.io/typr.github.io/docs/faq"><link data-rh="true" rel="alternate" href="https://we-data-ch.github.io/typr.github.io/docs/faq" hreflang="en"><link data-rh="true" rel="alternate" href="https://we-data-ch.github.io/typr.github.io/docs/faq" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"FAQ","item":"https://we-data-ch.github.io/typr.github.io/docs/faq"}]}</script><link rel="alternate" type="application/rss+xml" href="/typr.github.io/blog/rss.xml" title="TypR RSS Feed">
-<link rel="alternate" type="application/atom+xml" href="/typr.github.io/blog/atom.xml" title="TypR Atom Feed"><link rel="stylesheet" href="/typr.github.io/assets/css/styles.d5cd5a2b.css">
-<script src="/typr.github.io/assets/js/runtime~main.b0c22745.js" defer="defer"></script>
-<script src="/typr.github.io/assets/js/main.9166d3dc.js" defer="defer"></script>
+<link rel="alternate" type="application/atom+xml" href="/typr.github.io/blog/atom.xml" title="TypR Atom Feed"><link rel="stylesheet" href="/typr.github.io/assets/css/styles.a3a7f1b1.css">
+<script src="/typr.github.io/assets/js/runtime~main.62854f64.js" defer="defer"></script>
+<script src="/typr.github.io/assets/js/main.91d153f4.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -326,6 +326,22 @@
 <li>Any page&#x27;s Markdown source, at its own URL plus <code>.md</code> (for instance <code>/docs/reference/types.md</code>). The <strong>Copy as Markdown</strong> button at the top of each page copies it for you.</li>
 </ul>
 <p>Point your assistant at <code>llms-full.txt</code> when you start a TypR project, and give it the reference page for whatever you are working on. Then let the compiler do the rest: <code>typr check</code> is the arbiter, and it is much cheaper to run than to review generated code by hand. If your client supports <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">MCP</a>, skip the copy-paste entirely and give it direct access to the compiler — see <a href="/typr.github.io/docs/howto/mcp-server">Connect an AI assistant via MCP</a>.</p>
+<p>If your editor reads a static rules file instead (Cursor&#x27;s <code>.cursorrules</code>, Copilot&#x27;s custom instructions, <code>CLAUDE.md</code>, …), paste this in — it covers the mistakes a model defaults to when it guesses TypR from R or TypeScript:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e1e4e8;--prism-background-color:#24292e"><div class="codeBlockContent_m3Ux"><pre tabindex="0" class="codeBlock_qGQc thin-scrollbar"><code class="codeBlockLines_p187"><span class="line"><span>TypR is not R and not TypeScript — do not guess its syntax from either.</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>- Every statement ends in `;`.</span></span>
+<span class="line"><span>- Function definitions: `let name &lt;- fn(param: type, ...): return_type { ... };`</span></span>
+<span class="line"><span>  — every parameter and the return type are annotated; no `function`, no `return()`.</span></span>
+<span class="line"><span>- Structural types: `type Name &lt;- list { field: type, ... };`, not</span></span>
+<span class="line"><span>  TypeScript&#x27;s `interface` or `type Name = { ... }`. Build values with the</span></span>
+<span class="line"><span>  generated constructor: `Name:{ field: value, ... }`.</span></span>
+<span class="line"><span>- The pipe is `|&gt;`, native to TypR, not magrittr&#x27;s `%&gt;%` — no `.`/`_`</span></span>
+<span class="line"><span>  placeholder.</span></span>
+<span class="line"><span>- Sum types: `type Name &lt;- .TagA(payload) | .TagB;`, matched exhaustively</span></span>
+<span class="line"><span>  with `match value { .TagA(x) =&gt; ..., .TagB =&gt; ... }`.</span></span>
+<span class="line"><span>- Before trusting any TypR you write or receive, run `typr check` on it —</span></span>
+<span class="line"><span>  do not assume it compiles from inspection alone.</span></span>
+<span class="line"><span>- Full reference: https://we-data-ch.github.io/typr.github.io/llms-full.txt</span></span></code></pre></div></div>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="status">Status<a href="#status" class="hash-link" aria-label="Direct link to Status" title="Direct link to Status">​</a></h2>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="34-is-typr-production-ready">34. Is TypR production-ready?<a href="#34-is-typr-production-ready" class="hash-link" aria-label="Direct link to 34. Is TypR production-ready?" title="Direct link to 34. Is TypR production-ready?">​</a></h3>

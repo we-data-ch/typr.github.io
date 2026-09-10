@@ -48,12 +48,34 @@ Building from a local checkout of the compiler instead of installing it? Point
 |---|---|
 | `check` | Type-checks TypR source in-process, returns `{ok, diagnostics[{code, message}]}` with stable `T0xx` (type errors) / `S0xx` (syntax errors) codes |
 | `build` | Same as `check`, plus the transpiled R code (`r_code`) — produced even when there are type errors, so the assistant can inspect a best-effort translation while it fixes them |
+| `explain` | Takes a diagnostic `code` from `check`/`build` and returns a longer explanation plus a minimal before/after TypR example — for a curated subset of the most commonly hit codes. `found: false` means that code isn't covered yet; fall back to the diagnostic's own `message` |
 
-Both tools run without a filesystem or a project directory: no `.typr_cache`,
-nothing written to disk. That also means they only see the source you pass
-them — for project-wide context (existing modules, types defined elsewhere)
-the assistant still needs the files themselves, the same as any other editing
-task.
+All three tools run without a filesystem or a project directory: no
+`.typr_cache`, nothing written to disk. That also means they only see the
+source you pass them — for project-wide context (existing modules, types
+defined elsewhere) the assistant still needs the files themselves, the same
+as any other editing task.
+
+`explain` closes the last gap in the check-and-fix loop: a diagnostic's
+`message` says *what* is wrong (`"Parameter type mismatch: expected char, got
+int"`), not always *why* TypR flags it or how to fix it without trial and
+error. Ask for `explain({code: "T002"})` after a `check`/`build` call comes
+back with that code, and the assistant gets the longer story plus a working
+before/after pair, instead of guessing from the short message alone.
+
+The server also publishes two read-only **resources**:
+
+| Resource | What it holds |
+|---|---|
+| `typr://lexicon` | Every keyword, literal and primitive type, one line each — the same table as [Lexicon](../reference/lexicon.md) |
+| `typr://operators` | Every operator and sigil, with precedence — the same table as [Operators](../reference/operators.md) |
+
+They exist for the moment a `check`/`build` diagnostic mentions a sigil or
+operator the assistant does not recognize (`?B`, `%R`, `|>`) — it can read the
+resource and look the token up in the same turn, instead of guessing or
+leaving the session to search the docs site. Most MCP clients list resources
+alongside tools automatically; consult your client's docs if yours does not
+surface them.
 
 ## Why not just tell it to run `typr check` in a terminal?
 

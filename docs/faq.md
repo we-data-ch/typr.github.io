@@ -445,6 +445,26 @@ Give it the documentation. Models have not seen TypR in training — asked for T
 
 Point your assistant at `llms-full.txt` when you start a TypR project, and give it the reference page for whatever you are working on. Then let the compiler do the rest: `typr check` is the arbiter, and it is much cheaper to run than to review generated code by hand. If your client supports [MCP](https://modelcontextprotocol.io), skip the copy-paste entirely and give it direct access to the compiler — see [Connect an AI assistant via MCP](howto/mcp-server.md).
 
+If your editor reads a static rules file instead (Cursor's `.cursorrules`, Copilot's custom instructions, `CLAUDE.md`, …), paste this in — it covers the mistakes a model defaults to when it guesses TypR from R or TypeScript:
+
+```text
+TypR is not R and not TypeScript — do not guess its syntax from either.
+
+- Every statement ends in `;`.
+- Function definitions: `let name <- fn(param: type, ...): return_type { ... };`
+  — every parameter and the return type are annotated; no `function`, no `return()`.
+- Structural types: `type Name <- list { field: type, ... };`, not
+  TypeScript's `interface` or `type Name = { ... }`. Build values with the
+  generated constructor: `Name:{ field: value, ... }`.
+- The pipe is `|>`, native to TypR, not magrittr's `%>%` — no `.`/`_`
+  placeholder.
+- Sum types: `type Name <- .TagA(payload) | .TagB;`, matched exhaustively
+  with `match value { .TagA(x) => ..., .TagB => ... }`.
+- Before trusting any TypR you write or receive, run `typr check` on it —
+  do not assume it compiles from inspection alone.
+- Full reference: https://we-data-ch.github.io/typr.github.io/llms-full.txt
+```
+
 ---
 
 ## Status
