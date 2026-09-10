@@ -69,6 +69,11 @@
   --typr-surface: #ffffff;
   --typr-surface-alt: var(--ifm-color-emphasis-100);
   --typr-muted: var(--ifm-color-emphasis-700);
+  /* Bleu du logo R — utilisé uniquement pour le distinguer du rouge TypR dans
+     le schéma « cercles concentriques » (Diagram.tsx, Layers). */
+  --typr-r-blue: #2266c0;
+  --typr-r-blue-soft: rgba(34, 102, 192, 0.08);
+  --typr-r-blue-border: rgba(34, 102, 192, 0.35);
 }
 
 [data-theme='dark'] {
@@ -79,6 +84,11 @@
   --typr-accent-border: rgba(255, 122, 138, 0.32);
   --typr-surface: var(--ifm-background-surface-color);
   --typr-surface-alt: rgba(255, 255, 255, 0.025);
+  /* Même éclaircissement qu'--typr-accent en sombre : le bleu du logo R ne
+     passe pas 3:1 sur le fond sombre du site. */
+  --typr-r-blue: #7db2f2;
+  --typr-r-blue-soft: rgba(125, 178, 242, 0.09);
+  --typr-r-blue-border: rgba(125, 178, 242, 0.32);
 }
 
 /* « Download » est l'action principale de la barre de navigation : un bouton,

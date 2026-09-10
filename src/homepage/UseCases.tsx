@@ -10,6 +10,7 @@
 // syntaxe du langage.
 
 import React, {useRef, useState, type ReactNode} from 'react';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import clsx from 'clsx';
 import {CodeComparison, CodePane} from './Code';
 import {Flow} from './Diagram';
@@ -19,6 +20,8 @@ interface UseCase {
   id: string;
   /** Le libellé de l'onglet. */
   tab: string;
+  /** Le logo de l'écosystème associé au cas d'usage — la cible du typage. */
+  img: string;
   title: string;
   /** Clés d'extraits : le fichier R, puis son équivalent TypR. */
   before: string;
@@ -33,6 +36,7 @@ const USE_CASES: UseCase[] = [
   {
     id: 'package',
     tab: 'R Package',
+    img: '/img/r-packages.png',
     title: 'Build packages with explicit contracts.',
     before: 'package.r',
     after: 'package.typr',
@@ -42,6 +46,7 @@ const USE_CASES: UseCase[] = [
   {
     id: 'shiny',
     tab: 'Shiny App',
+    img: '/img/shiny.png',
     title: 'Make reactive data easier to reason about.',
     before: 'shiny.r',
     after: 'shiny.typr',
@@ -50,6 +55,7 @@ const USE_CASES: UseCase[] = [
   {
     id: 'pipeline',
     tab: 'Data Pipeline',
+    img: '/img/R_logo.png',
     title: 'Make data transformations verifiable.',
     before: 'pipeline.r',
     after: 'pipeline.typr',
@@ -64,23 +70,18 @@ const USE_CASES: UseCase[] = [
           ]}
           caption="Each stage of the pipeline has a type, so the compiler can follow the data through it."
         />
-        <div>
-          <p className={styles.extraLead}>
-            Drop the parsing step, and the mistake surfaces at compile time
-            rather than in production:
-          </p>
-          <CodePane
-            snippet="pipeline-error.text"
-            label="typr check"
-            tone="error"
-          />
-        </div>
+        <CodePane
+          snippet="pipeline-error.text"
+          label="typr check"
+          tone="error"
+        />
       </div>
     ),
   },
   {
     id: 'api',
     tab: 'API',
+    img: '/img/plumber.png',
     title: 'Turn functions into explicit contracts.',
     before: 'api.r',
     after: 'api.typr',
@@ -144,6 +145,12 @@ export default function UseCases(): ReactNode {
             tabIndex={i === active ? 0 : -1}
             className={clsx(styles.tab, i === active && styles.tabActive)}
             onClick={() => setActive(i)}>
+            <img
+              className={styles.tabImg}
+              src={useBaseUrl(item.img)}
+              alt=""
+              loading="lazy"
+            />
             {item.tab}
           </button>
         ))}

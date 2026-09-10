@@ -26,7 +26,7 @@ import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import clsx from 'clsx';
 import {CodePane} from '@site/src/homepage/Code';
-import {Branch, Hub} from '@site/src/homepage/Diagram';
+import {Branch, Hub, Layers, Pipeline} from '@site/src/homepage/Diagram';
 import UseCases from '@site/src/homepage/UseCases';
 import {PLAYGROUND_URL} from '@site/src/playground/url';
 import styles from './index.module.css';
@@ -98,6 +98,10 @@ function Section({
 
 function Hero(): ReactNode {
   const logoUrl = useBaseUrl('/img/typr_carre.png');
+  const packagesLogo = useBaseUrl('/img/r-packages.png');
+  const shinyLogo = useBaseUrl('/img/shiny.png');
+  const pipelineLogo = useBaseUrl('/img/R_logo.png');
+  const plumberLogo = useBaseUrl('/img/plumber.png');
 
   return (
     <header className={styles.hero}>
@@ -108,17 +112,26 @@ function Hero(): ReactNode {
           Type-safe R for <span className={styles.nowrap}>long-lived</span> software.
         </h1>
 
-        <p className={styles.heroSubtitle}>
-          TypR is a typed programming language for building R packages,
-          applications and data systems that are easier to understand, maintain
-          and evolve. It compiles to plain R, so it fits into the ecosystem you
-          already use.
-        </p>
-
         <p className={styles.heroDomains}>
-          Packages <span aria-hidden="true">·</span> Shiny applications{' '}
-          <span aria-hidden="true">·</span> Data pipelines{' '}
-          <span aria-hidden="true">·</span> APIs
+          <span className={styles.heroDomain}>
+            <img className={styles.heroDomainImg} src={packagesLogo} alt="" loading="lazy" />
+            Packages
+          </span>
+          <span aria-hidden="true">·</span>
+          <span className={styles.heroDomain}>
+            <img className={styles.heroDomainImg} src={shinyLogo} alt="" loading="lazy" />
+            Shiny applications
+          </span>
+          <span aria-hidden="true">·</span>
+          <span className={styles.heroDomain}>
+            <img className={styles.heroDomainImg} src={pipelineLogo} alt="" loading="lazy" />
+            Data pipelines
+          </span>
+          <span aria-hidden="true">·</span>
+          <span className={styles.heroDomain}>
+            <img className={styles.heroDomainImg} src={plumberLogo} alt="" loading="lazy" />
+            APIs
+          </span>
         </p>
 
         <div className={styles.heroActions}>
@@ -129,7 +142,7 @@ function Hero(): ReactNode {
             Get started
           </Link>
           <a
-            className={styles.buttonGhost}
+            className={styles.buttonWhite}
             href={PLAYGROUND_URL}
             target="_blank"
             rel="noopener noreferrer">
@@ -148,12 +161,42 @@ function Hero(): ReactNode {
 
 export default function Home(): ReactNode {
   const typrLogo = useBaseUrl('/img/typr_carre.png');
+  const rLogo = useBaseUrl('/img/R_logo.png');
+  const typrCliLogo = useBaseUrl('/img/typr_cli_logo2.png');
+  const packagesLogo = useBaseUrl('/img/r-packages.png');
+  const shinyLogo = useBaseUrl('/img/shiny.png');
+  const plumberLogo = useBaseUrl('/img/plumber.png');
 
   return (
     <Layout
       title="Type-safe R for long-lived software"
       description="TypR is a typed programming language for building R packages, applications and data systems that are easier to understand, maintain and evolve.">
       <Hero />
+
+      {/* TypR ne remplace pas R : il compile vers lui et tourne sur son
+          écosystème tel quel. Avant même le modèle de données, pour désamorcer
+          l'objection d'un lecteur qui vient de R. */}
+      <Section id="built-on-r">
+        <h2 className={styles.sectionTitle}>TypR is R, with types.</h2>
+        <p className={styles.sectionLead}>
+          TypR compiles to ordinary R and runs on its ecosystem as-is — the
+          same packages, the same Shiny apps, the same tools you already use.
+        </p>
+        <Layers
+          outer={{label: 'TypR', img: typrLogo}}
+          inner={{label: 'R', img: rLogo}}
+          caption="R at the core. TypR is the typed layer around it."
+        />
+
+        <Pipeline
+          nodes={[
+            {label: 'TypR source file', hint: 'main.ty', img: typrLogo},
+            {label: 'TypR compiler', hint: 'typr build', img: typrCliLogo, accent: true},
+            {label: 'R source file', hint: 'main.R', img: rLogo},
+          ]}
+          caption="The compiler turns typed source into the R code you ship."
+        />
+      </Section>
 
       {/* Pourquoi les types sont-ils importants ? */}
       <Section id="data-model" tone="alt">
@@ -172,9 +215,9 @@ export default function Home(): ReactNode {
           <Branch
             root={{label: 'Customer', accent: true}}
             leaves={[
-              {label: 'Package', hint: 'typed functions'},
-              {label: 'Shiny', hint: 'typed reactives'},
-              {label: 'API', hint: 'typed responses'},
+              {label: 'Package', hint: 'typed functions', img: packagesLogo},
+              {label: 'Shiny', hint: 'typed reactives', img: shinyLogo},
+              {label: 'API', hint: 'typed responses', img: plumberLogo},
             ]}
             caption="One definition, the same meaning everywhere it is used."
           />
@@ -185,7 +228,7 @@ export default function Home(): ReactNode {
       <Section id="from-r-to-typr">
         <h2 className={styles.sectionTitle}>See R become typed.</h2>
         <p className={styles.sectionLead}>
-          The same ideas. More explicit contracts.
+          Here is that discipline applied to the R code you already write.
         </p>
         <UseCases />
       </Section>
@@ -224,7 +267,7 @@ export default function Home(): ReactNode {
               Read the documentation
             </Link>
             <a
-              className={styles.buttonGhost}
+              className={styles.buttonWhite}
               href={PLAYGROUND_URL}
               target="_blank"
               rel="noopener noreferrer">

@@ -103,6 +103,12 @@
   margin: 0 auto;
 }
 
+/* Deux schémas dans la même section : le second illustre le premier, pas une
+   étape séparée — il lui faut de l'air, pas un titre. */
+.diagram + .diagram {
+  margin-top: 3rem;
+}
+
 .diagramCaption {
   margin-top: 1rem;
   text-align: center;
@@ -143,11 +149,51 @@
   width: 2rem;
   height: 2rem;
   border-radius: 6px;
+  object-fit: contain;
 }
 
 .nodeHint {
   font-size: 0.75rem;
   color: var(--typr-muted);
+}
+
+/* Chaîne horizontale : le pendant de .flow, de gauche à droite. */
+.pipeline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pipelineStep {
+  display: flex;
+  align-items: center;
+}
+
+.pipelineArrow {
+  padding: 0 0.75rem;
+  font-size: 1.25rem;
+  color: var(--typr-muted);
+}
+
+/* Une flèche horizontale ne se lit plus une fois la ligne repliée en colonne :
+   chaque étape passe sur sa propre ligne, comme .flow. */
+@media (max-width: 700px) {
+  .pipeline {
+    flex-direction: column;
+  }
+
+  .pipelineStep {
+    flex-direction: column;
+  }
+
+  .pipelineArrow {
+    padding: 0.35rem 0;
+    transform: rotate(90deg);
+  }
 }
 
 /* Chaîne verticale. */
@@ -319,5 +365,89 @@
   .hubConnectorV,
   .hubConnectorH {
     display: none;
+  }
+}
+
+/* Cercles concentriques : le grand cercle (TypR, rouge) contient le petit
+   (R, bleu). Les bords se touchent en bas : le cercle R est calé au bas du
+   cercle TypR avec `bottom: 0`, pas empilé en flex, de sorte que le badge
+   TypR reste dans la bande rouge au-dessus, quelle que soit sa hauteur. */
+.layers {
+  display: flex;
+  justify-content: center;
+}
+
+.layersOuter {
+  position: relative;
+  width: 15rem;
+  height: 15rem;
+  border-radius: 50%;
+  border: 2px solid var(--typr-accent-border);
+  background: var(--typr-accent-soft);
+}
+
+.layersBadge {
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+}
+
+.layersBadgeImg {
+  display: block;
+  width: 3.25rem;
+  height: 3.25rem;
+  object-fit: contain;
+}
+
+.layersInner {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 8.5rem;
+  height: 8.5rem;
+  border-radius: 50%;
+  border: 2px solid var(--typr-r-blue-border);
+  background: var(--typr-r-blue-soft);
+}
+
+.layersInnerImg {
+  display: block;
+  width: 3.25rem;
+  height: 3.25rem;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .layersOuter {
+    width: 12rem;
+    height: 12rem;
+  }
+
+  .layersBadge {
+    top: 1.5rem;
+  }
+
+  .layersBadgeImg {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .layersInner {
+    width: 7rem;
+    height: 7rem;
+  }
+
+  .layersInnerImg {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }

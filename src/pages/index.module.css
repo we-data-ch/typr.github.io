@@ -25,8 +25,8 @@
 }
 
 .heroLogo {
-  width: 128px;
-  height: 128px;
+  width: 217px;
+  height: 217px;
   margin-bottom: 1.75rem;
 }
 
@@ -56,12 +56,35 @@
 }
 
 .heroDomains {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.7rem 1rem;
   margin-bottom: 2.25rem;
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--typr-accent);
+}
+
+.heroDomain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.heroDomainImg {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+/* Le point séparateur ne doit pas porter l'accent des domaines, il serait
+   visuellement surchargé entre deux logos. */
+.heroDomains > [aria-hidden='true'] {
+  color: var(--typr-muted);
 }
 
 .heroActions {
@@ -96,7 +119,8 @@
 
 .buttonPrimary,
 .buttonSecondary,
-.buttonGhost {
+.buttonGhost,
+.buttonWhite {
   display: inline-block;
   padding: 0.7rem 1.4rem;
   border: 1px solid transparent;
@@ -137,6 +161,19 @@
 }
 
 .buttonGhost:hover {
+  color: var(--typr-accent);
+  text-decoration: none;
+}
+
+.buttonWhite {
+  border-color: var(--typr-border-strong);
+  background: #ffffff;
+  color: #000000;
+}
+
+.buttonWhite:hover {
+  border-color: var(--typr-accent-border);
+  background: #ffffff;
   color: var(--typr-accent);
   text-decoration: none;
 }

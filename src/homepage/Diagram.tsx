@@ -63,6 +63,32 @@ export function Flow({nodes, caption}: {nodes: Node[]; caption?: ReactNode}) {
 }
 
 /**
+ * Une chaîne horizontale : chaque étape mène à la suivante, de gauche à
+ * droite — le pendant de `Flow` pour un processus qui se lit comme une ligne
+ * de montage plutôt que comme une pile. Repasse en colonne sous 700px, où une
+ * flèche horizontale n'a plus la place de se lire.
+ */
+export function Pipeline({nodes, caption}: {nodes: Node[]; caption?: ReactNode}) {
+  return (
+    <figure className={styles.diagram}>
+      <ol className={styles.pipeline}>
+        {nodes.map((node, i) => (
+          <li key={node.label} className={styles.pipelineStep}>
+            {i > 0 && (
+              <span className={styles.pipelineArrow} aria-hidden="true">
+                →
+              </span>
+            )}
+            <Box {...node} />
+          </li>
+        ))}
+      </ol>
+      {caption && <figcaption className={styles.diagramCaption}>{caption}</figcaption>}
+    </figure>
+  );
+}
+
+/**
  * Un centre entouré de quatre nœuds, chacun relié à lui : un seul binaire,
  * plusieurs outils — à la différence de `Branch`, où la racine est unique et
  * les feuilles n'existent que parce qu'elle les définit, ici les quatre
@@ -135,6 +161,43 @@ export function Hub({
  * celui de la dernière se calculent depuis leur nombre et l'écart entre elles.
  * `--branch-count` porte ce nombre jusqu'au CSS.
  */
+/**
+ * Deux cercles concentriques : R au centre, TypR en couche autour de lui —
+ * TypR ne remplace pas l'écosystème R, il l'enveloppe. Contrairement à `Box`,
+ * les nœuds ne sont pas interchangeables : `outer` est toujours le grand
+ * cercle qui contient `inner`, jamais l'inverse.
+ */
+export interface LayerNode {
+  label: string;
+  img: string;
+}
+
+export function Layers({
+  outer,
+  inner,
+  caption,
+}: {
+  outer: LayerNode;
+  inner: LayerNode;
+  caption?: ReactNode;
+}) {
+  return (
+    <figure className={styles.diagram}>
+      <div className={styles.layers}>
+        <div className={styles.layersOuter}>
+          <div className={styles.layersBadge}>
+            <img className={styles.layersBadgeImg} src={outer.img} alt={outer.label} />
+          </div>
+          <div className={styles.layersInner}>
+            <img className={styles.layersInnerImg} src={inner.img} alt={inner.label} />
+          </div>
+        </div>
+      </div>
+      {caption && <figcaption className={styles.diagramCaption}>{caption}</figcaption>}
+    </figure>
+  );
+}
+
 export function Branch({
   root,
   leaves,
