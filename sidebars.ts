@@ -56,7 +56,13 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Philosophy',
-      items: ['philosophy/intro', 'philosophy/type-system-design', 'philosophy/vectorization_by_design', 'philosophy/design-proposals'],
+      items: [
+        'philosophy/intro',
+        'philosophy/beautiful_syntax',
+        'philosophy/type-system-design',
+        'philosophy/vectorization_by_design',
+        'philosophy/design-proposals',
+      ],
     },
     {
       type: 'category',
