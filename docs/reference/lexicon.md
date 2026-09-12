@@ -34,6 +34,10 @@ let y <- 42         # tolerated, warning emitted
 
 Literals can also appear as **types** (singleton types): `3`, `3.14`, `true`, `"chat"` are valid types, more precise than `int`/`num`/`bool`/`char`.
 
+:::caution
+`na`/`NA` and `null`/`NULL` are **not** literal types. The type for missing values is `na` (not `NA`); `NA` is only the R spelling of the `na` constant. Likewise, `null` is the type, and `NULL` is its R spelling.
+:::
+
 ---
 
 ## Identifiers

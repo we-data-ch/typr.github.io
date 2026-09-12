@@ -100,6 +100,10 @@ est rejeté au parsing.
 Les littéraux peuvent aussi apparaître *comme type* (types singleton) : `3`, `3.14`, `true`,
 `"chat"` sont des types valides, plus précis que `int`/`num`/`bool`/`char`.
 
+> **Attention** : `na`/`NA` et `null`/`NULL` ne sont **pas** des types singleton. Le type pour les
+> valeurs manquantes est `na` (et non `NA`) ; `NA` n'est que l'orthographe R de la constante `na`.
+> De même, `null` est le type, et `NULL` son orthographe R.
+
 ### Records (`list{...}`)
 
 ```typr

@@ -19,7 +19,7 @@ Typed R provides explicit basic (primitive) types:
 | `bool` | Boolean values | `true`, `false` |
 | `char` | Character strings | `"Hello"` |
 | `null` | Null value (`NULL`) | `null` |
-| `na` | Missing value (`NA`) | `na` |
+| `na` | Missing value (R spelling: `NA`) | `na` |
 | `Any` | Top type — accepts any value | (used in signatures) |
 | `Empty` | Bottom type — no value satisfies it | (return type for side-effect functions) |
 | `Self` | Refers to the type that implements an interface | (used in interface definitions) |
