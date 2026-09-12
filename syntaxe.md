@@ -461,6 +461,7 @@ un espace de noms séparé des variables) — c'est un contrôle de compatibilit
 extern (x: int, y: char) -> char r#"paste0(x, y)"#;   # corps R brut, typé en entrée/sortie
 
 function(x, y) { x + y }     # fonction R brute non typée (RFunction), corps capturé tel quel
+                                # — appelable, arité vérifiée, résultat: Any
 
 R {                             # bloc R brut non typé (RBlock) : valeur immédiate, pas un appel
   df %>%
@@ -477,8 +478,9 @@ Class("data.frame", "tbl")    # type dénotant une classe R existante (RClass)
 ```
 
 Ce sont les points de sortie délibérés du système de types : `extern` garde une signature
-vérifiée par TypR autour d'un corps R opaque ; `function(...)` / `R { ... }` / `JS { ... }` n'ont
-aucune vérification du tout. `R { ... }` capture son corps tel quel, accolades équilibrées (comme
+vérifiée par TypR autour d'un corps R opaque ; `function(...)` devient appelable avec l'arité
+vérifiée et un résultat typé `Any` (RFC 0028) — son corps, lui, n'est pas vérifié ; `R { ... }` /
+`JS { ... }` n'ont aucune vérification du tout. `R { ... }` capture son corps tel quel, accolades équilibrées (comme
 `function(...)`), et transpile en un simple bloc R `{ ... }` — qui s'évalue déjà à la valeur de sa
 dernière instruction, donc aucun wrapper ni appel n'est émis. C'est la forme à privilégier pour du
 R idiomatique difficilement typable (pipes `%>%`/`|>`, NSE dplyr, formules `~`, ...) qu'on veut

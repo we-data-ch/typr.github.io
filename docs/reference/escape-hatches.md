@@ -22,9 +22,11 @@ extern (x: int, y: char) -> char r#"paste0(x, y)"#;   # raw R body, typed input/
 
 ```typr
 let add <- function(x, y) { x + y };   # raw R function (RFunction), body captured as-is
+
+add(3, 7)
 ```
 
-Any `function(...)` expression is captured as an untyped R function — no type checking on the body.
+Any `function(...)` expression is captured as an untyped R function — its body is never type-checked, but it is callable: TypR checks the call's arity against the parsed parameter list (here, `add(3, 7)` is accepted because `add` takes 2 parameters) and types the result `Any`. To use the result as a concrete type, cast it explicitly with `as!`.
 
 ---
 
@@ -79,7 +81,7 @@ Vectorial blocks are re-parsed as a sequence of TypR elements (literals, calls, 
 | Form | Type-checked? | Use case |
 |------|--------------|----------|
 | `extern` | signature yes, body no | Typed interop with existing R functions |
-| `function(...)` | no | Untyped R functions |
+| `function(...)` | arity only, result: `Any` | Untyped R functions |
 | `R { }` | no | Idiomatic R values (pipes, NSE, formulas) |
 | `JS { }` | no | JavaScript target |
 | `@{ }@` | partially (TypR elements only) | Lightweight vectorial expressions |

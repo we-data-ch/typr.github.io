@@ -26,7 +26,7 @@ let my_addition <- fn(a: int, b: int): int {
 my_addition(num1, num2)
 ```
 
-```typr noplayground
+```typr
 # Also a valid TypR code: weak on safety, strong on freedom
 let num1 <- 3;
 let num2 <- 7;
