@@ -4,6 +4,12 @@ import type * as Preset from '@docusaurus/preset-classic';
 import rehypeShikiTypR, {CODE_COLORS} from './src/syntax/shiki';
 import homepageSnippetsPlugin from './src/homepage/plugin';
 import {PLAYGROUND_URL} from './src/playground/url';
+
+// we-data-ch/registry : l'index communautaire de Type Definitions pour des
+// packages R existants (CRAN, R-universe) — pas un dépôt de ce site, pas de
+// contrat d'URL à respecter comme pour le playground, donc pas besoin d'un
+// module dédié comme src/playground/url.ts.
+const REGISTRY_URL = 'https://we-data-ch.github.io/registry/';
 import sidebars from './sidebars';
 import {docOrderFromSidebars} from './src/llms/order';
 
@@ -199,8 +205,10 @@ const config: Config = {
 	},
 	//main: navbar
     // La barre de navigation porte les quatre destinations de la page
-    // d'accueil — Documentation, Playground, GitHub, Download — plus les deux
-    // que le site a par ailleurs : le blog, et Discussions, qui est le canal
+    // d'accueil — Documentation, Playground, GitHub, Download — plus les
+    // trois que le site a par ailleurs : le blog, Registry (l'index
+    // communautaire de Type Definitions pour les packages R existants — CRAN
+    // et R-universe, we-data-ch/registry), et Discussions, qui est le canal
     // d'aide canonique (plan-phase2 §2.4) et vaut d'être visible partout.
     // « Download » est l'action principale : c'est un bouton, habillé dans
     // src/css/custom.css.
@@ -221,6 +229,11 @@ const config: Config = {
         {
           href: PLAYGROUND_URL,
           label: 'Playground',
+          position: 'right',
+        },
+        {
+          href: REGISTRY_URL,
+          label: 'Registry',
           position: 'right',
         },
         {
@@ -266,6 +279,10 @@ const config: Config = {
             {
               label: 'Playground',
               href: PLAYGROUND_URL,
+            },
+            {
+              label: 'Registry',
+              href: REGISTRY_URL,
             },
             {
               label: 'Download',
