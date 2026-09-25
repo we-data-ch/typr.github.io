@@ -12,6 +12,11 @@
  * `noplayground` existait pour ne pas envoyer le lecteur vers une erreur qu'il
  * n'attendait pas, alors qu'ici le bandeau l'a prévenu et l'erreur *est* la
  * démonstration. Cliquer donne le message exact du compilateur.
+ *
+ * ```typr graph (et ```typr graph focus=<bloc>) ouvrent le playground sur
+ * l'onglet Graph plutôt que sur l'exécution habituelle — icône et infobulle
+ * différentes, `autorun` n'a alors plus de sens et est ignoré (spec
+ * visualization_graph_v2.md §11 "Documentation (G)").
  */
 import React from 'react';
 import clsx from 'clsx';
@@ -26,6 +31,7 @@ const PLAYGROUND_LANGUAGE = 'typr';
 
 const TITLE = 'Try this code in the TypR playground';
 const TITLE_COMPILE_FAIL = 'See this error in the TypR playground';
+const TITLE_GRAPH = "See this code's block graph in the TypR playground";
 
 export default function PlaygroundButton({
   className,
@@ -35,7 +41,8 @@ export default function PlaygroundButton({
   const {
     metadata: {code, language},
   } = useCodeBlockContext();
-  const {autorun, noplayground, compileFail} = useCodeBlockMeta();
+  const {autorun, noplayground, compileFail, graph, graphFocus} =
+    useCodeBlockMeta();
   const {colorMode} = useColorMode();
 
   if (language !== PLAYGROUND_LANGUAGE || noplayground) {
@@ -43,16 +50,19 @@ export default function PlaygroundButton({
   }
 
   // Un contre-exemple ne s'exécute jamais tout seul : `autorun` n'aurait ici
-  // aucun sens, la compilation s'arrête avant.
+  // aucun sens, la compilation s'arrête avant. `graph` non plus : ce bouton-là
+  // ouvre l'onglet Graph, pas Output.
   const href = buildPlaygroundUrl(code, {
-    autorun: autorun && !compileFail,
+    autorun: autorun && !compileFail && !graph,
     theme: colorMode,
+    view: graph ? 'graph' : undefined,
+    focus: graph && graphFocus ? graphFocus : undefined,
   });
   if (!href) {
     return null;
   }
 
-  const title = compileFail ? TITLE_COMPILE_FAIL : TITLE;
+  const title = graph ? TITLE_GRAPH : compileFail ? TITLE_COMPILE_FAIL : TITLE;
 
   return (
     <a
@@ -66,7 +76,19 @@ export default function PlaygroundButton({
         className={styles.playgroundButtonIcon}
         viewBox="0 0 24 24"
         aria-hidden="true">
-        <path fill="currentColor" d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+        {graph ? (
+          // Trois nœuds reliés : distinct du triangle « lecture » pour que le
+          // survol annonce déjà "vue graphe", avant même l'infobulle.
+          <g>
+            <line x1="12" y1="7" x2="6.5" y2="16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            <line x1="12" y1="7" x2="17.5" y2="16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="12" cy="5.5" r="2.3" fill="currentColor" />
+            <circle cx="5.5" cy="17.5" r="2.3" fill="currentColor" />
+            <circle cx="18.5" cy="17.5" r="2.3" fill="currentColor" />
+          </g>
+        ) : (
+          <path fill="currentColor" d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+        )}
       </svg>
     </a>
   );

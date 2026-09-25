@@ -20,6 +20,12 @@ export interface PlaygroundLinkOptions {
   /** Ouvre le playground dans le thème de la page (`?theme=`), sans écraser
    *  la préférence enregistrée du visiteur. */
   theme?: PlaygroundTheme;
+  /** Ouvre l'onglet Graph plutôt qu'Output (`?view=graph`), spec
+   *  visualization_graph_v2.md §11 "Documentation (G)". */
+  view?: 'graph';
+  /** Bloc affiché à l'ouverture du graphe (`?focus=<BlockKey>`). Ignoré sans
+   *  `view: 'graph'`. */
+  focus?: string;
 }
 
 /**
@@ -61,6 +67,12 @@ export function buildPlaygroundUrl(
   }
   if (options.theme) {
     url.searchParams.set('theme', options.theme);
+  }
+  if (options.view) {
+    url.searchParams.set('view', options.view);
+    if (options.focus) {
+      url.searchParams.set('focus', options.focus);
+    }
   }
 
   return url.toString();
