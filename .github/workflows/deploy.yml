@@ -111,15 +111,9 @@ jobs:
 
       - run: npm ci
 
-      - name: Fetch TypR version from develop
-        run: |
-          VERSION=$(curl -sf https://raw.githubusercontent.com/we-data-ch/typr/develop/Cargo.toml \
-            | grep '^version = ' | head -1 | sed 's/.*"\(.*\)".*/\1/')
-          echo "TYPR_VERSION=$VERSION" >> "$GITHUB_ENV"
-
-      - name: Sync version in homepage
-        run: |
-          sed -i "s/version [0-9]*\.[0-9]*\.[0-9]*/version $TYPR_VERSION/" src/pages/index.tsx
+      # La version affichée sur la page d'accueil est lue sur l'API GitHub au
+      # moment de la visite (src/pages/index.tsx) : plus rien à synchroniser ici,
+      # et plus de `sed` à maintenir sur une cible qui se déplace.
 
       # Les inventaires de syntaxe des pages de référence sont *dérivés* du
       # manifeste, pas recopiés à la main. Bloquant, et à raison : ici rien ne

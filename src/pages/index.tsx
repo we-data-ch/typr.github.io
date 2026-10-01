@@ -34,48 +34,161 @@ import styles from './index.module.css';
 
 const GITHUB_URL = 'https://github.com/we-data-ch/typr';
 
-// Écrite ici parce qu'aucun fichier de ce dépôt ne la connaît : la version vit
-// dans le Cargo.toml du compilateur (dépôt we-data-ch/typr). À reprendre à la
-// main à chaque release, comme la grammaire de syntaxes/.
-const VERSION = '0.5.10';
+/**
+ * `v0.6.0` → `0.6.0`. `null` si le tag n'a pas la forme attendue : mieux vaut
+ * n'afficher aucun numéro qu'un numéro faux.
+ */
+function parseVersion(tag: unknown): string | null {
+  const match = typeof tag === 'string' ? /^v?(\d+\.\d+\.\d+)/.exec(tag.trim()) : null;
+  return match ? match[1] : null;
+}
 
-/** Le compteur d'étoiles, à charger côté client — il n'existe pas au build. */
-function GitHubStars(): ReactNode {
-  const [stars, setStars] = useState<number | null>(null);
+/** Avant 1.0, le numéro porte la mention « alpha » ; après, plus rien. */
+function isAlpha(version: string): boolean {
+  return Number.parseInt(version, 10) < 1;
+}
+
+type Meta = {tag: string | null; stars: number | null};
+
+/**
+ * Ce que l'API GitHub a répondu la dernière fois, et quand.
+ *
+ * Le quota anonyme est de 60 requêtes par heure et par IP : sans cache, une
+ * simple rechargement de la page d'accueil en consomme deux, et un visiteur
+ * derrière un partage de connexion épuise celui de tout le monde. Le `heroMeta`
+ * ne bouge pourtant pas d'une minute à l'autre — une heure de cache suffit, et
+ * l'écart maximal reste celui d'une release publiée dans l'intervalle.
+ *
+ * `localStorage` peut être indisponible (navigation privée, cookies bloqués,
+ * quota plein) : chaque accès est donc encadré, et l'absence de cache ne fait
+ * que retomber sur la lecture directe.
+ */
+const CACHE_KEY = 'typr:github-meta';
+const CACHE_TTL_MS = 60 * 60 * 1000;
+
+function readCache(now: number): Meta | null {
+  try {
+    const raw = window.localStorage.getItem(CACHE_KEY);
+    if (raw === null) {
+      return null;
+    }
+    const entry = JSON.parse(raw) as {at?: unknown; tag?: unknown; stars?: unknown};
+    if (typeof entry.at !== 'number' || now - entry.at > CACHE_TTL_MS) {
+      return null;
+    }
+    return {
+      tag: typeof entry.tag === 'string' ? entry.tag : null,
+      stars: typeof entry.stars === 'number' ? entry.stars : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(meta: Meta, now: number): void {
+  try {
+    window.localStorage.setItem(CACHE_KEY, JSON.stringify({at: now, ...meta}));
+  } catch {
+    // Sans cache, la prochaine visite relira l'API. Rien à signaler.
+  }
+}
+
+/**
+ * La version publiée et le nombre d'étoiles, tous deux lus sur l'API GitHub.
+ *
+ * Ni l'un ni l'autre n'existe au build, et surtout aucun des deux ne se saisit
+ * à la main dans ce dépôt : la version vit dans le `Cargo.toml` du compilateur
+ * (we-data-ch/typr) et périmerait au premier `sed` deployé qui ne trouve plus
+ * sa cible. La release la plus récente est donc lue à l'exécution, comme les
+ * étoiles.
+ *
+ * `/releases/latest` ignore les prereleases et les brouillons : c'est donc la
+ * version que `curl … | sh` installe, et la seule qui ait un sens ici. C'est un
+ * second appel, inévitable : l'endpoint du dépôt porte les étoiles mais pas le
+ * tag de la release. Le cache ci-dessus amortit les deux.
+ */
+function GitHubMeta(): ReactNode {
+  const [meta, setMeta] = useState<Meta>({tag: null, stars: null});
 
   useEffect(() => {
-    let cancelled = false;
-    fetch('https://api.github.com/repos/we-data-ch/typr')
+    const now = Date.now();
+    const cached = readCache(now);
+    if (cached !== null) {
+      setMeta(cached);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    // Chaque réponse est lue pour elle-même : si l'une des deux échoue, l'autre
+    // doit quand même s'afficher.
+    const release = fetch('https://api.github.com/repos/we-data-ch/typr/releases/latest', {
+      signal: controller.signal,
+    })
       .then((res) => res.json())
-      .then((data) => {
-        // L'API répond aussi 403 (quota) avec un corps JSON : sans le champ,
-        // on n'affiche simplement rien.
-        if (!cancelled && typeof data?.stargazers_count === 'number') {
-          setStars(data.stargazers_count);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => (typeof data?.tag_name === 'string' ? {tag: data.tag_name} : null))
+      .catch(() => null);
+
+    const repo = fetch('https://api.github.com/repos/we-data-ch/typr', {
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      // L'API répond aussi 403 (quota) avec un corps JSON : sans le champ,
+      // on n'affiche simplement rien.
+      .then((data) =>
+        typeof data?.stargazers_count === 'number' ? {stars: data.stargazers_count} : null,
+      )
+      .catch(() => null);
+
+    Promise.all([release, repo]).then(([r, p]) => {
+      const merged = {tag: r?.tag ?? null, stars: p?.stars ?? null};
+      setMeta(merged);
+      // Un champ non lu est mémorisé comme tel, pas comme un zéro : le compteur
+      // reste absent une heure plutôt que d'afficher un chiffre faux. Tout
+      // échouer ne se mémorise pas, pour que la tentative suivante retente.
+      if (merged.tag !== null || merged.stars !== null) {
+        writeCache(merged, now);
+      }
+    });
+
+    return () => controller.abort();
   }, []);
 
-  if (stars === null) {
+  const version = meta.tag === null ? null : parseVersion(meta.tag);
+
+  if (version === null && meta.stars === null) {
     return null;
   }
 
   return (
     <>
-      <span className={styles.metaSeparator} aria-hidden="true">
-        ·
-      </span>
-      <a
-        className={styles.metaLink}
-        href={`${GITHUB_URL}/stargazers`}
-        target="_blank"
-        rel="noopener noreferrer">
-        ★ {stars.toLocaleString('en-US')} on GitHub
-      </a>
+      {version !== null && (
+        <>
+          <a
+            className={styles.metaLink}
+            href={`${GITHUB_URL}/releases/tag/${meta.tag}`}
+            target="_blank"
+            rel="noopener noreferrer">
+            version {version}
+          </a>
+          {isAlpha(version) && ' (alpha)'}
+        </>
+      )}
+      {meta.stars !== null && (
+        <>
+          {version !== null && (
+            <span className={styles.metaSeparator} aria-hidden="true">
+              ·
+            </span>
+          )}
+          <a
+            className={styles.metaLink}
+            href={`${GITHUB_URL}/stargazers`}
+            target="_blank"
+            rel="noopener noreferrer">
+            ★ {meta.stars.toLocaleString('en-US')} on GitHub
+          </a>
+        </>
+      )}
     </>
   );
 }
@@ -154,8 +267,7 @@ function Hero(): ReactNode {
         <InstallCommand />
 
         <p className={styles.heroMeta}>
-          <span>version {VERSION} (alpha)</span>
-          <GitHubStars />
+          <GitHubMeta />
         </p>
       </div>
     </header>

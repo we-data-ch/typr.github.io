@@ -85,8 +85,12 @@ Both scripts take the same options.
 To pass an option to the shell script, add `-s --` after `sh`:
 
 ```bash
-curl -fsSL https://we-data-ch.github.io/typr.github.io/install/install.sh | sh -s -- --version v0.5.12
+curl -fsSL https://we-data-ch.github.io/typr.github.io/install/install.sh | sh -s -- --version vX.Y.Z
 ```
+
+Substitute the tag you want — the ones published are listed on the
+[releases page](https://github.com/we-data-ch/typr/releases). Leaving the option
+off installs the latest one, which is what you want unless you have a reason.
 
 On PowerShell the options are spelled `-Version`, `-Channel`, `-DryRun` and
 `-Gnu`. They cannot be forwarded through `irm … | iex`, so download the script
@@ -94,7 +98,7 @@ first and run it as a file:
 
 ```powershell
 irm https://we-data-ch.github.io/typr.github.io/install/install.ps1 -OutFile install.ps1
-.\install.ps1 -Version v0.5.12
+.\install.ps1 -Version vX.Y.Z
 ```
 
 Two environment variables work with both scripts:

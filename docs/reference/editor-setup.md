@@ -49,11 +49,13 @@ release](https://github.com/we-data-ch/typr/releases/latest), then install it
 as a local source package:
 
 ```r
-install.packages("typr.runner_0.5.10.tar.gz", repos = NULL, type = "source")
+install.packages("typr.runner_<version>.tar.gz", repos = NULL, type = "source")
 ```
 
-(adjust the filename to the version you downloaded). This installs the
-**typr.runner** package and registers its RStudio addins.
+The asset is named after the release it belongs to, so `<version>` is the tag
+you just downloaded (`0.6.0` for `typr.runner_0.6.0.tar.gz`) — the filename has
+to match exactly, including the underscores. This installs the **typr.runner**
+package and registers its RStudio addins.
 
 ### Usage
 

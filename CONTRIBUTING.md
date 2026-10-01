@@ -316,10 +316,11 @@ site : ils échouent en silence.
    trois occurrences du numéro (config, plugin llms, workflows). Tant qu'on n'en
    garde qu'une, c'est une commande et un remplacement.
 
-Le numéro de version, lui, ne se saisit nulle part dans ce dépôt : il vient de
-`Cargo.toml [workspace.package].version` du compilateur, que `deploy.yml`
-récupère déjà pour la page d'accueil. La doc **consomme** cette valeur, elle n'en
-définit jamais une.
+Le numéro de version, lui, ne se saisit nulle part dans ce dépôt : la page
+d'accueil le lit sur l'API GitHub (`/releases/latest`), au même endroit que le
+nombre d'étoiles — `releases/latest` ignore les prereleases, donc c'est bien la
+version que le script d'installation installe. La doc **consomme** cette valeur,
+elle n'en définit jamais une.
 
 ## Mesure d'audience
 
