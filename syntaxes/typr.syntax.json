@@ -261,6 +261,16 @@
       "note": "No `Option`/`Result`/`List`/`Matrix`: TypR has none of them. These are the names usable bare in a type position; the ones that only exist in front of a delimiter are in `types.constructor` and `keywords.block`."
     },
     {
+      "name": "types.refinement",
+      "scope": "support.type.builtin.typr",
+      "kind": "words",
+      "lexemes": [
+        "length"
+      ],
+      "followed_by": "\\s*\\(\\s*[\\d<>]",
+      "note": "`[int] & length(5)`, `[int] & length(> 0)` (`parsing/types.rs::refinement_property`). `length` is also R's most common function, so it only counts glued to `(<digit>` or `(<comparison>`: `length(x)` stays a plain call."
+    },
+    {
       "name": "types.builtin-indexed",
       "scope": "support.type.builtin.typr",
       "kind": "words",

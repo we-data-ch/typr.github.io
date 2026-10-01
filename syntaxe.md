@@ -153,6 +153,30 @@ type Shape <- .Circle(num) | .Square(num);   # union par tags
 type Combined <- Movable & Drawable;          # intersection d'interfaces
 ```
 
+### Types raffinés
+
+```typr
+type Coordinates <- [num] & length(2);   # vecteur de longueur exactement 2 (≡ [2, num])
+let n: int & (> 0) <- 3;                 # entier strictement positif
+int & (> 0) & (< 10)                     # propriétés cumulables, ordre sans effet
+```
+
+Propriétés : `length(n)` (vecteurs), `(> c)` / `(< c)` (`int`, `num`) ; bornes larges et plages :
+`(>= c)`, `(<= c)`, `length(> n)`, `length(>= n)`, `length(< n)`, `length(<= n)`. Une combinaison vide
+(`(> 10) & (< 5)`) ou une propriété sur une base incompatible (`int & length(5)`) est une erreur
+de typage. Une propriété non prouvée statiquement est vérifiée à l'exécution à la frontière
+(`let`, argument, retour) via `typr_refine_*`. `length` n'est un mot de type que collé à
+`(<chiffre>` ou `(<comparaison>` : `length(x)` reste l'appel R.
+
+Narrowing : dans un `if`, la condition raffine les variables qu'elle cite (branche `then` = condition
+vraie, `else` = niée), sans vérification à l'exécution. Conditions lues : `length(x) <op> n`,
+`x <op> c` (scalaires), `!`, `(a) && (b)` / `(a) & (b)` (then), `(a) || (b)` (else), avec `<op>` parmi
+`> < >= <= ==`. Le reste est ignoré (sûr). Mettre chaque côté de `&&`/`||` entre parenthèses.
+
+Bases génériques : `fn(v: [#N, T] & length(> 0)): T` unifie `N`/`T` comme d'habitude, puis décide le
+raffinement contre chaque argument : prouvé (rien), non prouvé (`typr_refine_*` sur l'argument),
+réfuté (`[0, char]` : aucune signature ne correspond).
+
 ### Fonctions & interfaces (en position de type)
 
 ```typr
@@ -452,6 +476,20 @@ libres ont ce type comme premier paramètre « l'implémente », sans mot-clé `
 où `I` est un alias d'interface n'est donc jamais un vrai appel de fonction (les alias vivent dans
 un espace de noms séparé des variables) — c'est un contrôle de compatibilité à la compilation qui
 échoue avec `InterfaceNotSatisfied` / `IncompatibleInterfaceMethod`.
+
+### Plusieurs paramètres de même interface : `I@Id`
+
+```typr
+let cmp <- fn(a: Lovable@A, b: Lovable@B): bool { a.love() == b.love() };   # types indépendants
+let snd <- fn(a: Lovable@A, b: Lovable@B): Lovable@B { b };                 # retour = type de b
+let one <- fn(a: Lovable, b: Lovable): bool { ... };                        # nu ≡ Lovable@Lovable : même type
+```
+
+Suffixe `@Id` collé au nom d'alias d'interface, `Id` = **une** majuscule (ou `_`, variable fraîche à
+chaque occurrence). Un `I` nu vaut `I@I` : une seule variable par interface. Un même `Id` désigne le
+même type ; il porte une seule borne. `Lovable @A`, `Lovable@Self`, `Lovable@Abc` sont des erreurs
+de syntaxe (S018). Le préfixe `@A` (générique de kind interface) est un autre lexème. Le R généré
+ne change pas.
 
 ---
 

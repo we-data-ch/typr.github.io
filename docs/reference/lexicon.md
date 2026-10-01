@@ -178,6 +178,12 @@ in this list is not a keyword: it is an ordinary identifier. See
 | `Class(...)` | Type denoting an existing R class: `Class("data.frame", "tbl")`. |
 | `library(...)` | Declares an R package dependency, as in R. |
 
+### Type refinements
+
+| Form | Meaning |
+|---|---|
+| `length(n)` | Refinement, only in a type: `[int] & length(5)` is a vector of exactly 5 elements. Also takes a range: `length(> 0)`. Glued to `(<digit>` or `(<comparison>` — `length(x)` stays R's function. |
+
 ### Kind sigils
 
 A sigil prefixes a single-uppercase-letter generic to fix its kind.

@@ -118,6 +118,7 @@ export const LEXEMES = {
   Tuple: { form: 'Tuple[...]', gloss: 'Positional tuple: `Tuple[int, char]`, variadic `Tuple[T..., U]`.' },
   Record: { form: 'Record[...]', gloss: 'Bracket record type: `Record[name: char]`, variadic `Record[Fs..., id: int]`.' },
   UnknownFunction: { gloss: 'The type given to an R function TypR knows nothing about.' },
+  length: { form: 'length(n)', gloss: 'Refinement, only in a type: `[int] & length(5)` is a vector of exactly 5 elements. Also takes a range: `length(> 0)`. Glued to `(<digit>` or `(<comparison>` — `length(x)` stays R\'s function.' },
   dataframe: { form: 'dataframe[...]{...}', gloss: 'Data frame with typed columns: `dataframe[#N]{ name: char }`.' },
   df: { form: 'df[...]{...}', gloss: 'Short spelling of `dataframe`.' },
   'data.frame': { gloss: "R's own data-frame name, accepted as a type." },

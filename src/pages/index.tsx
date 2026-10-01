@@ -27,6 +27,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import clsx from 'clsx';
 import {CodePane} from '@site/src/homepage/Code';
 import {Branch, Hub, Layers, Pipeline} from '@site/src/homepage/Diagram';
+import InstallCommand from '@site/src/homepage/InstallCommand';
 import UseCases from '@site/src/homepage/UseCases';
 import {PLAYGROUND_URL} from '@site/src/playground/url';
 import styles from './index.module.css';
@@ -135,11 +136,11 @@ function Hero(): ReactNode {
         </p>
 
         <div className={styles.heroActions}>
-          <Link className={styles.buttonPrimary} to="/docs/reference/installation">
-            Download TypR
-          </Link>
-          <Link className={styles.buttonSecondary} to="/docs/intro">
+          <Link className={styles.buttonPrimary} to="/docs/intro">
             Get started
+          </Link>
+          <Link className={styles.buttonSecondary} to="/docs/reference/installation">
+            Installation guide
           </Link>
           <a
             className={styles.buttonWhite}
@@ -149,6 +150,8 @@ function Hero(): ReactNode {
             Try the playground
           </a>
         </div>
+
+        <InstallCommand />
 
         <p className={styles.heroMeta}>
           <span>version {VERSION} (alpha)</span>
@@ -264,11 +267,12 @@ export default function Home(): ReactNode {
           <h2 className={styles.sectionTitle}>Build software that lasts.</h2>
           <p className={styles.sectionLead}>
             Start building your next R package, application or data system with
-            TypR.
+            TypR. One command installs it.
           </p>
-          <div className={styles.heroActions}>
+          <InstallCommand />
+          <div className={styles.heroActions} style={{marginTop: '2rem'}}>
             <Link className={styles.buttonPrimary} to="/docs/reference/installation">
-              Download TypR
+              Installation guide
             </Link>
             <Link className={styles.buttonSecondary} to="/docs/intro">
               Read the documentation

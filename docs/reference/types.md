@@ -166,6 +166,112 @@ With an alias, `Person` and `list { name: char, age: int }` are interchangeable.
 
 ---
 
+## Refined types
+
+A refined type is a base type narrowed by a property, written with `&`:
+
+```typr
+type Coordinates <- [num] & length(2);   # a vector of exactly two numbers
+let origin: Coordinates <- [0.0, 0.0];
+let n: int & (> 0) <- 3;                 # a strictly positive integer
+```
+
+| Property | Applies to | Meaning |
+|---|---|---|
+| `length(n)` | vectors | exactly `n` elements. `[int] & length(5)` is the same type as `[5, int]`. |
+| `(> c)`, `(< c)` | `int`, `num` | every value is greater / less than the constant `c` |
+| `(>= c)`, `(<= c)` | `int`, `num` | every value is at least / at most `c` |
+| `length(> n)`, `length(>= n)`, `length(< n)`, `length(<= n)` | vectors | the number of elements lies in that range: `[int] & length(> 0)` is a non-empty vector |
+
+Properties combine: `int & (> 0) & (< 10)`. Order and repetition do not matter, and a
+combination that no value can satisfy is a compile error:
+
+```typr compile_fail
+let a: int & (> 10) & (< 5) <- 7;
+```
+
+Applying a property to a base that does not support it (`int & length(5)`, `chr & (> 0)`) is
+also an error.
+
+### Where the check happens
+
+A refinement is proven at compile time whenever the compiler can, and checked once, at run time,
+when it cannot. The check sits at the boundary, where a value enters a refined type: a `let`
+annotation, a function argument, a return value.
+
+```typr
+let read_point <- fn(): [num] { [3.0, 4.0] };
+let p: [num] & length(2) <- read_point();   # length unknown here: checked at run time
+let q: [num] & length(2) <- [1.0, 2.0];     # proven by the literal: no check
+```
+
+The first `let` becomes a call to a small helper from the generated prelude:
+
+```r
+p <- typr_refine_length(read_point(), 2L, "TypR/main.ty:2")
+```
+
+If the length is wrong, R stops with
+`Type refinement violation at TypR/main.ty:2: expected length 2, got 3`.
+Inside the function, the refined parameter is trusted: nothing is re-checked.
+
+### Narrowing by a condition
+
+Inside an `if`, the condition is itself a proof. The compiler reads it and refines the variables
+it mentions, in the `then` branch for the condition and in the `else` branch for its negation, so
+no run-time check is needed there:
+
+```typr
+let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
+let safe_first <- fn(v: [int]): int {
+  if (length(v) > 0) { first(v) } else { 0 }
+};
+let sqrt_pos <- fn(x: num & (> 0)): num { x };
+let clamp <- fn(x: num): num {
+  if (x > 0) { sqrt_pos(x) } else { 0.0 }
+};
+```
+
+In the `then` branches, `v` is known to be non-empty and `x` to be positive. Without the `if`, the call `first(v)` would check `length(v) > 0` at run time instead.
+
+The compiler understands these conditions:
+
+| Condition | Refines |
+|---|---|
+| `length(x) <op> n` | the length of the vector `x` |
+| `x <op> c` | the scalar `x` (`int` or `num`) |
+| `!cond` | swaps the two branches |
+| `(a) && (b)`, `(a) & (b)` | both hold in the `then` branch |
+| `(a) \|\| (b)` | both are false in the `else` branch |
+
+where `<op>` is one of `>`, `<`, `>=`, `<=`, `==`. Anything else is ignored: the branch is still
+valid, it just gets no extra information. The narrowing stays inside its branch and is gone after
+the `if`. Parenthesize each side of `&&` and `||`.
+
+### Generic bases
+
+A refinement can sit on a generic base. The generics are unified as usual; the refinement is
+decided against each argument at the call:
+
+```typr
+let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
+let sized <- fn(v: [3, char]): char { first(v) };   # length 3 proves length > 0: no check
+let unknown <- fn(v: [int]): int { first(v) };      # unproven: checked at run time
+```
+
+```typr compile_fail
+let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
+let empty <- fn(v: [0, char]): char { first(v) };   # length 0 can never be > 0
+```
+
+The same three outcomes apply as for concrete types: proven (no check), unproven (a run-time
+check on the argument), refuted (no signature matches).
+
+Operations that keep the property (`x + 1` on a `[5, int]`) keep the type. Functions the
+compiler knows nothing about return their declared type, without the refinement.
+
+---
+
 ## Type inference
 
 Typed R features **type inference** — explicit annotations are not always required. The compiler infers types from:
@@ -189,6 +295,7 @@ Explicit types can be added incrementally where clarity or safety is critical.
 | Tuple | `tuple{T1, T2}` | `:{1, "hello"}` |
 | Function | `(T1, T2) -> T3` | `fn(a: int): bool { true }` |
 | Interface | `interface { f: (T) -> T, ... }` | no default constructor |
+| Refined | `T & length(n)`, `T & (> c)` | `[num] & length(2)` |
 | Union | `T1 \| T2` | no default constructor |
 | Tagged | `.Tag(T) \| .Tag2` | `.Some(42)`, `.None` |
 | Alias | `type Name = T` | `type Person = list { ... }` |

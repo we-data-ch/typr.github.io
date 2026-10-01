@@ -82,6 +82,7 @@ const PAGES = [
         column: 'Type',
       },
       { heading: 'Built-in constructors', rules: ['types.constructor'], column: 'Form' },
+      { heading: 'Type refinements', rules: ['types.refinement'], column: 'Form' },
       { heading: 'Kind sigils', kind: 'sigils' },
     ],
   },
