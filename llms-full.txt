@@ -3173,57 +3173,176 @@ Typed R is designed to scale from simple scripts to complex systems, combining t
 
 ## Installation
 
-TypR is installed as a complement to R.
+TypR installs with **one command**. No Rust, no Docker, no manual download —
+the script fetches the right binary for your machine, checks its SHA-256
+checksum, and puts it in your user folder. It never asks for administrator
+rights.
 
-General steps:
+Just want to look around first? [Try the playground](https://we-data-ch.github.io/typr-playground.github.io/)
+in your browser — nothing to install.
 
-### 1. Install a recent version of **R**.
+### 1. Install TypR
 
-You can install R (and RStudio) in this [link](https://rstudio-education.github.io/hopr/starting.html).
+#### Linux and macOS
 
-### 2. Install the TypR compiler/interpreter 
-
-You can install TypR in 3 different ways:
-
-#### With the release page
-
-If you have Windows, Mac or Linux, you can download it with the [release page](https://github.com/we-data-ch/typr/releases/).
-
-#### Via DockerHub:
-
-If you have docker you can install TypR with your terminal:
-```bash
-docker pull fabricehategekimana/typr:latest
-```
-
-You can then run it in this way:
+Open a terminal and run:
 
 ```bash
-docker run -it --rm -v $(pwd):/workspace fabricehategekimana/typr:latest
+curl -fsSL https://we-data-ch.github.io/typr.github.io/install/install.sh | sh
 ```
+
+The binary lands in `~/.local/bin`. On Linux you get a statically linked
+(musl) build that starts on Rocky 9, Debian 12, Ubuntu 22.04, Alpine and
+anything more recent — no glibc requirement.
+
+#### Windows
+
+Open PowerShell (it ships with Windows 10 and later) and run:
+
+```powershell
+irm https://we-data-ch.github.io/typr.github.io/install/install.ps1 | iex
+```
+
+The binary lands in `%LOCALAPPDATA%\Programs\typr`, which is added to your
+user `PATH`. PowerShell may warn that the script is unsigned: check that the
+address is the one above, then confirm.
+
+#### Prefer a package manager?
+
+| Tool | Command | Systems |
+|---|---|---|
+| Homebrew | `brew install we-data-ch/typr/typr` | macOS |
+| WinGet | `winget install we-data-ch.TypR` | Windows |
+| Scoop | `scoop bucket add typr https://github.com/we-data-ch/scoop-bucket``scoop install typr` | Windows |
+
+Updates then go through the same tool (`brew upgrade typr`,
+`winget upgrade we-data-ch.TypR`, `scoop update typr`).
+
+### 2. Check that it works
+
+Open a **new** terminal (so the updated `PATH` is picked up) and run:
+
+```bash
+typr --version
+```
+
+It should print a version number. If it says `typr: command not found`, see
+[Troubleshooting](#troubleshooting).
+
+Then head to [Getting started](/docs/intro), or install your
+[editor integration](./editor-setup).
+
+### 3. Install R
+
+TypR compiles to R, so you also need a recent version of **R** to run the
+result. If you don't have it yet, follow
+[this guide](https://rstudio-education.github.io/hopr/starting.html) (it covers
+RStudio too).
+
+### Options
+
+Both scripts take the same options.
+
+| Option | Effect |
+|---|---|
+| `--version vX.Y.Z` | install a specific release instead of the latest |
+| `--channel beta` | install the latest prerelease |
+| `--dry-run` | print what would happen, download nothing |
+| `--gnu` | Linux and macOS only: glibc build instead of musl |
+| `--help` | show the script's help |
+
+To pass an option to the shell script, add `-s --` after `sh`:
+
+```bash
+curl -fsSL https://we-data-ch.github.io/typr.github.io/install/install.sh | sh -s -- --version v0.5.12
+```
+
+On PowerShell the options are spelled `-Version`, `-Channel`, `-DryRun` and
+`-Gnu`. They cannot be forwarded through `irm … | iex`, so download the script
+first and run it as a file:
+
+```powershell
+irm https://we-data-ch.github.io/typr.github.io/install/install.ps1 -OutFile install.ps1
+.\install.ps1 -Version v0.5.12
+```
+
+Two environment variables work with both scripts:
+
+| Variable | Effect |
+|---|---|
+| `TYPR_INSTALL_DIR` | install into this folder instead of the default |
+| `TYPR_INSTALL_VERIFY=0` | skip the SHA-256 check (only to diagnose a network problem) |
+
+### What the script does to your machine
+
+- Downloads the archive for your system from the
+  [GitHub release](https://github.com/we-data-ch/typr/releases) and verifies it
+  against the release's `checksums.txt`. It stops if the checksum is missing or
+  malformed.
+- On Linux and macOS, writes **only** `~/.local/bin/typr`. It does not edit
+  your shell profile: if `~/.local/bin` is not already on your `PATH`, it
+  prints the exact line to add to `~/.profile` or `~/.zshrc`.
+- On Windows, writes the binary and adds its folder to your user `PATH` in the
+  registry.
+- Removes its temporary download folder, on success and on failure.
+
+To uninstall, delete the `typr` binary (and, on Windows, its folder from your
+`PATH`), or use your package manager's uninstall command.
+
+### Other ways to install
+
+#### Download a release by hand
+
+Binaries for Windows, macOS and Linux (x86_64 and aarch64) are on the
+[release page](https://github.com/we-data-ch/typr/releases/latest), next to a
+`checksums.txt`. To verify an archive yourself:
+
+```bash
+curl -fsSLO https://github.com/we-data-ch/typr/releases/latest/download/checksums.txt
+grep "x86_64-unknown-linux-musl.tar.gz" checksums.txt
+sha256sum typr-*-x86_64-unknown-linux-musl.tar.gz
+```
+
+The two hashes must match.
 
 #### With Cargo (Rust)
 
-If you already have Rust in your system, you can download it with Cargo from Rust:
+If you already have Rust:
 
 ```bash
-cargo install TypR
+cargo install typr
 ```
 
-### 3. Verify the installation 
-
-To verify your installation, you can use this command:
+#### With Docker
 
 ```bash
-> typr --version
-typr [actual version]
-
+docker pull fabricehategekimana/typr:latest
+docker run -it --rm -v $(pwd):/workspace fabricehategekimana/typr:latest
 ```
 
-Once installed, TypR can be used:
-- from the command line,
-- within a compatible IDE — see [Editor Setup](./editor-setup) for VS Code,
-  RStudio and Vim/Neovim.
+### Troubleshooting
+
+**`typr: command not found`** — the install folder is not on the `PATH` of
+this terminal. Open a new terminal; on Linux and macOS, if it still fails, add
+the line the installer printed to `~/.profile` or `~/.zshrc`. You can always
+run `~/.local/bin/typr` directly.
+
+**`GLIBC_2.39 not found`** — you are running an older, glibc-linked build.
+Re-run the install command without `--gnu`: the default build is static and has
+no glibc requirement.
+
+**The download fails although the network works** — set
+`TYPR_INSTALL_VERIFY=0` once to confirm the cause, then remove it. It disables
+the only protection against a tampered archive, so don't leave it on.
+
+**PowerShell security warning** — the script is not code-signed. `irm … | iex`
+runs downloaded code, which is the usual trade-off of a one-liner. If you would
+rather read it first, use the `-OutFile` form above, open `install.ps1`, then
+run it.
+
+**Exit codes** — `0` success; `1` environment or verification problem (no
+network, release not found, bad checksum); `2` bad command line (unknown
+option, missing argument).
 
 ---
 
@@ -3433,6 +3552,10 @@ let y <- 42         # tolerated, warning emitted
 
 Literals can also appear as **types** (singleton types): `3`, `3.14`, `true`, `"chat"` are valid types, more precise than `int`/`num`/`bool`/`char`.
 
+:::caution
+`na`/`NA` and `null`/`NULL` are **not** literal types. The type for missing values is `na` (not `NA`); `NA` is only the R spelling of the `na` constant. Likewise, `null` is the type, and `NULL` is its R spelling.
+:::
+
 ---
 
 ### Identifiers
@@ -3573,6 +3696,12 @@ in this list is not a keyword: it is an ordinary identifier. See
 | `Class(...)` | Type denoting an existing R class: `Class("data.frame", "tbl")`. |
 | `library(...)` | Declares an R package dependency, as in R. |
 
+#### Type refinements
+
+| Form | Meaning |
+|---|---|
+| `length(n)` | Refinement, only in a type: `[int] & length(5)` is a vector of exactly 5 elements. Also takes a range: `length(> 0)`. Glued to `(<digit>` or `(<comparison>` — `length(x)` stays R's function. |
+
 #### Kind sigils
 
 A sigil prefixes a single-uppercase-letter generic to fix its kind.
@@ -3642,7 +3771,7 @@ Destructuring is desugared into a temporary variable + positional access via dot
 
 ### Reassignment & mutation
 
-```typr
+```typr noplayground
 # --- setup ---
 let x <- 0;
 let f <- fn(a: int): int { a + 1 };
@@ -3689,7 +3818,7 @@ Typed R provides explicit basic (primitive) types:
 | `bool` | Boolean values | `true`, `false` |
 | `char` | Character strings | `"Hello"` |
 | `null` | Null value (`NULL`) | `null` |
-| `na` | Missing value (`NA`) | `na` |
+| `na` | Missing value (R spelling: `NA`) | `na` |
 | `Any` | Top type — accepts any value | (used in signatures) |
 | `Empty` | Bottom type — no value satisfies it | (return type for side-effect functions) |
 | `Self` | Refers to the type that implements an interface | (used in interface definitions) |
@@ -3836,6 +3965,112 @@ With an alias, `Person` and `list { name: char, age: int }` are interchangeable.
 
 ---
 
+### Refined types
+
+A refined type is a base type narrowed by a property, written with `&`:
+
+```typr noplayground
+type Coordinates <- [num] & length(2);   # a vector of exactly two numbers
+let origin: Coordinates <- [0.0, 0.0];
+let n: int & (> 0) <- 3;                 # a strictly positive integer
+```
+
+| Property | Applies to | Meaning |
+|---|---|---|
+| `length(n)` | vectors | exactly `n` elements. `[int] & length(5)` is the same type as `[5, int]`. |
+| `(> c)`, `(< c)` | `int`, `num` | every value is greater / less than the constant `c` |
+| `(>= c)`, `(<= c)` | `int`, `num` | every value is at least / at most `c` |
+| `length(> n)`, `length(>= n)`, `length(< n)`, `length(<= n)` | vectors | the number of elements lies in that range: `[int] & length(> 0)` is a non-empty vector |
+
+Properties combine: `int & (> 0) & (< 10)`. Order and repetition do not matter, and a
+combination that no value can satisfy is a compile error:
+
+```typr compile_fail
+let a: int & (> 10) & (< 5) <- 7;
+```
+
+Applying a property to a base that does not support it (`int & length(5)`, `chr & (> 0)`) is
+also an error.
+
+#### Where the check happens
+
+A refinement is proven at compile time whenever the compiler can, and checked once, at run time,
+when it cannot. The check sits at the boundary, where a value enters a refined type: a `let`
+annotation, a function argument, a return value.
+
+```typr noplayground
+let read_point <- fn(): [num] { [3.0, 4.0] };
+let p: [num] & length(2) <- read_point();   # length unknown here: checked at run time
+let q: [num] & length(2) <- [1.0, 2.0];     # proven by the literal: no check
+```
+
+The first `let` becomes a call to a small helper from the generated prelude:
+
+```r
+p <- typr_refine_length(read_point(), 2L, "TypR/main.ty:2")
+```
+
+If the length is wrong, R stops with
+`Type refinement violation at TypR/main.ty:2: expected length 2, got 3`.
+Inside the function, the refined parameter is trusted: nothing is re-checked.
+
+#### Narrowing by a condition
+
+Inside an `if`, the condition is itself a proof. The compiler reads it and refines the variables
+it mentions, in the `then` branch for the condition and in the `else` branch for its negation, so
+no run-time check is needed there:
+
+```typr noplayground
+let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
+let safe_first <- fn(v: [int]): int {
+  if (length(v) > 0) { first(v) } else { 0 }
+};
+let sqrt_pos <- fn(x: num & (> 0)): num { x };
+let clamp <- fn(x: num): num {
+  if (x > 0) { sqrt_pos(x) } else { 0.0 }
+};
+```
+
+In the `then` branches, `v` is known to be non-empty and `x` to be positive. Without the `if`, the call `first(v)` would check `length(v) > 0` at run time instead.
+
+The compiler understands these conditions:
+
+| Condition | Refines |
+|---|---|
+| `length(x) <op> n` | the length of the vector `x` |
+| `x <op> c` | the scalar `x` (`int` or `num`) |
+| `!cond` | swaps the two branches |
+| `(a) && (b)`, `(a) & (b)` | both hold in the `then` branch |
+| `(a) \|\| (b)` | both are false in the `else` branch |
+
+where `<op>` is one of `>`, `<`, `>=`, `<=`, `==`. Anything else is ignored: the branch is still
+valid, it just gets no extra information. The narrowing stays inside its branch and is gone after
+the `if`. Parenthesize each side of `&&` and `||`.
+
+#### Generic bases
+
+A refinement can sit on a generic base. The generics are unified as usual; the refinement is
+decided against each argument at the call:
+
+```typr noplayground
+let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
+let sized <- fn(v: [3, char]): char { first(v) };   # length 3 proves length > 0: no check
+let unknown <- fn(v: [int]): int { first(v) };      # unproven: checked at run time
+```
+
+```typr compile_fail
+let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
+let empty <- fn(v: [0, char]): char { first(v) };   # length 0 can never be > 0
+```
+
+The same three outcomes apply as for concrete types: proven (no check), unproven (a run-time
+check on the argument), refuted (no signature matches).
+
+Operations that keep the property (`x + 1` on a `[5, int]`) keep the type. Functions the
+compiler knows nothing about return their declared type, without the refinement.
+
+---
+
 ### Type inference
 
 Typed R features **type inference** — explicit annotations are not always required. The compiler infers types from:
@@ -3859,6 +4094,7 @@ Explicit types can be added incrementally where clarity or safety is critical.
 | Tuple | `tuple{T1, T2}` | `:{1, "hello"}` |
 | Function | `(T1, T2) -> T3` | `fn(a: int): bool { true }` |
 | Interface | `interface { f: (T) -> T, ... }` | no default constructor |
+| Refined | `T & length(n)`, `T & (> c)` | `[num] & length(2)` |
 | Union | `T1 \| T2` | no default constructor |
 | Tagged | `.Tag(T) \| .Tag2` | `.Some(42)`, `.None` |
 | Alias | `type Name = T` | `type Person = list { ... }` |
@@ -4313,7 +4549,7 @@ mod$member         # record field / module access — "::" is a historical alias
 
 #### Comparison with R
 
-```typr
+```typr noplayground
 # --- setup ---
 let data <- [1, 2, 3, -4];
 
@@ -4469,6 +4705,16 @@ module Math {
 
 A module compiles to an R environment. Members without `@pub` remain invisible from outside (except in `build --test` mode via `@testable`, where they are exposed as `M$.test_name`).
 
+You can see this boundary directly in the playground's block graph view: only `pi_approx` and `Radians` show up as the module's outputs, while `pi` stays visible only once you step inside.
+
+```typr graph
+module Math {
+    let pi <- 3.14159;
+    @pub let pi_approx <- 3.14;
+    @pub opaque Radians <- num;
+};
+```
+
 ---
 
 ### Importing from modules
@@ -4598,6 +4844,74 @@ This pattern is powerful for building extensible libraries where users can plug 
 
 ---
 
+### Several parameters of the same interface: `I@Id`
+
+A bare interface name stands for **one** hidden type variable per interface. Two `Lovable`
+parameters therefore share the same concrete type:
+
+```typr noplayground
+# --- setup ---
+type Lovable <- interface { love: (Self) -> int };
+type Cat <- list { name: char };
+type Dog <- list { age: int };
+let love <- fn(c: Cat): int { 1 };
+let love <- fn(d: Dog): int { 2 };
+let cat <- Cat:{ name = "tom" };
+let dog <- Dog:{ age = 3 };
+# -------------
+
+let cmp <- fn(a: Lovable, b: Lovable): bool { a.love() == b.love() };
+cmp(cat, dog);   # rejected: a and b must have the same type
+```
+
+To let the two parameters have **different** concrete types, name the variables with a suffix
+`@Id` (one uppercase letter, glued to the interface name):
+
+```typr
+# --- setup ---
+type Lovable <- interface { love: (Self) -> int };
+type Cat <- list { name: char };
+type Dog <- list { age: int };
+let love <- fn(c: Cat): int { 1 };
+let love <- fn(d: Dog): int { 2 };
+let cat <- Cat:{ name = "tom" };
+let dog <- Dog:{ age = 3 };
+# -------------
+
+let cmp <- fn(a: Lovable@A, b: Lovable@B): bool { a.love() == b.love() };
+cmp(cat, dog);
+```
+
+The identifier also ties the return type to a parameter. Here the result is the type of `b`, not of `a`:
+
+```typr noplayground
+# --- setup, from the previous block ---
+type Lovable <- interface { love: (Self) -> int };
+type Cat <- list { name: char };
+type Dog <- list { age: int };
+let love <- fn(c: Cat): int { 1 };
+let love <- fn(d: Dog): int { 2 };
+let cat <- Cat:{ name = "tom" };
+let dog <- Dog:{ age = 3 };
+# --------------------------------------
+
+let second <- fn(a: Lovable@A, b: Lovable@B): Lovable@B { b };
+let d: Dog <- second(cat, dog);
+```
+
+The same identifier used twice means the same type: `fn(a: Lovable@X, b: Lovable@X)` called with a `Cat`
+and a `Dog` is an error. `Lovable@_` is a fresh variable at each occurrence.
+
+The rules, in short:
+
+- `@Id` is written right after the interface name, with no space. `Lovable @A` and `Lovable@Self` are syntax errors (S018).
+- One identifier carries one bound: `Lovable@A` with `Printable@A` is an error (T047).
+- An identifier cannot also be a free generic of the signature (`fn(a: T, b: Lovable@T)`, T048).
+- An identifier that appears only in the return type has nothing to be bound to (T017).
+- The generated R does not change: the S3 dispatch uses the interface name, never the identifier.
+
+---
+
 ### Intersection of interfaces
 
 ```typr
@@ -4723,9 +5037,11 @@ extern (x: int, y: char) -> char r#"paste0(x, y)"#;   # raw R body, typed input/
 
 ```typr
 let add <- function(x, y) { x + y };   # raw R function (RFunction), body captured as-is
+
+add(3, 7)
 ```
 
-Any `function(...)` expression is captured as an untyped R function — no type checking on the body.
+Any `function(...)` expression is captured as an untyped R function — its body is never type-checked, but it is callable: TypR checks the call's arity against the parsed parameter list (here, `add(3, 7)` is accepted because `add` takes 2 parameters) and types the result `Any`. To use the result as a concrete type, cast it explicitly with `as!`.
 
 ---
 
@@ -4780,7 +5096,7 @@ Vectorial blocks are re-parsed as a sequence of TypR elements (literals, calls, 
 | Form | Type-checked? | Use case |
 |------|--------------|----------|
 | `extern` | signature yes, body no | Typed interop with existing R functions |
-| `function(...)` | no | Untyped R functions |
+| `function(...)` | arity only, result: `Any` | Untyped R functions |
 | `R { }` | no | Idiomatic R values (pipes, NSE, formulas) |
 | `JS { }` | no | JavaScript target |
 | `@{ }@` | partially (TypR elements only) | Lightweight vectorial expressions |
@@ -5013,7 +5329,7 @@ let get_info <- fn(p: Person): char {
 
 By default, untyped R functions accept `Any` and return `Empty`, which means the compiler can't verify your usage. The `@` annotation fixes this by declaring the expected types:
 
-```typr
+```typr noplayground
 # Without signature: toupper takes Any, returns Empty
 toupper("Hi"); # works, but no type checking
 
@@ -5181,6 +5497,220 @@ None of these choices is settled by fiat, and the ones that are still open are
 open in public. Language changes go through a written proposal reviewed next to
 the compiler — see [Design proposals](design-proposals.md) for how that works
 and where the current ones are.
+
+---
+
+## The beauty of syntax
+
+Even though `TypR` is based on `R`, it has some quirks that make it a bit different from its counterpart. Some may look negative but others are just beautiful (my own perspective).
+
+### The little down side
+
+The `;` is now mandatory so people can have a better syntax. It can look painful at the beginning but people will be able to put it as a reflex like the `.` at the end of a sentence written in human language. 
+
+There is no more `.` in the naming convention.
+People could no more use `.` in the name of their types or functions. If you want to reuse existing R function that use `.` you can just replace it with `__`
+
+```typr noplayground
+# not allowed
+data.frame(...) 
+
+# works and call the native `data.frame`
+data__frame(...) 
+```
+
+### Booleans!
+
+Now `true` and `false` are admitted boolean notations. Of course `TRUE` and `FALSE` still exist with `T` and `F`.
+
+```typr
+# all valid
+print(TRUE);
+print(T);
+print(true);
+
+# all valid
+print(FALSE);
+print(F);
+print(false);
+```
+
+### Better pipelines
+
+I love the fact that R has a pipeline syntax. Unfortunately it's not as elegant as we want. A pipeline within R generally looks like this:
+
+```r
+data |> f1() |>
+	f2() |>
+	f3() |>
+	f4() |>
+	f5()
+```
+
+With TypR the elegance takes place now one can build more beautiful pipelines like this:
+
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
+data 
+	|> f1()
+	|> f2()
+	|> f3()
+	|> f4()
+	|> f5();
+```
+
+It does exactly the same thing. The difference is the elegance and the readability. 
+
+### Array notation
+
+One key point of TypR is its built-in vector orientation. It was an interesting challenge to build a type system that implements this design (see [vectorization by design](/docs/philosophy/vectorization_by_design) for more details).
+
+To build a vector in R, you just have to use:
+
+```r
+c(1, 2, 3)
+```
+
+With TypR we now have the array notation `[]` to build vectors. 
+
+```typr
+[1, 2, 3]
+```
+
+Compared to `c()`, one can only put side by side elements of the same type without type coercion. I think it makes things more elegant since we have an expected behavior powered with type checking.
+
+### Uniform function call
+
+For those who have the nostalgia of the OOP notation. We have the uniform function call.
+
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
+data 
+	|> f1()
+	|> f2()
+	|> f3()
+	|> f4()
+	|> f5();
+```
+
+```typr
+# --- setup ---
+let data <- 1;
+let f1 <- fn(x: int): int { x + 1 };
+let f2 <- fn(x: int): int { x + 2 };
+let f3 <- fn(x: int): int { x + 3 };
+let f4 <- fn(x: int): int { x + 4 };
+let f5 <- fn(x: int): int { x + 5 };
+# ---------------
+
+data 
+	.f1()
+	.f2()
+	.f3()
+	.f4()
+	.f5();
+```
+
+For some, it's simpler and more ergonomic. It goes along with the philosophy of TypR since each function will become an R S3 method by default (so it is still OOP).
+
+### Beautiful Type Constructor
+
+With TypR, one can have better distinction with the help of constructors.
+
+```r
+# classic list constructor in R
+list(
+	a = 8L, 
+	b = 12
+)
+```
+
+We still keep the original syntax but we had another syntax.
+
+```r
+# classic list constructor in TypR
+:{
+	a = 8L, 
+	b = 12
+}
+```
+
+In R, lists are the equivalent of records in other languages.
+
+One can create some personalized lists within the code with the help of a custom list type. You define an alias that targets a list type and you can use this alias to build other types.
+
+```typr
+# Define an alias other a list type
+type Person <- list {
+	name: char,
+	age: int
+};
+```
+
+```typr
+# You can use the alias as a constructor
+Person:{ 
+	name: "Anna", 
+	age: 28
+};
+```
+
+You can also do the same with union type.
+
+```typr
+# Define a record type
+type Person <- list {
+	name: char,
+	age: int
+};
+
+# Build an union type
+type PersonOrInt <- Person | int;
+
+# A scalar member is written as itself
+let n: PersonOrInt <- 7;
+
+# A record member is built through the qualified constructor
+# (useful for autocompletion)
+let p: PersonOrInt <- PersonOrInt.Person:{name: "Bob", age: 12};
+```
+
+### Partial function application
+
+Currying is one of the most powerful elements of functional programming. Languages like haskell do it well. But to be more practical, it's better to be able to pick which parameter to fix with a defined value.
+
+```typr
+# Create a function
+let add <- fn(a: int, b: int): int {
+	a + b
+};
+
+# Create other function from it
+# by fixing some parameters
+let add_b <- \add(a = 10);
+let add_a <- \add(b = 10);
+
+# All can be used
+add(3, 5);
+add_b(4);
+add_a(2);
+```
 
 ---
 
@@ -6189,216 +6719,22 @@ Use `==` for equality testing. A single `=` is only valid in named fields, top-l
 
 A single-letter PascalCase alias (e.g., `type A <- int;`) is not parseable. Use at least 2 characters (e.g., `type Ab <- int;`).
 
----
+### Alias a type as soon as it's used in a function's first parameter
 
-## The beauty of syntax
-
-Even though `TypR` is based on `R`, it has some quirks that make it a bit different from its counterpart. Some may look negative but others are just beautiful (my own perspective).
-
-### The little down side
-
-The `;` is now mandatory so people can have a better syntax. It can look painful at the beginning but people will be able to put it as a reflex like the `.` at the end of a sentence written in human language. 
-
-There is no more `.` in the naming convention.
-People could no more use `.` in the name of their types or functions. If you want to reuse existing R function that use `.` you can just replace it with `__`
-
-```typr noplayground
-# not allowed
-data.frame(...) 
-
-# works and call the native `data.frame`
-data__frame(...) 
-```
-
-### Booleans!
-
-Now `true` and `false` are admitted boolean notations. Of course `TRUE` and `FALSE` still exist with `T` and `F`.
+An inline structural type (`list{...}` or `:{...}`) that appears as a function's **first**
+parameter should be given a `type` alias, even if it's only used once. It reads better at the
+call site, names the generated R constructor/validator (`as.T`/`validate_T`) instead of leaving
+it anonymous, and lets UFCS calls (`point.add(other)`) read like a method on a real type instead
+of on a shape:
 
 ```typr
-# all valid
-print(TRUE);
-print(T);
-print(true);
+# Avoid
+let add <- fn(point: list{val: int, name: char}, other: int): int { point$val + other };
 
-# all valid
-print(FALSE);
-print(F);
-print(false);
+# Prefer
+type Point <- list{val: int, name: char};
+let add <- fn(point: Point, other: int): int { point$val + other };
 ```
 
-### Better pipelines
-
-I love the fact that R has a pipeline syntax. Unfortunately it's not as elegant as we want. A pipeline within R generally looks like this:
-
-```r
-data |> f1() |>
-	f2() |>
-	f3() |>
-	f4() |>
-	f5()
-```
-
-With TypR the elegance takes place now one can build more beautiful pipelines like this:
-
-```typr
-# --- setup ---
-let data <- 1;
-let f1 <- fn(x: int): int { x + 1 };
-let f2 <- fn(x: int): int { x + 2 };
-let f3 <- fn(x: int): int { x + 3 };
-let f4 <- fn(x: int): int { x + 4 };
-let f5 <- fn(x: int): int { x + 5 };
-# ---------------
-
-data 
-	|> f1()
-	|> f2()
-	|> f3()
-	|> f4()
-	|> f5();
-```
-
-It does exactly the same thing. The difference is the elegance and the readability. 
-
-### Array notation
-
-One key point of TypR is its built-in vector orientation. It was an interesting challenge to build a type system that implements this design (see [vectorization by design](/docs/philosophy/vectorization_by_design) for more details).
-
-To build a vector in R, you just have to use:
-
-```r
-c(1, 2, 3)
-```
-
-With TypR we now have the array notation `[]` to build vectors. 
-
-```typr
-[1, 2, 3]
-```
-
-Compared to `c()`, one can only put side by side elements of the same type without type coercion. I think it makes things more elegant since we have an expected behavior powered with type checking.
-
-### Uniform function call
-
-For those who have the nostalgia of the OOP notation. We have the uniform function call.
-
-```typr
-# --- setup ---
-let data <- 1;
-let f1 <- fn(x: int): int { x + 1 };
-let f2 <- fn(x: int): int { x + 2 };
-let f3 <- fn(x: int): int { x + 3 };
-let f4 <- fn(x: int): int { x + 4 };
-let f5 <- fn(x: int): int { x + 5 };
-# ---------------
-
-data 
-	|> f1()
-	|> f2()
-	|> f3()
-	|> f4()
-	|> f5();
-```
-
-```typr
-# --- setup ---
-let data <- 1;
-let f1 <- fn(x: int): int { x + 1 };
-let f2 <- fn(x: int): int { x + 2 };
-let f3 <- fn(x: int): int { x + 3 };
-let f4 <- fn(x: int): int { x + 4 };
-let f5 <- fn(x: int): int { x + 5 };
-# ---------------
-
-data 
-	.f1()
-	.f2()
-	.f3()
-	.f4()
-	.f5();
-```
-
-For some, it's simpler and more ergonomic. It goes along with the philosophy of TypR since each function will become an R S3 method by default (so it is still OOP).
-
-### Beautiful Type Constructor
-
-With TypR, one can have better distinction with the help of constructors.
-
-```r
-# classic list constructor in R
-list(
-	a = 8L, 
-	b = 12
-)
-```
-
-We still keep the original syntax but we had another syntax.
-
-```r
-# classic list constructor in TypR
-:{
-	a = 8L, 
-	b = 12
-}
-```
-
-In R, lists are the equivalent of records in other languages.
-
-One can create some personalized lists within the code with the help of a custom list type. You define an alias that targets a list type and you can use this alias to build other types.
-
-```typr
-# Define an alias other a list type
-type Person <- list {
-	name: char,
-	age: int
-};
-```
-
-```typr
-# You can use the alias as a constructor
-Person:{ 
-	name: "Anna", 
-	age: 28
-};
-```
-
-You can also do the same with union type.
-
-```typr
-# Define a record type
-type Person <- list {
-	name: char,
-	age: int
-};
-
-# Build an union type
-type PersonOrInt <- Person | int;
-
-# A scalar member is written as itself
-let n: PersonOrInt <- 7;
-
-# A record member is built through the qualified constructor
-# (useful for autocompletion)
-let p: PersonOrInt <- PersonOrInt.Person:{name: "Bob", age: 12};
-```
-
-### Partial function application
-
-Currying is one of the most powerful elements of functional programming. Languages like haskell do it well. But to be more practical, it's better to be able to pick which parameter to fix with a defined value.
-
-```typr
-# Create a function
-let add <- fn(a: int, b: int): int {
-	a + b
-};
-
-# Create other function from it
-# by fixing some parameters
-let add_b <- \add(a = 10);
-let add_a <- \add(b = 10);
-
-# All can be used
-add(3, 5);
-add_b(4);
-add_a(2);
-```
+Once a shape has an alias, reuse it for every other function whose first parameter has that
+same shape rather than repeating the inline structural type.

@@ -71,6 +71,74 @@ This pattern is powerful for building extensible libraries where users can plug 
 
 ---
 
+## Several parameters of the same interface: `I@Id`
+
+A bare interface name stands for **one** hidden type variable per interface. Two `Lovable`
+parameters therefore share the same concrete type:
+
+```typr noplayground
+# --- setup ---
+type Lovable <- interface { love: (Self) -> int };
+type Cat <- list { name: char };
+type Dog <- list { age: int };
+let love <- fn(c: Cat): int { 1 };
+let love <- fn(d: Dog): int { 2 };
+let cat <- Cat:{ name = "tom" };
+let dog <- Dog:{ age = 3 };
+# -------------
+
+let cmp <- fn(a: Lovable, b: Lovable): bool { a.love() == b.love() };
+cmp(cat, dog);   # rejected: a and b must have the same type
+```
+
+To let the two parameters have **different** concrete types, name the variables with a suffix
+`@Id` (one uppercase letter, glued to the interface name):
+
+```typr
+# --- setup ---
+type Lovable <- interface { love: (Self) -> int };
+type Cat <- list { name: char };
+type Dog <- list { age: int };
+let love <- fn(c: Cat): int { 1 };
+let love <- fn(d: Dog): int { 2 };
+let cat <- Cat:{ name = "tom" };
+let dog <- Dog:{ age = 3 };
+# -------------
+
+let cmp <- fn(a: Lovable@A, b: Lovable@B): bool { a.love() == b.love() };
+cmp(cat, dog);
+```
+
+The identifier also ties the return type to a parameter. Here the result is the type of `b`, not of `a`:
+
+```typr noplayground
+# --- setup, from the previous block ---
+type Lovable <- interface { love: (Self) -> int };
+type Cat <- list { name: char };
+type Dog <- list { age: int };
+let love <- fn(c: Cat): int { 1 };
+let love <- fn(d: Dog): int { 2 };
+let cat <- Cat:{ name = "tom" };
+let dog <- Dog:{ age = 3 };
+# --------------------------------------
+
+let second <- fn(a: Lovable@A, b: Lovable@B): Lovable@B { b };
+let d: Dog <- second(cat, dog);
+```
+
+The same identifier used twice means the same type: `fn(a: Lovable@X, b: Lovable@X)` called with a `Cat`
+and a `Dog` is an error. `Lovable@_` is a fresh variable at each occurrence.
+
+The rules, in short:
+
+- `@Id` is written right after the interface name, with no space. `Lovable @A` and `Lovable@Self` are syntax errors (S018).
+- One identifier carries one bound: `Lovable@A` with `Printable@A` is an error (T047).
+- An identifier cannot also be a free generic of the signature (`fn(a: T, b: Lovable@T)`, T048).
+- An identifier that appears only in the return type has nothing to be bound to (T017).
+- The generated R does not change: the S3 dispatch uses the interface name, never the identifier.
+
+---
+
 ## Intersection of interfaces
 
 ```typr

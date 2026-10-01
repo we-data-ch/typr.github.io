@@ -180,7 +180,7 @@ let get_info <- fn(p: Person): char {
 
 By default, untyped R functions accept `Any` and return `Empty`, which means the compiler can't verify your usage. The `@` annotation fixes this by declaring the expected types:
 
-```typr
+```typr noplayground
 # Without signature: toupper takes Any, returns Empty
 toupper("Hi"); # works, but no type checking
 

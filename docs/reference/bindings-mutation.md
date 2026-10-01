@@ -33,7 +33,7 @@ Destructuring is desugared into a temporary variable + positional access via dot
 
 ## Reassignment & mutation
 
-```typr
+```typr noplayground
 # --- setup ---
 let x <- 0;
 let f <- fn(a: int): int { a + 1 };

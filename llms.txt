@@ -131,7 +131,7 @@ Every page is listed below. Fetch a page's `.md` URL to get its full Markdown so
 - [Connect an AI assistant via MCP](https://we-data-ch.github.io/typr.github.io/docs/howto/mcp-server.md): Give Claude Code, Claude Desktop, Cursor or any MCP client direct access to the TypR compiler, so it checks its own generated code instead of guess...
 - [Type Shiny apps](https://we-data-ch.github.io/typr.github.io/docs/howto/shiny-integration.md): Type reactive values and modules in a Shiny app built with TypR.
 - [Reference](https://we-data-ch.github.io/typr.github.io/docs/reference/intro.md): How the reference is organised, and what to read to understand the type system and the main language constructs.
-- [Installation](https://we-data-ch.github.io/typr.github.io/docs/reference/installation.md): Install the TypR compiler as a complement to an existing R installation, and verify it works.
+- [Installation](https://we-data-ch.github.io/typr.github.io/docs/reference/installation.md): Install the TypR compiler with one command on Linux, macOS or Windows, and verify it works.
 - [Editor Setup](https://we-data-ch.github.io/typr.github.io/docs/reference/editor-setup.md): Set up TypR in VS Code, RStudio, Positron, or Vim/Neovim, all driven by the typr CLI and the typr lsp language server.
 - [Lexicon & Literals](https://we-data-ch.github.io/typr.github.io/docs/reference/lexicon.md): The fundamental tokens and literal types of TypR.
 - [Bindings & Mutation](https://we-data-ch.github.io/typr.github.io/docs/reference/bindings-mutation.md): How variables are declared, destructured, and reassigned in TypR.
@@ -148,10 +148,10 @@ Every page is listed below. Fetch a page's `.md` URL to get its full Markdown so
 - [TypR vs R — What Really Changes](https://we-data-ch.github.io/typr.github.io/docs/reference/cheatsheet.md): A side-by-side comparison of R and TypR.
 - [Compatibility with R](https://we-data-ch.github.io/typr.github.io/docs/reference/r-typr.md): Why TypR is a companion to R rather than a replacement, and how a TypR package stays an ordinary R package.
 - [Philosophy](https://we-data-ch.github.io/typr.github.io/docs/philosophy/intro.md): Freedom versus safety, and where TypR's gradual typing sits between R and a strict language.
+- [The beauty of syntax](https://we-data-ch.github.io/typr.github.io/docs/philosophy/beautiful_syntax.md): The syntax choices that set TypR apart from R, and the reasoning behind each of them.
 - [Why this type system](https://we-data-ch.github.io/typr.github.io/docs/philosophy/type-system-design.md): Why the type system is shaped the way it is: keeping R's flexibility while taming its fragility.
 - [Vectorization by design](https://we-data-ch.github.io/typr.github.io/docs/philosophy/vectorization_by_design.md): Why R's vectorization stops at custom types, and how TypR's lifting-based vectorization goes further.
 - [Design Proposals](https://we-data-ch.github.io/typr.github.io/docs/philosophy/design-proposals.md): How language changes are decided in TypR: the RFC process, where proposals live, and what makes one convincing.
 - [Generics & Kind Sigils](https://we-data-ch.github.io/typr.github.io/docs/concepts/generics-kind.md): Generic type parameters and the kind sigils that power TypR's type system.
 - [Type Constructors & Aliases](https://we-data-ch.github.io/typr.github.io/docs/concepts/type-constructors.md): Defining new types with type, opaque, and typeconstructor.
 - [Known Pitfalls](https://we-data-ch.github.io/typr.github.io/docs/concepts/known-pitfalls.md): Common pitfalls and ambiguities in the TypR parser.
-- [The beauty of syntax](https://we-data-ch.github.io/typr.github.io/docs/philosophy/beautiful_syntax.md): The syntax choices that set TypR apart from R, and the reasoning behind each of them.

@@ -32,6 +32,10 @@ let y <- 42         # tolerated, warning emitted
 
 Literals can also appear as **types** (singleton types): `3`, `3.14`, `true`, `"chat"` are valid types, more precise than `int`/`num`/`bool`/`char`.
 
+:::caution
+`na`/`NA` and `null`/`NULL` are **not** literal types. The type for missing values is `na` (not `NA`); `NA` is only the R spelling of the `na` constant. Likewise, `null` is the type, and `NULL` is its R spelling.
+:::
+
 ---
 
 ## Identifiers
@@ -171,6 +175,12 @@ in this list is not a keyword: it is an ordinary identifier. See
 | `seq[...]` | Sequence literal. The range sugar `1:10` desugars to the R `seq(1, 10, 1)`. |
 | `Class(...)` | Type denoting an existing R class: `Class("data.frame", "tbl")`. |
 | `library(...)` | Declares an R package dependency, as in R. |
+
+### Type refinements
+
+| Form | Meaning |
+|---|---|
+| `length(n)` | Refinement, only in a type: `[int] & length(5)` is a vector of exactly 5 elements. Also takes a range: `length(> 0)`. Glued to `(<digit>` or `(<comparison>` — `length(x)` stays R's function. |
 
 ### Kind sigils
 

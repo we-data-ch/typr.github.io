@@ -18,6 +18,16 @@ module Math {
 
 A module compiles to an R environment. Members without `@pub` remain invisible from outside (except in `build --test` mode via `@testable`, where they are exposed as `M$.test_name`).
 
+You can see this boundary directly in the playground's block graph view: only `pi_approx` and `Radians` show up as the module's outputs, while `pi` stays visible only once you step inside.
+
+```typr graph
+module Math {
+    let pi <- 3.14159;
+    @pub let pi_approx <- 3.14;
+    @pub opaque Radians <- num;
+};
+```
+
 ---
 
 ## Importing from modules
