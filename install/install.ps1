@@ -1,43 +1,42 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 <#
 .SYNOPSIS
-    TypR — installation en une commande (Windows).
+    TypR - one-command installation (Windows).
 
 .DESCRIPTION
     powershell -c "irm https://we-data-ch.github.io/typr.github.io/install/install.ps1 | iex"
 
-    Le format est .zip et non .tar.gz : Expand-Archive est le seul outil
-    d'extraction présent sur un Windows sans rien installer, alors qu'il
-    faudrait tar.exe (livré à partir de Windows 10 1803, absent de Windows 7/8.1
-    et de Windows Server 2012).
+    The format is .zip rather than .tar.gz: Expand-Archive is the only
+    extraction tool present on a Windows box with nothing installed, whereas
+    tar.exe would be needed (shipped starting with Windows 10 1803, absent
+    from Windows 7/8.1 and Windows Server 2012).
 
-    Cible %LOCALAPPDATA%\Programs\typr : convention utilisateur moderne, aucun
-    droit administrateur. Le PATH utilisateur est mis à jour par registre, donc
-    il ne prend effet qu'au prochain terminal — le script le dit, et met
-    également à jour $env:Path de la session courante pour que `typr --version`
-    fonctionne immédiatement.
+    Target is %LOCALAPPDATA%\Programs\typr: modern per-user convention, no
+    administrator rights required. The user PATH is updated through the
+    registry, so it only takes effect in the next terminal - the script says
+    so, and also updates $env:Path for the current session so that
+    `typr --version` works immediately.
 
-    Le binaire n'est pas signé. Un fichier posé par Expand-Archive ne porte pas
-    l'attribut Mark-of-the-Web (seuls les navigateurs et les zip téléchargés en
-    le posent) : pas de SmartScreen, contrairement à un exécutable téléchargé
-    puis double-cliqué.
+    The binary is not signed. A file extracted by Expand-Archive does not carry
+    the Mark-of-the-Web attribute (only browsers and zips downloaded with it do):
+    no SmartScreen, unlike an executable that was downloaded then double-clicked.
 
 .PARAMETER Version
-    Tag à installer (ex. v0.5.12). Par défaut, la dernière version stable.
+    Tag to install (e.g. v0.5.12). Defaults to the latest stable release.
 
 .PARAMETER Channel
-    stable (défaut) ou beta.
+    stable (default) or beta.
 
 .PARAMETER DryRun
-    Affiche ce qui serait fait, ne télécharge rien.
+    Shows what would be done, downloads nothing.
 
 .PARAMETER Gnu
-    Sans effet sur Windows ; accepté pour que la même ligne de commande
-    fonctionne sur les deux scripts.
+    No effect on Windows; accepted so the same command line works with both
+    scripts.
 
 .NOTES
-    Rien n'est écrit hors de %LOCALAPPDATA% et aucun privilège administrateur
-    n'est requis.
+    Nothing is written outside %LOCALAPPDATA% and no administrator privilege
+    is required.
 #>
 
 [CmdletBinding()]
@@ -52,12 +51,17 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# On Windows PowerShell 5.1, the System.Net.Http assembly is not loaded by
+# default (it is on PowerShell 7): without this Add-Type, the first use of
+# [System.Net.Http.HttpClient] fails with "type not found".
+Add-Type -AssemblyName System.Net.Http
+
 # ---------------------------------------------------------------------------
 # Configuration
 #
-# Les variables d'environnement ci-dessous sont surchargées par les tests, qui
-# servent une release locale : sans cela, tester le refus d'un SHA falsifié
-# supposerait de falsifier une vraie release publiée.
+# The environment variables below are overridden by the tests, which serve a
+# local release: without this, testing the rejection of a forged SHA would
+# require forging a real published release.
 # ---------------------------------------------------------------------------
 $Repo  = if ($env:TYPR_INSTALL_REPO)  { $env:TYPR_INSTALL_REPO }  else { 'we-data-ch/typr' }
 $Origin = if ($env:TYPR_INSTALL_ORIGIN) { $env:TYPR_INSTALL_ORIGIN } else { 'https://github.com' }
@@ -69,15 +73,15 @@ $ReleasesFeed = "$Origin/$Repo/releases.atom"
 
 $Verify = if ($env:TYPR_INSTALL_VERIFY) { $env:TYPR_INSTALL_VERIFY } else { '1' }
 if ($Verify -notin @('0', '1')) {
-    Write-Error "TYPR_INSTALL_VERIFY doit valoir 0 ou 1 (reçu : '$Verify')."
+    Write-Error "TYPR_INSTALL_VERIFY must be 0 or 1 (got: '$Verify')."
     exit 2
 }
 
 $script:TempDir = $null
 
-# `exit` ne passe pas par le `trap`, qui ne voit que les erreurs : le dossier
-# temporaire est donc nettoyé explicitement ici. Sans cela, chaque échec laissait
-# une archive à moitié téléchargée dans %TEMP%.
+# `exit` does not go through the `trap`, which only sees errors: the temporary
+# directory must therefore be cleaned up explicitly here. Without this, every
+# failure left a half-downloaded archive in %TEMP%.
 function Stop-Install {
     param([string] $Message, [int] $Code = 1)
     Remove-TempDir
@@ -85,11 +89,11 @@ function Stop-Install {
     exit $Code
 }
 
-function Step { param([string] $Message) Write-Host "→ $Message" }
+function Step { param([string] $Message) Write-Host "-> $Message" }
 function Note { param([string] $Message) Write-Host "  $Message" }
 function Warn {
     param([string] $Message)
-    Write-Host "typr-install : attention : $Message" -ForegroundColor Yellow
+    Write-Host "typr-install : warning: $Message" -ForegroundColor Yellow
 }
 
 function Remove-TempDir {
@@ -98,8 +102,8 @@ function Remove-TempDir {
     }
 }
 
-# Nettoyage du dossier temporaire en cas d'erreur, avec un code de retour non
-# nul : sous `irm | iex`, un `exit 0` ferait croire à une installation réussie.
+# Cleanup of the temporary directory on error, with a non-zero return code:
+# under `irm | iex`, an `exit 0` would make a failed install look successful.
 trap {
     Remove-TempDir
     Write-Error $_
@@ -109,11 +113,11 @@ trap {
 # ---------------------------------------------------------------------------
 # HTTP
 #
-# `HttpClient` plutôt que `Invoke-WebRequest` : la classe .NET Framework est
-# présente à l'identique dans Windows PowerShell 5.1 et PowerShell 7, alors que
-# les paramètres des cmdlets ont divergé entre les deux — `-UseBasicParsing`
-# n'a pas le même sens partout, et `-MaximumRedirection 0` se comporte
-# différemment, ou n'existe pas. Ici il n'y a aucun drapeau à se tromper.
+# `HttpClient` rather than `Invoke-WebRequest`: the .NET Framework class is
+# present identically in Windows PowerShell 5.1 and PowerShell 7, whereas the
+# cmdlet parameters diverged between the two - `-UseBasicParsing` does not
+# mean the same thing everywhere, and `-MaximumRedirection 0` behaves
+# differently, or does not exist. Here there is no flag to get wrong.
 function New-Client {
     param([bool] $AllowRedirect = $true)
     $handler = [System.Net.Http.HttpClientHandler]::new()
@@ -126,9 +130,9 @@ function New-Client {
 function Get-RedirectLocation {
     param([string] $Url)
 
-    # On veut l'en-tête de redirection, pas la destination : c'est lui qui porte
-    # le tag, et `/releases/latest` exclut les prereleases — exactement la
-    # sémantique du canal stable, sans dépendre de jq ni de l'API GitHub.
+    # We want the redirect header, not the destination: that is what carries
+    # the tag, and `/releases/latest` excludes prereleases - exactly the
+    # stable-channel semantics, without depending on jq or the GitHub API.
     $client = New-Client -AllowRedirect $false
     try {
         $request = [System.Net.Http.HttpRequestMessage]::new(
@@ -161,24 +165,24 @@ function Get-String {
     }
 }
 
-# Renvoie $false au lieu d'appeler Stop-Install : à chaque appelant de dire ce
-# que l'absence du fichier signifie.
+# Returns $false instead of calling Stop-Install: it is up to each caller to
+# say what the absence of the file means.
 function Try-Save-File {
     param([string] $Url, [string] $Path)
 
-    # On écrit dans un fichier temporaire puis on renomme : si le téléchargement
-    # est interrompu, il ne reste pas un fichier à moitié écrit sous le nom
-    # définitif — l'archive est vérifiée avant d'être installée de toute façon.
+    # We write to a temporary file then rename: if the download is
+    # interrupted, no file is left half-written under the final name - the
+    # archive is verified before being installed anyway.
     $partial = "$Path.part"
     $client = New-Client
     try {
         $response = $client.GetAsync($Url).GetAwaiter().GetResult()
         $response.EnsureSuccessStatusCode() | Out-Null
 
-        # `$source` et non `$input` : ce dernier est une variable automatique
-        # de PowerShell (l'ancien `$input` du pipeline), qui peut être réécrite
-        # par du code tiers chargé avant nous — ou par nous, ce qui ferait lire
-        # un $null à CopyTo et masquerait le téléchargement en « échec ».
+        # `$source` and not `$input`: the latter is a PowerShell automatic
+        # variable (the old `$input` of the pipeline), which can be rewritten
+        # by third-party code loaded before us - or by us, which would make
+        # CopyTo read a $null and mask the download as a "failure".
         $source = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
         $target = [System.IO.File]::Create($partial)
         try { $source.CopyTo($target) }
@@ -187,10 +191,10 @@ function Try-Save-File {
         if (Test-Path -LiteralPath $Path) { Remove-Item -LiteralPath $Path -Force }
         Move-Item -LiteralPath $partial -Destination $Path -Force
 
-        # Explicite, et non implicite : une fonction PowerShell renvoie ce que
-        # son `try` a émis, or un téléchargement réussi n'émet rien. Sans ce
-        # `return`, Try-Save-File rendrait $null — donc falsy — et l'appelant
-        # lirait un succès comme un échec.
+        # Explicit, not implicit: a PowerShell function returns whatever its
+        # `try` emits, and a successful download emits nothing. Without this
+        # `return`, Try-Save-File would return $null - hence falsy - and the
+        # caller would read a success as a failure.
         return $true
     }
     catch {
@@ -208,7 +212,7 @@ function Save-File {
     param([string] $Url, [string] $Path)
 
     if (-not (Try-Save-File $Url $Path)) {
-        Stop-Install "téléchargement échoué : $Url`n  Vérifier le réseau, ou réessayer avec -Version vX.Y.Z."
+        Stop-Install "download failed: $Url`n  Check the network, or retry with -Version vX.Y.Z."
     }
 }
 
@@ -224,18 +228,18 @@ function Resolve-Version {
     if ($Channel -eq 'stable') {
         $location = Get-RedirectLocation $LatestUrl
         if ($location -and $location -match '/tag/(v[^/?#]+)') { return $Matches[1] }
-        Stop-Install "impossible de déterminer la dernière version stable.`n  URL interrogée : $LatestUrl`n  Pour épingler une version : -Version vX.Y.Z"
+        Stop-Install "cannot determine the latest stable version.`n  URL queried: $LatestUrl`n  To pin a version: -Version vX.Y.Z"
     }
 
-    # Le canal beta doit lister les releases et filtrer. Le flux Atom en liste
-    # les dix dernières, prereleases comprises, et se parse sans dépendance.
-    # Les suffixes sont ceux que release.yml marque `prerelease`.
+    # The beta channel must list the releases and filter. The Atom feed lists
+    # the last ten of them, prereleases included, and can be parsed without a
+    # dependency. The suffixes are those that release.yml marks `prerelease`.
     $xml = Get-String $ReleasesFeed
     $tags = [regex]::Matches($xml, 'Repository/\d+/(v[^<]+)') |
             ForEach-Object { $_.Groups[1].Value }
     $prerelease = $tags | Where-Object { $_ -match '-(alpha|beta|rc)[.0-9]' } | Select-Object -First 1
     if (-not $prerelease) {
-        Stop-Install "aucune prerelease trouvée sur $ReleasesFeed.`n  Le flux Atom ne liste que les dix dernières releases : si la dernière`n  prerelease est plus ancienne, épinglez-la avec -Channel beta -Version vX.Y.Z"
+        Stop-Install "no prerelease found on $ReleasesFeed.`n  The Atom feed only lists the last ten releases: if the last`n  prerelease is older, pin it with -Channel beta -Version vX.Y.Z"
     }
     return $prerelease
 }
@@ -243,20 +247,20 @@ function Resolve-Version {
 function Assert-Tag {
     param([string] $Tag)
     if ($Tag -notmatch '^v[0-9]') {
-        Stop-Install "tag illisible : '$Tag' (attendu : vX.Y.Z)." 2
+        Stop-Install "unreadable tag: '$Tag' (expected: vX.Y.Z)." 2
     }
 }
 
 function Resolve-Target {
-    # Surcharge de test. `PROCESSOR_ARCHITECTURE` n'existe que sous Windows, donc
-    # sans cette variable le chemin download → SHA → extraction → PATH ne peut
-    # être exercé que sur un runner Windows. install.sh n'a pas le même besoin :
-    # `uname -m` existe partout où le script Unix tourne.
+    # Test override. `PROCESSOR_ARCHITECTURE` only exists on Windows, so
+    # without this variable the download -> SHA -> extraction -> PATH path can
+    # only be exercised on a Windows runner. install.sh does not have the same
+    # need: `uname -m` exists everywhere the Unix script runs.
     if ($env:TYPR_INSTALL_TARGET) { return $env:TYPR_INSTALL_TARGET }
 
-    # Sous WOW64 (PowerShell 32 bits sur Windows 64), PROCESSOR_ARCHITECTURE
-    # vaut x86 et PROCESSOR_ARCHITEW6432 porte le vrai. Sur ARM64, on prend le
-    # binaire ARM : Windows l'émule de toute façon s'il ne l'exécute pas.
+    # Under WOW64 (32-bit PowerShell on 64-bit Windows), PROCESSOR_ARCHITECTURE
+    # is x86 and PROCESSOR_ARCHITEW6432 carries the real value. On ARM64, we
+    # take the ARM binary: Windows emulates it anyway if it cannot run it.
     $arch = $env:PROCESSOR_ARCHITECTURE
     if ($arch -eq 'x86' -and $env:PROCESSOR_ARCHITEW6432) { $arch = $env:PROCESSOR_ARCHITEW6432 }
 
@@ -264,18 +268,18 @@ function Resolve-Target {
         'AMD64' { return 'x86_64-pc-windows-msvc' }
         'ARM64' { return 'aarch64-pc-windows-msvc' }
         'x86'   {
-            Stop-Install "TypR ne publie pas de binaire 32 bits (x86).`n  Un Windows 64 bits a normalement PROCESSOR_ARCHITECTURE=AMD64 : si ce`n  n'est pas le cas, le PowerShell ouvert est 32 bits — fermez-le et rouvrez-le."
+            Stop-Install "TypR does not publish a 32-bit binary (x86).`n  A 64-bit Windows normally has PROCESSOR_ARCHITECTURE=AMD64: if not,`n  the open PowerShell is 32-bit - close it and reopen it."
         }
         default {
-            Stop-Install "architecture non supportée : '$arch'.`n  TypR publie des binaires x86_64 et aarch64 pour Windows."
+            Stop-Install "unsupported architecture: '$arch'.`n  TypR publishes x86_64 and aarch64 binaries for Windows."
         }
     }
 }
 
 function Get-OsName {
     if ($env:OS) { return $env:OS }
-    # `$env:OS` n'existe que sous Windows ; sous PowerShell 7 sur Linux/macOS
-    # (où le script est testé), on retombe sur la description .NET.
+    # `$env:OS` only exists on Windows; under PowerShell 7 on Linux/macOS
+    # (where the script is tested), we fall back on the .NET description.
     if ([System.Runtime.InteropServices.RuntimeInformation]) {
         return [System.Runtime.InteropServices.RuntimeInformation]::OSDescription
     }
@@ -285,58 +289,57 @@ function Get-OsName {
 function Resolve-InstallDir {
     if ($env:TYPR_INSTALL_DIR) { return $env:TYPR_INSTALL_DIR }
     if ($env:LOCALAPPDATA)    { return (Join-Path $env:LOCALAPPDATA 'Programs\typr') }
-    Stop-Install "LOCALAPPDATA n'est pas défini : impossible de savoir où installer.`n  Définissez TYPR_INSTALL_DIR."
+    Stop-Install "LOCALAPPDATA is not defined: cannot determine where to install.`n  Set TYPR_INSTALL_DIR."
 }
 
 # ---------------------------------------------------------------------------
 # SHA-256
 # ---------------------------------------------------------------------------
-# `Get-FileHash` est présent depuis PowerShell 4.0 : pas de module à charger,
-# contrairement à `certutil -hashfile` qui n'est pas garanti sur une image
-# serveur minimale.
+# `Get-FileHash` is available since PowerShell 4.0: no module to load, unlike
+# `certutil -hashfile` which is not guaranteed on a minimal server image.
 #
-# On isole la seule ligne de checksums.txt qui concerne notre archive, puis on
-# compare les empreintes. `sha256sum -c` échouerait ici — l'équivalent Windows
-# essaierait de vérifier les sept autres archives de la release, non
-# téléchargées, en sortant un code d'erreur alors que la nôtre est valide.
+# We isolate the only checksums.txt line concerning our archive, then compare
+# the digests. `sha256sum -c` would fail here - the Windows equivalent would
+# try to verify the seven other archives of the release, not downloaded, and
+# exit with an error although ours is valid.
 function Test-Checksum {
     param([string] $Path, [string] $Name)
 
-    Step 'Vérification du SHA-256'
+    Step 'SHA-256 verification'
 
     $sumsPath = Join-Path $script:TempDir 'checksums.txt'
     $sumsUrl = "$DownloadBase/$script:Tag/checksums.txt"
-    # `Save-File` dirait « téléchargement échoué », ce qui ne dit pas *ce qui*
-    # manque. Ici la réponse est toujours la même — checksums.txt est introuvable
-    # ou le réseau est coupé — et l'utilisateur a besoin de la seconde phrase
-    # pour distinguer une release mal publiée d'un pare-feu.
+    # `Save-File` would say "download failed", which does not say *what* is
+    # missing. Here the answer is always the same - checksums.txt is missing
+    # or the network is down - and the user needs the second sentence to
+    # distinguish a badly published release from a firewall.
     if (-not (Try-Save-File $sumsUrl $sumsPath)) {
-        Stop-Install "checksums.txt introuvable pour $($script:Tag).`n  URL : $sumsUrl`n  Le fichier liste les huit archives de la release ; son absence signifie`n  que la release est incomplète. Vérifier aussi le réseau."
+        Stop-Install "checksums.txt not found for $($script:Tag).`n  URL: $sumsUrl`n  The file lists the eight archives of the release; its absence means`n  the release is incomplete. Also check the network."
     }
 
-    # On filtre sur le NOM, pas sur le couple SHA + nom. Filtrer sur les deux
-    # confondrait deux diagnostics très différents : « ce fichier ne parle pas
-    # de notre archive » et « la ligne existe mais son empreinte est illisible ».
-    # Le second est un fichier corrompu, le premier une release mal publiée.
-    # install.sh procède dans le même ordre, pour que les deux scripts nomment la
-    # même cause de la même façon.
+    # We filter on the NAME, not on the SHA + name pair. Filtering on both
+    # would confuse two very different diagnoses: "this file does not mention
+    # our archive" and "the line exists but its digest is unreadable". The
+    # second is a corrupted file, the first a badly published release.
+    # install.sh proceeds in the same order, so that both scripts name the
+    # same cause in the same way.
     $line = Get-Content -LiteralPath $sumsPath |
             Where-Object { $_ -match ('\s+\*?' + [regex]::Escape($Name) + '$') } |
             Select-Object -First 1
 
     if (-not $line) {
         $received = (Get-Content -LiteralPath $sumsPath) -join "`n"
-        Stop-Install "checksums.txt de $($script:Tag) ne contient aucune ligne pour $Name.`n  Fichier reçu :`n$received"
+        Stop-Install "checksums.txt of $($script:Tag) contains no line for $Name.`n  File received:`n$received"
     }
 
     $expected = ($line.Trim() -split '\s+')[0]
     if ($expected -notmatch '^[0-9a-f]{64}$') {
-        Stop-Install "ligne malformée dans checksums.txt pour $Name :`n  $line`n  Un SHA-256 fait 64 caractères hexadécimaux ; trouvé '$expected'."
+        Stop-Install "malformed line in checksums.txt for ${Name}:`n  $line`n  A SHA-256 is 64 hexadecimal characters; found '$expected'."
     }
 
     $actual = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($expected -ne $actual) {
-        Stop-Install "SHA-256 falsifié pour $Name.`n  attendu $expected`n  obtenu   $actual`n  L'archive a été supprimée ; rien n'est installé."
+        Stop-Install "forged SHA-256 for $Name.`n  expected $expected`n  got      $actual`n  The archive was deleted; nothing was installed."
     }
 
     Note "SHA-256 correct ($actual)"
@@ -358,10 +361,9 @@ function Test-OnPath {
     return $false
 }
 
-# Le PATH utilisateur est écrit dans le registre : il ne sera pris en compte
-# qu'au prochain démarrage de terminal, ce qu'il faut dire explicitement. On
-# met aussi à jour $env:Path de la session courante pour que `typr --version`
-# fonctionne sans attendre.
+# The user PATH is written to the registry: it will only be taken into account
+# at the next terminal start, which must be said explicitly. We also update
+# $env:Path of the current session so that `typr --version` works right away.
 function Add-ToUserPath {
     param([string] $Dir)
 
@@ -381,10 +383,10 @@ function Add-ToUserPath {
         [Environment]::SetEnvironmentVariable('Path', $new, 'User')
     }
     catch {
-        # Un PATH verrouillé par une stratégie de groupe refuse l'écriture. Ce n'est pas
-        # fatal : le binaire est installé, seul son accès automatisé manque.
-        Warn "le PATH utilisateur n'a pas pu être écrit : $($_.Exception.Message)"
-        Warn "ajoutez manuellement : `$env:Path += ';' + '$Dir'"
+        # A PATH locked by a group policy refuses the write. This is not
+        # fatal: the binary is installed, only its automated access is missing.
+        Warn "the user PATH could not be written: $($_.Exception.Message)"
+        Warn "add it manually: `$env:Path += ';' + '$Dir'"
         return $false
     }
     return $true
@@ -393,25 +395,26 @@ function Add-ToUserPath {
 function Test-BinaryStart {
     param([string] $Path)
 
-    Step 'Vérification de l''installation'
+    Step 'Installation check'
     $output = & $Path '--version' 2>&1
     if ($LASTEXITCODE -eq 0) {
         $output | ForEach-Object { Note "$_" }
         return
     }
 
-    # Le cas mesuré en septembre 2026 : l'installation se termine sans erreur,
-    # puis `typr --version` échoue. Le dire ici vaut mieux qu'un ticket.
+    # The case measured in September 2026: the installation ends without
+    # error, then `typr --version` fails. Saying it here is better than a
+    # support ticket.
     Write-Host ''
-    Warn 'le binaire est installé mais ne démarre pas.'
-    Note "Message du binaire : $output"
-    Note 'Si celui-ci évoque une DLL introuvable (VCRUNTIME140.dll, ucrtbase.dll),'
-    Note "l'artefact n'a pas été lié statiquement : lire $Docs/install pour le dépannage."
+    Warn 'the binary is installed but does not start.'
+    Note "Binary message: $output"
+    Note 'If it mentions a missing DLL (VCRUNTIME140.dll, ucrtbase.dll),'
+    Note "the artifact was not statically linked: read $Docs/install for troubleshooting."
     exit 1
 }
 
 # ---------------------------------------------------------------------------
-# Déroulement
+# Sequence
 # ---------------------------------------------------------------------------
 $script:Tag = Resolve-Version
 Assert-Tag $script:Tag
@@ -422,15 +425,15 @@ $artifact = "typr-$($script:Tag)-$target.zip"
 $url = "$DownloadBase/$($script:Tag)/$artifact"
 
 Step "TypR $($script:Tag)"
-Note "système   : $(Get-OsName) ($env:PROCESSOR_ARCHITECTURE)"
-Note "cible     : $target"
-Note "dossier   : $installDir"
+Note "system    : $(Get-OsName) ($env:PROCESSOR_ARCHITECTURE)"
+Note "target    : $target"
+Note "directory : $installDir"
 
-if ($Verify -eq '0') { Warn 'vérification SHA-256 désactivée (TYPR_INSTALL_VERIFY=0).' }
+if ($Verify -eq '0') { Warn 'SHA-256 verification disabled (TYPR_INSTALL_VERIFY=0).' }
 
 if ($DryRun) {
-    Step 'Simulation — rien ne sera téléchargé ni écrit'
-    Note "artefact  : $artifact"
+    Step 'Dry run - nothing will be downloaded or written'
+    Note "artifact  : $artifact"
     Note "url       : $url"
     Note "sha256    : $DownloadBase/$($script:Tag)/checksums.txt"
     exit 0
@@ -440,13 +443,13 @@ if (-not (Test-Path -LiteralPath $installDir)) {
     New-Item -ItemType Directory -Path $installDir -Force | Out-Null
 }
 if (-not (Test-Path -LiteralPath $installDir)) {
-    Stop-Install "impossible de créer $installDir."
+    Stop-Install "cannot create $installDir."
 }
 
 $script:TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("typr-install-" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $script:TempDir -Force | Out-Null
 
-Step 'Téléchargement'
+Step 'Download'
 $archivePath = Join-Path $script:TempDir $artifact
 Save-File $url $archivePath
 
@@ -454,8 +457,8 @@ if ($Verify -ne '0') {
     Test-Checksum $archivePath $artifact
 }
 else {
-    Step 'Vérification du SHA-256'
-    Note 'ignorée.'
+    Step 'SHA-256 verification'
+    Note 'skipped.'
 }
 
 Step 'Extraction'
@@ -465,25 +468,25 @@ try {
     Expand-Archive -LiteralPath $archivePath -DestinationPath $extractDir -Force
 }
 catch {
-    Stop-Install "archive illisible : $artifact`n  $($_.Exception.Message)"
+    Stop-Install "unreadable archive: $artifact`n  $($_.Exception.Message)"
 }
 
 $exePath = Join-Path $extractDir 'typr.exe'
 if (-not (Test-Path -LiteralPath $exePath)) {
-    Stop-Install "l'archive $artifact ne contient aucun binaire 'typr.exe'."
+    Stop-Install "the archive $artifact contains no 'typr.exe' binary."
 }
 
 $targetExe = Join-Path $installDir 'typr.exe'
-# Remove-Item puis Copy-Item plutôt que Move-Item : un binaire en cours
-# d'exécution sous Windows ne peut pas être écrasé, et l'échec serait
-# confondu avec un problème d'écriture. L'opération reste idempotente.
+# Remove-Item then Copy-Item rather than Move-Item: a running binary on
+# Windows cannot be overwritten, and the failure would be confused with a
+# write problem. The operation remains idempotent.
 if (Test-Path -LiteralPath $targetExe) {
     Remove-Item -LiteralPath $targetExe -Force
 }
 Copy-Item -LiteralPath $exePath -Destination $targetExe -Force
 
 Write-Host ''
-Step "TypR $($script:Tag) installé dans $installDir"
+Step "TypR $($script:Tag) installed in $installDir"
 
 if (Test-OnPath $installDir) {
     Test-BinaryStart $targetExe
@@ -491,15 +494,15 @@ if (Test-OnPath $installDir) {
 else {
     if (Add-ToUserPath $installDir) {
         $env:Path = "$installDir$([System.IO.Path]::PathSeparator)$env:Path"
-        Warn "$installDir a été ajouté au PATH utilisateur."
-        Note 'Il ne sera pris en compte qu''au prochain démarrage d''un terminal.'
-        Note 'Celui-ci est à jour : `typr --version` fonctionne dès maintenant.'
+        Warn "$installDir was added to the user PATH."
+        Note 'It will only be taken into account at the next terminal start.'
+        Note 'This one is up to date: `typr --version` works right away.'
     }
     Write-Host ''
-    Note "Essayez d'abord : $targetExe --version"
+    Note "Try first: $targetExe --version"
 }
 
 Remove-TempDir
 
 Write-Host ''
-Note "Documentation : $Docs"
+Note "Documentation: $Docs"
