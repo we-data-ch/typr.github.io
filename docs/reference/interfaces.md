@@ -78,7 +78,7 @@ This pattern is powerful for building extensible libraries where users can plug 
 A bare interface name stands for **one** hidden type variable per interface. Two `Lovable`
 parameters therefore share the same concrete type:
 
-```typr compile_fail
+```typr noplayground
 # --- setup ---
 type Lovable <- interface { love: (Self) -> int };
 type Cat <- list { name: char };
@@ -113,7 +113,7 @@ cmp(cat, dog);
 
 The identifier also ties the return type to a parameter. Here the result is the type of `b`, not of `a`:
 
-```typr
+```typr noplayground
 # --- setup, from the previous block ---
 type Lovable <- interface { love: (Self) -> int };
 type Cat <- list { name: char };

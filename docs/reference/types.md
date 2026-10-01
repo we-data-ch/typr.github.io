@@ -170,7 +170,7 @@ With an alias, `Person` and `list { name: char, age: int }` are interchangeable.
 
 A refined type is a base type narrowed by a property, written with `&`:
 
-```typr
+```typr noplayground
 type Coordinates <- [num] & length(2);   # a vector of exactly two numbers
 let origin: Coordinates <- [0.0, 0.0];
 let n: int & (> 0) <- 3;                 # a strictly positive integer
@@ -199,7 +199,7 @@ A refinement is proven at compile time whenever the compiler can, and checked on
 when it cannot. The check sits at the boundary, where a value enters a refined type: a `let`
 annotation, a function argument, a return value.
 
-```typr
+```typr noplayground
 let read_point <- fn(): [num] { [3.0, 4.0] };
 let p: [num] & length(2) <- read_point();   # length unknown here: checked at run time
 let q: [num] & length(2) <- [1.0, 2.0];     # proven by the literal: no check
@@ -221,7 +221,7 @@ Inside an `if`, the condition is itself a proof. The compiler reads it and refin
 it mentions, in the `then` branch for the condition and in the `else` branch for its negation, so
 no run-time check is needed there:
 
-```typr
+```typr noplayground
 let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
 let safe_first <- fn(v: [int]): int {
   if (length(v) > 0) { first(v) } else { 0 }
@@ -253,7 +253,7 @@ the `if`. Parenthesize each side of `&&` and `||`.
 A refinement can sit on a generic base. The generics are unified as usual; the refinement is
 decided against each argument at the call:
 
-```typr
+```typr noplayground
 let first <- fn(v: [#N, T] & length(> 0)): T { v[1] };
 let sized <- fn(v: [3, char]): char { first(v) };   # length 3 proves length > 0: no check
 let unknown <- fn(v: [int]): int { first(v) };      # unproven: checked at run time

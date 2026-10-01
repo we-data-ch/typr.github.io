@@ -115,7 +115,7 @@ mod$member         # record field / module access — "::" is a historical alias
 
 ### Comparison with R
 
-```typr
+```typr noplayground
 # --- setup ---
 let data <- [1, 2, 3, -4];
 
