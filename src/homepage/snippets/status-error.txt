@@ -1,0 +1,9 @@
+  × Type error: This match doesn't cover every variant
+   ╭─[status.ty:4:3]
+ 3 │ let label <- fn(status: Status): char {
+ 4 │   match status {
+   ·   ▲
+   ·   ╰── Missing variant: Pending
+ 5 │     .Active => "Active",
+   ╰────
+  help: Add an arm for each missing variant, or a catch-all `_ => ...` branch.

@@ -2,8 +2,9 @@
 //
 // Elle raconte une histoire, et l'ordre des sections *est* cette histoire :
 // vos données ont une forme, et elle ne devrait pas vivre dans la tête des gens
-// → voici ce que les types changent au code que vous écrivez déjà → voici les
-// outils → installez TypR.
+// → voici ce que R laisse passer et que le compilateur arrête → voici ce que
+// les types changent au code que vous écrivez déjà → voici les outils →
+// installez TypR.
 //
 // Une section = une question, et une seule. Déplacer une section, c'est
 // déplacer une réponse : le fil se lit du haut vers le bas.
@@ -28,6 +29,7 @@ import clsx from 'clsx';
 import {CodePane} from '@site/src/homepage/Code';
 import {Branch, Hub, Layers, Pipeline} from '@site/src/homepage/Diagram';
 import InstallCommand from '@site/src/homepage/InstallCommand';
+import Pitfalls from '@site/src/homepage/Pitfalls';
 import UseCases from '@site/src/homepage/UseCases';
 import {PLAYGROUND_URL} from '@site/src/playground/url';
 import styles from './index.module.css';
@@ -346,8 +348,19 @@ export default function Home(): ReactNode {
         </div>
       </Section>
 
+      {/* Qu'est-ce que R laisse passer, et que le compilateur arrête ? Les
+          erreurs que R signale tard — ou jamais —, une classe à la fois. */}
+      <Section id="what-r-lets-through">
+        <h2 className={styles.sectionTitle}>What R lets through, TypR stops.</h2>
+        <p className={styles.sectionLead}>
+          Mistakes that R reports late, or never. Each one below is rejected
+          by the compiler before the code runs.
+        </p>
+        <Pitfalls />
+      </Section>
+
       {/* Qu'est-ce que cela change concrètement ? */}
-      <Section id="from-r-to-typr">
+      <Section id="from-r-to-typr" tone="alt">
         <h2 className={styles.sectionTitle}>See R become typed.</h2>
         <p className={styles.sectionLead}>
           Here is that discipline applied to the R code you already write.
@@ -356,7 +369,7 @@ export default function Home(): ReactNode {
       </Section>
 
       {/* Quels outils sont disponibles ? */}
-      <Section id="toolchain" tone="alt">
+      <Section id="toolchain">
         <h2 className={styles.sectionTitle}>One language. One toolchain.</h2>
         <p className={styles.sectionLead}>
           The <code>typr</code> command provides the tools needed to build,

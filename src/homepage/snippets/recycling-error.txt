@@ -1,0 +1,9 @@
+  × Type error: No signature of function 'rescale' matches this call.
+   ╭─[recycling.ty:6:2]
+ 5 │ rescale([5.0, 4.0, 8.0]);
+ 6 │ rescale([5.0, 2.0]);
+   ·  ───┬───
+   ·     ╰── Called with 1 argument(s): ([2, num])
+   ╰────
+  help: 'rescale' exists but none of its signature(s) accepts these arguments:
+            ([3, num]) -> [3, num]

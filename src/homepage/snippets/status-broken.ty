@@ -1,0 +1,8 @@
+type Status <- .Active | .Closed | .Pending;
+
+let label <- fn(status: Status): char {
+  match status {
+    .Active => "Active",
+    .Closed => "Closed",
+  }
+};

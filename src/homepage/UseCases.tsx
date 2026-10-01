@@ -16,12 +16,13 @@ import {CodeComparison, CodePane} from './Code';
 import {Flow} from './Diagram';
 import styles from './useCases.module.css';
 
-interface UseCase {
+export interface UseCase {
   id: string;
   /** Le libellé de l'onglet. */
   tab: string;
-  /** Le logo de l'écosystème associé au cas d'usage — la cible du typage. */
-  img: string;
+  /** Le logo de l'écosystème associé au cas d'usage — la cible du typage.
+   *  Absent quand l'onglet n'est pas lié à un écosystème. */
+  img?: string;
   title: string;
   /** Clés d'extraits : le fichier R, puis son équivalent TypR. */
   before: string;
@@ -103,14 +104,31 @@ const USE_CASES: UseCase[] = [
   },
 ];
 
-export default function UseCases(): ReactNode {
+function TabIcon({src}: {src: string}): ReactNode {
+  return <img className={styles.tabImg} src={useBaseUrl(src)} alt="" loading="lazy" />;
+}
+
+/**
+ * Le sélecteur lui-même, indépendant des cas qu'il présente : `UseCases` lui
+ * donne les quatre écosystèmes, `Pitfalls` les erreurs que R laisse passer.
+ * `idPrefix` garde les `id` ARIA uniques quand la page porte deux sélecteurs.
+ */
+export function UseCaseTabs({
+  cases,
+  idPrefix,
+  ariaLabel,
+}: {
+  cases: UseCase[];
+  idPrefix: string;
+  ariaLabel: string;
+}): ReactNode {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Flèches, Origine et Fin : ce qu'on attend d'un `tablist`, et ce sans quoi
   // le sélecteur n'est utilisable qu'à la souris.
   function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    const last = USE_CASES.length - 1;
+    const last = cases.length - 1;
     let next: number | null = null;
     if (event.key === 'ArrowRight') next = active === last ? 0 : active + 1;
     else if (event.key === 'ArrowLeft') next = active === 0 ? last : active - 1;
@@ -122,16 +140,16 @@ export default function UseCases(): ReactNode {
     tabRefs.current[next]?.focus();
   }
 
-  const useCase = USE_CASES[active];
+  const useCase = cases[active];
 
   return (
     <>
       <div
         role="tablist"
-        aria-label="Use cases"
+        aria-label={ariaLabel}
         className={styles.tabs}
         onKeyDown={onKeyDown}>
-        {USE_CASES.map((item, i) => (
+        {cases.map((item, i) => (
           <button
             key={item.id}
             ref={(el) => {
@@ -139,18 +157,13 @@ export default function UseCases(): ReactNode {
             }}
             type="button"
             role="tab"
-            id={`usecase-tab-${item.id}`}
+            id={`${idPrefix}-tab-${item.id}`}
             aria-selected={i === active}
-            aria-controls={`usecase-panel-${item.id}`}
+            aria-controls={`${idPrefix}-panel-${item.id}`}
             tabIndex={i === active ? 0 : -1}
             className={clsx(styles.tab, i === active && styles.tabActive)}
             onClick={() => setActive(i)}>
-            <img
-              className={styles.tabImg}
-              src={useBaseUrl(item.img)}
-              alt=""
-              loading="lazy"
-            />
+            {item.img && <TabIcon src={item.img} />}
             {item.tab}
           </button>
         ))}
@@ -158,8 +171,8 @@ export default function UseCases(): ReactNode {
 
       <div
         role="tabpanel"
-        id={`usecase-panel-${useCase.id}`}
-        aria-labelledby={`usecase-tab-${useCase.id}`}
+        id={`${idPrefix}-panel-${useCase.id}`}
+        aria-labelledby={`${idPrefix}-tab-${useCase.id}`}
         tabIndex={0}
         className={styles.panel}>
         <h3 className={styles.panelTitle}>{useCase.title}</h3>
@@ -174,4 +187,8 @@ export default function UseCases(): ReactNode {
       </div>
     </>
   );
+}
+
+export default function UseCases(): ReactNode {
+  return <UseCaseTabs cases={USE_CASES} idPrefix="usecase" ariaLabel="Use cases" />;
 }

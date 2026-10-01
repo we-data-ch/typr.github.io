@@ -1,0 +1,6 @@
+let sales <- data.frame(
+  revenue = c(100.0, 200.0, 300.0),
+  region  = c("N", "S", "E")
+);
+
+let vat <- sales$reveneu * 0.21;

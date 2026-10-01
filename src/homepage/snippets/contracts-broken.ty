@@ -1,0 +1,7 @@
+let set_alpha <- fn(
+  alpha: num & (>= 0.0) & (<= 1.0)
+): num {
+  alpha
+};
+
+set_alpha(1.5);

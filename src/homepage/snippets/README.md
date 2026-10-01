@@ -39,6 +39,24 @@ typr check src/homepage/snippets/pipeline-broken.ty 2>&1 \
   > src/homepage/snippets/pipeline-error.txt
 ```
 
+La section « What R lets through » (`../Pitfalls.tsx`) suit la même convention
+pour ses cinq contre-exemples (`contracts`, `recycling`, `columns`, `factor`,
+`status`) : `<nom>.R` (le R tel qu'on l'écrit), `<nom>-broken.ty` (le TypR,
+rejeté) et `<nom>-error.txt`. Pour régénérer un diagnostic — première erreur
+seulement, sans les erreurs en cascade :
+
+```bash
+n=contracts
+typr check src/homepage/snippets/$n-broken.ty 2>&1 \
+  | sed 's/\x1b\[[0-9;]*m//g' \
+  | awk '/× (Type|Syntax) error/{p=1} p&&/^$/{exit} p' \
+  | sed "s/$n-broken\.ty/$n.ty/g" \
+  > src/homepage/snippets/$n-error.txt
+```
+
+Lancer `typr check` depuis un autre répertoire : il dépose `context.json` et
+`std.ty` à côté du fichier vérifié.
+
 ## Ajouter un extrait
 
 1. Déposer le fichier ici.

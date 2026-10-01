@@ -1,0 +1,14 @@
+  × Type error: DataFrame[3, {"region": char, "revenue": num}] doesn't have a
+  │ field 'reveneu'
+   ╭─[columns.ty:1:14]
+ 1 │ let sales <- data.frame(
+   ·              ┬
+   ·              ╰── Type DataFrame[3, {"region": char, "revenue": num}] defined here
+ 2 │   revenue = c(100.0, 200.0, 300.0),
+   ╰────
+   ╭─[columns.ty:6:19]
+ 5 │ 
+ 6 │ let vat <- sales$reveneu * 0.21;
+   ·                   ▲
+   ·                   ╰── Field 'reveneu' doesn't exist
+   ╰────

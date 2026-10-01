@@ -1,0 +1,9 @@
+type Factor <- Foreign<Any>;
+
+@extern base::factor: (x: [char]) -> Factor;
+@extern stats::weighted__mean: (
+  x: [#N, num], w: [#N, num]
+) -> num;
+
+let scores <- factor(["1", "2", "3"]);
+weighted__mean(scores, [0.2, 0.3, 0.5]);

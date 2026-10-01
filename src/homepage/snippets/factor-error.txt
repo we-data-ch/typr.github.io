@@ -1,0 +1,10 @@
+  × Type error: No signature of function 'weighted__mean' matches this call.
+   ╭─[factor.ty:9:2]
+ 8 │ let scores <- factor(["1", "2", "3"]);
+ 9 │ weighted__mean(scores, [0.2, 0.3, 0.5]);
+   ·  ───────┬──────
+   ·         ╰── Called with 2 argument(s): (Foreign, [3, num])
+   ╰────
+  help: 'weighted__mean' exists but none of its signature(s) accepts these
+        arguments:
+            ([#N, num], [#N, num]) -> num

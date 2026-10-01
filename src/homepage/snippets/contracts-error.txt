@@ -1,0 +1,10 @@
+  × Type error: No signature of function 'set_alpha' matches this call.
+   ╭─[contracts.ty:7:2]
+ 6 │ 
+ 7 │ set_alpha(1.5);
+   ·  ────┬────
+   ·      ╰── Called with 1 argument(s): (1.5)
+   ╰────
+  help: 'set_alpha' exists but none of its signature(s) accepts these
+        arguments:
+            ((<= 1) & (>= 0) & num) -> num
