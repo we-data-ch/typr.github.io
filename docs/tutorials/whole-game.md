@@ -165,10 +165,18 @@ Two things to notice:
   is a character vector". See [escape hatches](/docs/reference/escape-hatches)
   for the full story.
 
-:::caution A parser quirk (fixed in the next release)
+:::caution A parser quirk (tracked, fix planned)
 Writing the body as a single expression, `strsplit(x, pat)[[1]]`, confuses the
-parser in the current release. Bind the result to a variable first, then index
-it, as shown above. This will be fixed in the next release.
+parser in the current release. Indexing a call result directly is rejected
+only in tail position of a `fn` body; the same code parses fine anywhere else.
+Two workarounds: bind the result to a variable first, then index it (as shown
+above), or parenthesize the call, `(strsplit(x, pat))[[1]]`.
+
+The bug is cataloged as an open, automatically replayed case in the compiler's
+bug catalog (`typr case`, case `0107-call-result-index-in-fn-tail`): every
+compiler run of the catalog re-checks that this snippet still fails, and the
+case flips to `fixed` once the parser accepts it. Remove this note when that
+happens.
 :::
 
 ## `typr check`: your new best friend
@@ -188,7 +196,14 @@ Code verification successful!
 Now for the whole point of TypR. Add a bad call at the bottom of
 `TypR/main.ty`, passing a number where a string is expected:
 
-```typr
+```typr compile_fail
+# --- setup: the function under test, from the previous block ---
+@pub let str_split_one <- fn(x: char, pat: char): [char] {
+  let parts <- strsplit(x, pat);
+  parts[[1]] as! [char]
+};
+# ----------------------------------------------------------------
+
 let r <- str_split_one(42, ",");
 ```
 
@@ -262,13 +277,20 @@ in. In TypR, tests live next to the code in a `Test` block and are extracted
 into `tests/testthat/` at build time. Add this to `TypR/main.ty`:
 
 ```typr
+# --- setup: the function under test ---
+@pub let str_split_one <- fn(x: char, pat: char): [char] {
+  let parts <- strsplit(x, pat);
+  parts[[1]] as! [char]
+};
+# --------------------------------------
+
 Test {
   test_that("str_split_one splits a string", {
     expect_equal(str_split_one("a,b,c", ","), c("a", "b", "c"));
   });
 
-  test_that("str_split_one errors informatively", {
-    expect_error(str_split_one("a,b,c", ""))
+  test_that("str_split_one returns one piece per separator group", {
+    expect_equal(length(str_split_one("a,b", ",")), 2);
   })
 }
 ```
@@ -279,6 +301,16 @@ Rebuild and run the test suite:
 typr build   # extracts the block to tests/testthat/test-main.R
 typr test    # runs devtools::test()
 ```
+
+:::note Supported testthat assertions
+The current release only types a subset of testthat inside `Test` blocks:
+`expect_equal` and `expect_true` are available, while `expect_error`,
+`expect_length`, and `expect_type` are rejected with *not defined in this
+scope*. The natural test for this section would have been
+`expect_error(str_split_one("a,b,c", ""))`; it is replaced above by an
+equivalent assertion on the result. Support for the full testthat assertion
+surface is planned for a future release.
+:::
 
 :::caution A renv quirk (fixed in the next release)
 In the current release, `typr test` can fail inside a freshly scaffolded
