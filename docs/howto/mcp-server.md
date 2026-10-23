@@ -81,6 +81,29 @@ leaving the session to search the docs site. Most MCP clients list resources
 alongside tools automatically; consult your client's docs if yours does not
 surface them.
 
+## Learn TypR with the tutor
+
+The server also carries the TypR tutor, the course behind `typr tutor`, so an
+assistant can teach it to you. It exposes a `tutor` **prompt**: pick it in your
+client (in Claude Code, type `/mcp__typr__tutor`, optionally followed by a lesson
+number) and the assistant walks you through the twelve lessons.
+
+It teaches rather than solves: it presents each lesson, lets you write the
+code, grades every attempt with the real compiler, gives hints one at a time,
+and ends each lesson with the documentation pages that take you further. The
+tools behind it are available to any client:
+
+| Tool | What it does |
+|---|---|
+| `tutor_lessons` | Lists the lessons, with their title and goal |
+| `tutor_lesson` | Returns a lesson file: its explanation and its exercise |
+| `tutor_check` | Grades an attempt: `passed`, the compiler's diagnostics and their explanations, what is still missing, and once passed, the pages to read next |
+| `tutor_hint` | Returns a hint, from vague (level 1) to nearly the answer |
+
+The terminal version and the AI version grade the same way, so you can switch
+between them: the assistant can read the lesson files in a `typr-tutor/`
+folder created by `typr tutor` (see [Getting started](../intro.md)).
+
 ## Why not just tell it to run `typr check` in a terminal?
 
 You can — nothing above is required. MCP mainly saves the round trip: the

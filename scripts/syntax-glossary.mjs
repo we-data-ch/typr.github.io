@@ -181,6 +181,7 @@ export const RULES = {
   'numbers.float': null,
   'numbers.integer': null,
   'types.variant': null,
+  'variables.hidden': null, // décrit en prose : « Hidden names » de lexicon.md
   'types.sigil-generic': null, // rendu depuis `manifest.sigils`
   'types.generic': null,
   'types.alias': null,

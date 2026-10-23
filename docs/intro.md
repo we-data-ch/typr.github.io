@@ -27,6 +27,24 @@ You need:
 
 Everything else (IDE, editor, RStudio) is optional.
 
+:::tip Prefer to learn inside your editor?
+
+Like `vimtutor` for Vim, `typr tutor` is a hands-on course built into the
+compiler: twelve short lessons, each a TypR file whose comments explain and
+whose code you complete, graded by the compiler itself.
+
+```bash
+typr tutor          # creates a typr-tutor/ folder and tells you which file to open
+typr tutor check    # grades your answer, then points you to the pages to read next
+```
+
+`typr tutor hint` gives a hint when you are stuck, and `typr tutor list` shows
+your progress. It covers the same ground as this page and a bit more (unions,
+generics, typing R functions). Prefer an AI tutor? The
+[MCP server](howto/mcp-server.md#learn-typr-with-the-tutor) runs the same lessons.
+
+:::
+
 ## 1. Say hello
 
 Create a file called `hello.ty` in an empty folder:

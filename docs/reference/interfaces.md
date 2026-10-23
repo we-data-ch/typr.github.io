@@ -148,3 +148,92 @@ type Combined <- Movable & Drawable;   # intersection of interfaces
 ```
 
 A value must satisfy **all** interfaces in the intersection.
+
+---
+
+## Interfaces and generics are the same mechanism
+
+In TypR an interface used as a parameter type **is** a constrained generic. You never write the
+type parameter yourself; it is introduced for you:
+
+```typr
+# --- setup ---
+type Incrementable <- interface { incr: (Self) -> Self };
+let incr <- fn(self: int): int { self + 1 };
+# -------------
+
+let double <- fn(i: Incrementable): Incrementable { incr(incr(i)) };
+```
+
+is read as "for any type `A` that satisfies `Incrementable`, `double` takes an `A` and returns an
+`A`", that is `∀ A: Incrementable. A → A`. The same interface name in the parameter and in the
+return type stands for **one and the same type**.
+
+Applying it picks `A` from the argument, so the result keeps its real type, not the interface:
+
+```typr
+# --- setup ---
+type Incrementable <- interface { incr: (Self) -> Self };
+let incr <- fn(self: int): int { self + 1 };
+let double <- fn(i: Incrementable): Incrementable { incr(incr(i)) };
+# -------------
+
+let r <- double(3);    # r : int  (A = int, because int has an `incr`)
+```
+
+Bare generic names follow the same scheme with the weakest possible constraint. In
+`fn(a: A, b: B): A`, each free type identifier that is neither a primitive nor a declared type
+becomes a parameter `A: interface {}` (see the next section).
+
+| You write | TypR reads it as |
+|-----------|------------------|
+| `fn(a: A, b: B): A` | `∀ A, B. (A, B) → A` — each constraint is the empty interface |
+| `fn(i: Incrementable): Incrementable` | `∀ A: Incrementable. A → A` |
+
+### An interface only in the return type is rejected
+
+If an interface appears in the return type **without** any matching parameter, there is no
+argument from which to pick the concrete type. That would be an *existential* type
+(`∃ A: Incrementable. A`), which TypR does not support; the compiler reports that the interface
+"appears only in return position":
+
+```typr compile_fail
+type Incrementable <- interface { incr: (Self) -> Self };
+let make <- fn(): Incrementable { 3 };
+```
+
+To hide an implementation behind a stable name, use an `opaque` type instead
+(`opaque Counter <- ...`).
+
+---
+
+## Generics `T`, `U` are opaque inside the body
+
+A bare generic such as `T` or `U` behaves like a parameter whose interface is
+**empty** (`interface {}`): the caller may pass anything, but inside the function
+body nothing is known about the value except its name. Two different generics are
+never interchangeable.
+
+```typr
+let id <- fn(a: T): T { a };
+let first <- fn(a: [#N, T]): [#N, T] { a };
+let second <- fn(a: T, b: U): U { b };
+```
+
+Returning the wrong generic is rejected, including when the generic is nested in a
+type such as `[#N, T]`:
+
+```typr compile_fail
+let swap_wrong <- fn(a: T, b: U): T { b };
+```
+
+```typr compile_fail
+let nested_wrong <- fn(a: [#N, T], b: [#N, U]): [#N, T] { b };
+```
+
+The error names the generics you wrote (`Expected: T`, `Found: U`). The same name
+(`T`) always stands for the same type throughout one signature, and the generated R
+is unchanged.
+
+You can also write an empty interface yourself (`type Any1 <- interface {};`); it is
+accepted by the parser and does not add any method requirement.

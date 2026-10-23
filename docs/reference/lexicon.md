@@ -45,6 +45,7 @@ Literals can also appear as **types** (singleton types): `3`, `3.14`, `true`, `"
 | Kind | Convention | Example | Enforcement |
 |------|-----------|---------|-------------|
 | Variable | `snake_case` | `my_var` | must start with `a-z` or `_` |
+| Hidden | leading `.` | `.cache`, `.helper` | `.` then `a-z` or `_`; can't be `@pub`/`@export` |
 | Type | `PascalCase` | `MyType` | **required** for `type`/`opaque`/alias declarations |
 | Quoted | backticks | `` `+` ``, `` `weird name` `` | useful for naming custom operators |
 
@@ -52,6 +53,33 @@ The parser explicitly rejects casing mistakes:
 
 - `let PascalCase <- ...` triggers `LetInsteadOfType`
 - `type snake_case <- ...` triggers `TypeInsteadOfLet`
+
+### Hidden names
+
+A leading dot makes a name *hidden*, as in R: `.cache`, `.helper`, or a record field `.secret`.
+It is emitted unchanged, so R's `ls()` hides it, and so does a package's default
+`exportPattern("^[^\\.]")`. A hidden name is private by definition: `@pub` or `@export` on it is
+an error (`S020`). `@testable` is still allowed.
+
+`__name` is the ASCII spelling of `.name`. Both spellings refer to the same binding, following the
+general rule that `__` becomes `.` in the emitted R (`as__character` → `as.character`). Use `__`
+right after the `.` operator: `x..helper()` would read as the `..` spread token, so it is rejected
+(`S019`). Write `x.__helper()` or `x |> .helper()` instead.
+
+```typr
+type Account <- list{ owner: char, .balance: num };
+
+let .fee <- fn(a: Account): num { a.__balance * 0.01 };
+
+let acc <- Account:{ owner = "ada", .balance = 250.0 };
+acc.__fee();
+acc |> .fee();
+```
+
+```typr compile_fail
+let .twice <- fn(a: int): int { a * 2 };
+let y <- 3..twice();
+```
 
 ---
 
