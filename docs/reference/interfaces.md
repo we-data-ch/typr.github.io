@@ -211,8 +211,7 @@ To hide an implementation behind a stable name, use an `opaque` type instead
 
 A bare generic such as `T` or `U` behaves like a parameter whose interface is
 **empty** (`interface {}`): the caller may pass anything, but inside the function
-body nothing is known about the value except its name. Two different generics are
-never interchangeable.
+body nothing is known about the value except its name.
 
 ```typr
 let id <- fn(a: T): T { a };
@@ -220,20 +219,24 @@ let first <- fn(a: [#N, T]): [#N, T] { a };
 let second <- fn(a: T, b: U): U { b };
 ```
 
-Returning the wrong generic is rejected, including when the generic is nested in a
-type such as `[#N, T]`:
+A generic cannot stand in for a concrete type. Returning the parameter where an
+`int` is promised is rejected:
 
 ```typr compile_fail
-let swap_wrong <- fn(a: T, b: U): T { b };
+let wrong <- fn(a: T): int { a };
 ```
+
+And once a call fixes the generic to one type, the result cannot be assigned to
+another:
 
 ```typr compile_fail
-let nested_wrong <- fn(a: [#N, T], b: [#N, U]): [#N, T] { b };
+let id <- fn(a: T): T { a };
+let n: int <- id("hello");
 ```
 
-The error names the generics you wrote (`Expected: T`, `Found: U`). The same name
-(`T`) always stands for the same type throughout one signature, and the generated R
-is unchanged.
+The same name (`T`) always stands for the same type throughout one signature, so
+`fn(a: T, b: T)` requires two arguments of the same type, and the generated R is
+unchanged.
 
 You can also write an empty interface yourself (`type Any1 <- interface {};`); it is
 accepted by the parser and does not add any method requirement.

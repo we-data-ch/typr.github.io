@@ -56,7 +56,7 @@ The parser explicitly rejects casing mistakes:
 
 ### Hidden names
 
-A leading dot makes a name *hidden*, as in R: `.cache`, `.helper`, or a record field `.secret`.
+A leading dot makes a name *hidden*, as in R: `.cache`, `.helper`.
 It is emitted unchanged, so R's `ls()` hides it, and so does a package's default
 `exportPattern("^[^\\.]")`. A hidden name is private by definition: `@pub` or `@export` on it is
 an error (`S020`). `@testable` is still allowed.
@@ -67,13 +67,13 @@ right after the `.` operator: `x..helper()` would read as the `..` spread token,
 (`S019`). Write `x.__helper()` or `x |> .helper()` instead.
 
 ```typr
-type Account <- list{ owner: char, .balance: num };
+type Account <- list{ owner: char, balance: num };
 
-let .fee <- fn(a: Account): num { a.__balance * 0.01 };
+let __fee <- fn(a: Account): num { a.balance * 0.01 };
 
-let acc <- Account:{ owner = "ada", .balance = 250.0 };
+let acc <- Account:{ owner = "ada", balance = 250.0 };
 acc.__fee();
-acc |> .fee();
+acc |> __fee();
 ```
 
 ```typr compile_fail
