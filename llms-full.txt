@@ -139,6 +139,24 @@ You need:
 
 Everything else (IDE, editor, RStudio) is optional.
 
+:::tip Prefer to learn inside your editor?
+
+Like `vimtutor` for Vim, `typr tutor` is a hands-on course built into the
+compiler: twelve short lessons, each a TypR file whose comments explain and
+whose code you complete, graded by the compiler itself.
+
+```bash
+typr tutor          # creates a typr-tutor/ folder and tells you which file to open
+typr tutor check    # grades your answer, then points you to the pages to read next
+```
+
+`typr tutor hint` gives a hint when you are stuck, and `typr tutor list` shows
+your progress. It covers the same ground as this page and a bit more (unions,
+generics, typing R functions). Prefer an AI tutor? The
+[MCP server](howto/mcp-server.md#learn-typr-with-the-tutor) runs the same lessons.
+
+:::
+
 ### 1. Say hello
 
 Create a file called `hello.ty` in an empty folder:
@@ -1177,13 +1195,394 @@ That's designing, not just typing. In our [TypR philosophy](/docs/philosophy/int
 
 The automatic transmission was always coming to R. You just didn't notice the milestones:
 
-- **renv** locked your dependencies.
+- **renv** (and now **uvr**) locked your dependencies.
 - **lintr** and **Air** enforced style without being annoying about it.
 - **dplyr**, **purrr**, and **forcats** were letting you offload the rules about data shapes to the machine.
 
 TypR just builds that transmission into the engine itself.
 
 If you're writing packages, Shiny apps, or long pipelines that need to survive the next grant cycle, TypR is your insurance policy against future-you's unreliable memory. And if you're just throwing together a quick exploration in a notebook? Leave the types off. TypR genuinely doesn't mind. You can dial the safety up or down as you need it.
+
+---
+
+## The Whole Game
+
+_Before you start_
+
+This tutorial develops a small toy package from start to finish. The goal is
+the big picture and a workable workflow, before the rest of the documentation
+gets into the details of the type system.
+
+It is a TypR adaptation of the chapter
+[The Whole Game](https://r-pkgs.org/whole-game.html) from
+[_R Packages (2e)_](https://r-pkgs.org/) by Hadley Wickham and Jennifer Bryan.
+The structure and the toy package are the same, so the two workflows can be
+compared side by side. All credit for the original material goes to the
+authors.
+
+The tutorial is self-contained. Finishing it is not required to read on, but
+following along and actually building the package is strongly recommended.
+
+> **Duration:** 15 to 20 minutes.
+
+### Prerequisites
+
+- **R** (≥ 4.1) installed
+- **The `typr` compiler**: see the [installation guide](/docs/reference/installation)
+- **Git** (optional, for the version-control section)
+- A terminal and a text editor
+
+Run `typr init` once to install the R packages TypR needs (`devtools`,
+`testthat`):
+
+```bash
+typr init
+```
+
+### Toy package: regexcite
+
+The package built here is small but has the features commonly seen in released
+packages:
+
+- Functions that address a specific need: helpers for work with regular
+  expressions, made safer by TypR's type system.
+- Static type checking with `typr check`, a step that simply does not exist in
+  a pure R workflow.
+- The established R workflows for installation, help, and quality checks:
+  - Documentation via roxygen2, generated from type annotations.
+  - Unit testing with testthat, extracted from `Test` blocks.
+- Version control with Git (optional but recommended).
+
+The package is called **regexcite**, after the original chapter. The functions
+are deliberately simple; they only serve to demonstrate the development
+process. For actual regular-expression helpers, look at
+[stringr](https://stringr.tidyverse.org/),
+[stringi](https://stringi.gagolewski.com/) or
+[rex](https://cran.r-project.org/package=rex).
+
+### `typr new`
+
+`typr new` is TypR's equivalent of `usethis::create_package()`. Pick the
+location deliberately: somewhere alongside other projects, not nested inside
+another package or Git repo, and not inside an R package library.
+
+```bash
+typr new regexcite
+```
+
+```
+Creating the R package 'regexcite'...
+Writing DESCRIPTION
+Writing NAMESPACE
+Writing .Rbuildignore
+Writing .gitignore
+Writing TypR/main.ty
+Writing tests/testthat.R
+Writing README.md
+Package R 'regexcite' successfully created!
+Initializing renv...
+```
+
+Move into the new directory and look around:
+
+```bash
+cd regexcite
+```
+
+```
+regexcite/
+  DESCRIPTION       # package metadata
+  NAMESPACE         # exports/imports (generated, do not edit)
+  R/                # generated R code (do not edit by hand)
+  TypR/
+    main.ty         # typed source code, the business end
+  tests/
+    testthat.R      # standard testthat entry point
+  man/              # documentation (auto-generated)
+  README.md
+  renv.lock         # environment snapshot
+  rproj.Rproj       # RStudio project file
+```
+
+The layout is a standard R package with exactly one addition: the `TypR/`
+folder, which holds the typed `.ty` sources. Everything under `R/` is
+transpiled output and should never be edited directly.
+
+:::note renv today, Rig tomorrow
+`typr new` currently initializes [renv](https://rstudio.github.io/renv/) for
+environment and package management. A future release will switch to
+[Rig](https://github.com/r-lib/rig), Posit's R installation manager, for this
+role. The package layout and the rest of this tutorial stay the same.
+:::
+
+### `git init`
+
+The regexcite directory is now a TypR source package. Making it a Git
+repository is optional but recommended, and it makes it easy to see what
+changes at each step:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit: typr new scaffold"
+```
+
+The only change is a hidden `.git` directory. The scaffold already ships a
+`.gitignore` covering R's behind-the-scenes files.
+
+### Write the first function
+
+Splitting a single string into parts is a common task. Base R's `strsplit()`
+does this, but returns a list of character vectors, because it accepts a
+vector of strings. With just one string, the first element is always the one
+wanted:
+
+```r
+x <- "alfa,bravo,charlie,delta"
+strsplit(x, split = ",")
+#> [[1]]
+#> [1] "alfa"    "bravo"   "charlie" "delta"
+```
+
+The function `str_split_one()` captures this pattern and, on top of it,
+guarantees at compile time that one string goes in and a character vector
+comes out. Replace the contents of `TypR/main.ty` with:
+
+```typr
+# Split a single string into pieces.
+@pub let str_split_one <- fn(x: char, pat: char): [char] {
+  let parts <- strsplit(x, pat);
+  parts[[1]] as! [char]
+};
+```
+
+Two things to notice:
+
+- The signature `fn(x: char, pat: char): [char]` declares that both arguments
+  are single strings and the result is a character vector. `@pub` exports the
+  function from the package (it maps to roxygen2's `@export`).
+- `strsplit` is an R function TypR types at the `T3` tier, so its return type
+  is `any`. The explicit cast `as! [char]` is the programmer asserting "this
+  is a character vector". See [escape hatches](/docs/reference/escape-hatches)
+  for the full story.
+
+:::caution A parser quirk (tracked, fix planned)
+Writing the body as a single expression, `strsplit(x, pat)[[1]]`, confuses the
+parser in the current release. Indexing a call result directly is rejected
+only in tail position of a `fn` body; the same code parses fine anywhere else.
+Two workarounds: bind the result to a variable first, then index it (as shown
+above), or parenthesize the call, `(strsplit(x, pat))[[1]]`.
+
+The bug is cataloged as an open, automatically replayed case in the compiler's
+bug catalog (`typr case`, case `0107-call-result-index-in-fn-tail`): every
+compiler run of the catalog re-checks that this snippet still fails, and the
+case flips to `fixed` once the parser accepts it. Remove this note when that
+happens.
+:::
+
+### `typr check`: your new best friend
+
+Before building anything, ask the compiler what it thinks:
+
+```bash
+typr check
+```
+
+```
+Parsing... done
+Type checking... done
+Code verification successful!
+```
+
+Now for the whole point of TypR. Add a bad call at the bottom of
+`TypR/main.ty`, passing a number where a string is expected:
+
+```typr compile_fail
+# --- setup: the function under test, from the previous block ---
+@pub let str_split_one <- fn(x: char, pat: char): [char] {
+  let parts <- strsplit(x, pat);
+  parts[[1]] as! [char]
+};
+# ----------------------------------------------------------------
+
+let r <- str_split_one(42, ",");
+```
+
+```bash
+typr check
+```
+
+```
+Type errors found:
+  × Type error: No signature of function 'str_split_one' matches this call.
+   ╭─[TypR/main.ty:6:10]
+ 6 │ let r <- str_split_one(42, ",");
+   ·          ──────┬──────
+   ·                ╰── Called with 2 argument(s): (42, ",")
+   ╰────
+  help: 'str_split_one' exists but none of its signature(s) accepts these
+        arguments:
+            (char, char) -> [any, char]
+```
+
+In pure R this bug would only surface at run time, possibly hours into a
+pipeline. Here it shows up before the code ever runs. Delete the bad line and
+commit:
+
+```bash
+git add TypR/main.ty
+git commit -m "Add str_split_one()"
+```
+
+### `typr build`
+
+Transpile the typed source into R:
+
+```bash
+typr build
+```
+
+```
+R code successfully generated in the R/ folder
+```
+
+What appeared:
+
+```
+R/
+  std.R                # generated helpers
+  generic_functions.R  # generated generics
+  types.R              # generated type definitions
+  main.R               # transpiled main.ty
+man/
+  str_split_one.Rd     # documentation, from the annotations
+```
+
+Two results are worth pausing on:
+
+1. `R/main.R` contains ordinary R code with roxygen2 comments derived from the
+   types. No `#'` is ever written by hand.
+2. `man/str_split_one.Rd` was generated automatically. `str_split_one` is
+   already a documented, exported function:
+
+```
+\name{str_split_one}
+\title{Split a single string into pieces.}
+\usage{str_split_one(x, pat)}
+```
+
+### `Test { }` and `typr test`
+
+In the R world this is where `usethis::use_testthat()` and a test file come
+in. In TypR, tests live next to the code in a `Test` block and are extracted
+into `tests/testthat/` at build time. Add this to `TypR/main.ty`:
+
+```typr
+# --- setup: the function under test ---
+@pub let str_split_one <- fn(x: char, pat: char): [char] {
+  let parts <- strsplit(x, pat);
+  parts[[1]] as! [char]
+};
+# --------------------------------------
+
+Test {
+  test_that("str_split_one splits a string", {
+    expect_equal(str_split_one("a,b,c", ","), c("a", "b", "c"));
+  });
+
+  test_that("str_split_one returns one piece per separator group", {
+    expect_equal(length(str_split_one("a,b", ",")), 2);
+  })
+}
+```
+
+Rebuild and run the test suite:
+
+```bash
+typr build   # extracts the block to tests/testthat/test-main.R
+typr test    # runs devtools::test()
+```
+
+:::note Supported testthat assertions
+The current release only types a subset of testthat inside `Test` blocks:
+`expect_equal` and `expect_true` are available, while `expect_error`,
+`expect_length`, and `expect_type` are rejected with *not defined in this
+scope*. The natural test for this section would have been
+`expect_error(str_split_one("a,b,c", ""))`; it is replaced above by an
+equivalent assertion on the result. Support for the full testthat assertion
+surface is planned for a future release.
+:::
+
+:::caution A renv quirk (fixed in the next release)
+In the current release, `typr test` can fail inside a freshly scaffolded
+project because the renv environment does not see the globally installed
+`devtools` and `testthat` packages, even after `typr init`. As a workaround,
+run the tests from a plain R session at the project root with
+`devtools::test()`. This environment friction is exactly what the planned move
+to [Rig](https://github.com/r-lib/rig) will address in the next release.
+:::
+
+Commit the tests:
+
+```bash
+git add TypR/main.ty tests/testthat/
+git commit -m "Add tests for str_split_one()"
+```
+
+### `typr pkg install`: use the package
+
+The result is a perfectly ordinary R package. Install it into the R library:
+
+```bash
+typr pkg install
+```
+
+(`devtools::install()` from R works too.) Then, in a fresh R session:
+
+```r
+library(regexcite)
+
+str_split_one("alfa,bravo,charlie,delta", ",")
+#> [1] "alfa"    "bravo"   "charlie" "delta"
+
+?str_split_one   # yes, the help page is already there
+```
+
+Final commit:
+
+```bash
+git add .
+git commit -m "Build, document and test regexcite"
+```
+
+### Review: what just happened?
+
+| R Packages (2e) step | TypR equivalent |
+| --- | --- |
+| `usethis::create_package()` | `typr new regexcite` |
+| `usethis::use_git()` | `git init` |
+| Write `R/str-split-one.R` by hand | Write `TypR/main.ty`, run `typr build` |
+| `devtools::document()` | automatic from `@pub` + type annotations |
+| `usethis::use_testthat()` + test files | `Test { }` blocks, extracted at build |
+| `devtools::test()` | `typr test` |
+| `devtools::install()` | `typr pkg install` |
+| `R CMD check` | `typr check`, before anything runs |
+
+The whole game, in one sentence: typed code goes in `TypR/`, and the compiler
+turns it into a conventional, documented, tested, installable R package while
+catching type errors before R ever sees them.
+
+### Where to go next
+
+- [Create your first TypR package](/docs/tutorials/first-package): a
+  type-modeling tutorial with records and union types.
+- [How to build, test & document](/docs/howto/build-and-test): the workflow in
+  reference form.
+- [Type system reference](/docs/reference/types): everything about `char`,
+  `[char]`, refinements, and friends.
+- [Escape hatches](/docs/reference/escape-hatches): the `as!` cast and the
+  trust tiers (`T1` to `T3`) in depth.
+- The original chapter: [The Whole Game, R Packages (2e)](https://r-pkgs.org/whole-game.html).
 
 ---
 
@@ -2592,6 +2991,61 @@ TypR never forces an all-or-nothing choice.
 
 ---
 
+## Manage R dependencies with uvr
+
+## How to manage R dependencies with uvr
+
+A TypR project locks its R packages with [uvr](https://github.com/nbafrank/uvr), a fast
+single-binary package manager for R. `typr` never installs a package behind your back:
+every installation is an explicit command.
+
+### Install uvr
+
+```bash
+cargo install --git https://github.com/nbafrank/uvr
+```
+
+`typr new` still creates the project if uvr is missing, and tells you to run `uvr init` later.
+Use `typr new --no-uvr` to skip uvr on purpose.
+
+### Add a package
+
+```bash
+typr use dplyr
+```
+
+This writes the package to `DESCRIPTION` (`Imports`) **and** to `uvr.toml`, then installs it in
+the project library `.uvr/library/`.
+
+### After a clone
+
+```bash
+uvr sync
+```
+
+`uvr.toml` and `uvr.lock` are committed; `.uvr/` is not.
+
+### Keep both files in agreement
+
+You may edit `DESCRIPTION` or `uvr.toml` by hand. `typr check` warns when they disagree, or
+when `library(x)` is used in TypR code for a package declared nowhere:
+
+```text
+warning: `jsonlite` is in DESCRIPTION but not in uvr.toml: run `typr use jsonlite`
+```
+
+These are warnings, not errors.
+
+### Run R in the project library
+
+`typr run`, `typr test` and `typr build` already do. For your own script:
+
+```bash
+uvr run script.R
+```
+
+---
+
 ## Use raw R blocks
 
 ## How to use raw R blocks in TypR
@@ -2970,6 +3424,29 @@ resource and look the token up in the same turn, instead of guessing or
 leaving the session to search the docs site. Most MCP clients list resources
 alongside tools automatically; consult your client's docs if yours does not
 surface them.
+
+### Learn TypR with the tutor
+
+The server also carries the TypR tutor, the course behind `typr tutor`, so an
+assistant can teach it to you. It exposes a `tutor` **prompt**: pick it in your
+client (in Claude Code, type `/mcp__typr__tutor`, optionally followed by a lesson
+number) and the assistant walks you through the twelve lessons.
+
+It teaches rather than solves: it presents each lesson, lets you write the
+code, grades every attempt with the real compiler, gives hints one at a time,
+and ends each lesson with the documentation pages that take you further. The
+tools behind it are available to any client:
+
+| Tool | What it does |
+|---|---|
+| `tutor_lessons` | Lists the lessons, with their title and goal |
+| `tutor_lesson` | Returns a lesson file: its explanation and its exercise |
+| `tutor_check` | Grades an attempt: `passed`, the compiler's diagnostics and their explanations, what is still missing, and once passed, the pages to read next |
+| `tutor_hint` | Returns a hint, from vague (level 1) to nearly the answer |
+
+The terminal version and the AI version grade the same way, so you can switch
+between them: the assistant can read the lesson files in a `typr-tutor/`
+folder created by `typr tutor` (see [Getting started](../intro.md)).
 
 ### Why not just tell it to run `typr check` in a terminal?
 
@@ -3569,6 +4046,7 @@ Literals can also appear as **types** (singleton types): `3`, `3.14`, `true`, `"
 | Kind | Convention | Example | Enforcement |
 |------|-----------|---------|-------------|
 | Variable | `snake_case` | `my_var` | must start with `a-z` or `_` |
+| Hidden | leading `.` | `.cache`, `.helper` | `.` then `a-z` or `_`; can't be `@pub`/`@export` |
 | Type | `PascalCase` | `MyType` | **required** for `type`/`opaque`/alias declarations |
 | Quoted | backticks | `` `+` ``, `` `weird name` `` | useful for naming custom operators |
 
@@ -3576,6 +4054,33 @@ The parser explicitly rejects casing mistakes:
 
 - `let PascalCase <- ...` triggers `LetInsteadOfType`
 - `type snake_case <- ...` triggers `TypeInsteadOfLet`
+
+#### Hidden names
+
+A leading dot makes a name *hidden*, as in R: `.cache`, `.helper`.
+It is emitted unchanged, so R's `ls()` hides it, and so does a package's default
+`exportPattern("^[^\\.]")`. A hidden name is private by definition: `@pub` or `@export` on it is
+an error (`S020`). `@testable` is still allowed.
+
+`__name` is the ASCII spelling of `.name`. Both spellings refer to the same binding, following the
+general rule that `__` becomes `.` in the emitted R (`as__character` → `as.character`). Use `__`
+right after the `.` operator: `x..helper()` would read as the `..` spread token, so it is rejected
+(`S019`). Write `x.__helper()` or `x |> .helper()` instead.
+
+```typr
+type Account <- list{ owner: char, balance: num };
+
+let __fee <- fn(a: Account): num { a.balance * 0.01 };
+
+let acc <- Account:{ owner = "ada", balance = 250.0 };
+acc.__fee();
+acc |> __fee();
+```
+
+```typr compile_fail
+let .twice <- fn(a: int): int { a * 2 };
+let y <- 3..twice();
+```
 
 ---
 
@@ -4343,6 +4848,107 @@ type Widget <- list { embed coords: Position, label: char };
 
 `embed` is a "soft" keyword — it is only recognized before `name: Type` with a trailing space, so a field actually named `embed` remains parsable.
 
+Embedding is TypR's mechanism for **behavioral composition**: a type that embeds another one
+automatically gets the functions defined on it. There is no inheritance, no class and no `impl`
+block, and nothing is mutated.
+
+#### Forwarding
+
+Every function whose first parameter is `self: B` and which returns a `B` becomes available on
+any type `A` that embeds `B`. Calling it on an `A` forwards to the embedded field, then rebuilds
+the `A` around the result:
+
+```typr
+type Position <- list { x: int, y: int };
+
+let move <- fn(self: Position, dx: int, dy: int): Position {
+    Position:{ x = self$x + dx, y = self$y + dy }
+};
+
+type Player <- list { embed coords: Position, name: char };
+
+let p <- Player:{ coords = Position:{ x = 1, y = 2 }, name = "ada" };
+let q <- move(p, 1, 1);    # q is a Player, with coords moved
+```
+
+Conceptually, TypR generates this function for you:
+
+```typr noplayground
+let move <- fn(self: Player, dx: int, dy: int): Player {
+    Player:{ coords = move(self$coords, dx, dy), ...self }
+};
+```
+
+The rebuild is purely functional: a new record is constructed with `Player:{ ... }`, the other
+fields are carried over through the runtime spread `...self`, and the embedded field is
+explicitly rewritten with the forwarded result (an explicit field always wins over a spread).
+
+:::note
+A type named `Character` collides with the cast function `as.Character` of the builtin `char`
+type. Pick another name for your own types (`Player`, `Hero`, …).
+:::
+
+#### What can be embedded
+
+The embedded type must be structurally a **record** (`list { ... }`, or an alias that resolves to
+one). Numbers, literal types, functions and non-record unions are rejected:
+
+```typr compile_fail
+type Bad <- list { embed n: int };
+```
+
+A record may contain several `embed` fields:
+
+```typr
+type Position <- list { x: int, y: int };
+type Stats <- list { hp: int };
+
+type Player <- list { embed coords: Position, embed stats: Stats };
+```
+
+#### Collisions are errors
+
+TypR never shadows implicitly. If the same function would be provided twice, you must resolve
+the conflict yourself.
+
+Two embeddings providing the same function name:
+
+```typr compile_fail
+type Position <- list { x: int, y: int };
+type Stats <- list { hp: int };
+let move <- fn(self: Position, dx: int): Position { self };
+let move <- fn(self: Stats, dx: int): Stats { self };
+
+type Player <- list { embed coords: Position, embed stats: Stats };
+```
+
+An explicit function defined on the embedding type that clashes with an inherited one:
+
+```typr compile_fail
+type Position <- list { x: int, y: int };
+let move <- fn(self: Position, dx: int): Position { self };
+
+type Player <- list { embed coords: Position, name: char };
+let move <- fn(self: Player, dx: int): Player { self };
+```
+
+Rename or remove one of the conflicting functions or fields.
+
+#### Current limits
+
+- **Monomorphic embedded types only.** Only functions defined directly on `B` are forwarded; a
+  generic function (`fn id(x: T): T`) is not instantiated for `B`, and `Vec2<#N>`-style generic
+  embedded types are not supported yet.
+- **Direct embedding only.** Collision detection and combined forwarding work for `embed` fields
+  declared in the same `list { ... }`. If records are combined with the intersection `&`, the
+  `embed` flag is not preserved by the field merge.
+- **No variadic forwarding.** A function of `B` with a variadic parameter (`...xs: T`) is silently
+  not forwarded.
+- **Refined types** (predicates such as `(. > 0)`) do not exist in TypR yet, so they cannot be
+  embedded.
+- **Declaration order.** A type must be declared before any function that mentions it, so a
+  clash is only detected when the explicit function is written *after* the embedding type.
+
 ---
 
 ### The `{...}` rule for generic types
@@ -4925,6 +5531,98 @@ type Combined <- Movable & Drawable;   # intersection of interfaces
 ```
 
 A value must satisfy **all** interfaces in the intersection.
+
+---
+
+### Interfaces and generics are the same mechanism
+
+In TypR an interface used as a parameter type **is** a constrained generic. You never write the
+type parameter yourself; it is introduced for you:
+
+```typr
+# --- setup ---
+type Incrementable <- interface { incr: (Self) -> Self };
+let incr <- fn(self: int): int { self + 1 };
+# -------------
+
+let double <- fn(i: Incrementable): Incrementable { incr(incr(i)) };
+```
+
+is read as "for any type `A` that satisfies `Incrementable`, `double` takes an `A` and returns an
+`A`", that is `∀ A: Incrementable. A → A`. The same interface name in the parameter and in the
+return type stands for **one and the same type**.
+
+Applying it picks `A` from the argument, so the result keeps its real type, not the interface:
+
+```typr
+# --- setup ---
+type Incrementable <- interface { incr: (Self) -> Self };
+let incr <- fn(self: int): int { self + 1 };
+let double <- fn(i: Incrementable): Incrementable { incr(incr(i)) };
+# -------------
+
+let r <- double(3);    # r : int  (A = int, because int has an `incr`)
+```
+
+Bare generic names follow the same scheme with the weakest possible constraint. In
+`fn(a: A, b: B): A`, each free type identifier that is neither a primitive nor a declared type
+becomes a parameter `A: interface {}` (see the next section).
+
+| You write | TypR reads it as |
+|-----------|------------------|
+| `fn(a: A, b: B): A` | `∀ A, B. (A, B) → A` — each constraint is the empty interface |
+| `fn(i: Incrementable): Incrementable` | `∀ A: Incrementable. A → A` |
+
+#### An interface only in the return type is rejected
+
+If an interface appears in the return type **without** any matching parameter, there is no
+argument from which to pick the concrete type. That would be an *existential* type
+(`∃ A: Incrementable. A`), which TypR does not support; the compiler reports that the interface
+"appears only in return position":
+
+```typr compile_fail
+type Incrementable <- interface { incr: (Self) -> Self };
+let make <- fn(): Incrementable { 3 };
+```
+
+To hide an implementation behind a stable name, use an `opaque` type instead
+(`opaque Counter <- ...`).
+
+---
+
+### Generics `T`, `U` are opaque inside the body
+
+A bare generic such as `T` or `U` behaves like a parameter whose interface is
+**empty** (`interface {}`): the caller may pass anything, but inside the function
+body nothing is known about the value except its name.
+
+```typr
+let id <- fn(a: T): T { a };
+let first <- fn(a: [#N, T]): [#N, T] { a };
+let second <- fn(a: T, b: U): U { b };
+```
+
+A generic cannot stand in for a concrete type. Returning the parameter where an
+`int` is promised is rejected:
+
+```typr compile_fail
+let wrong <- fn(a: T): int { a };
+```
+
+And once a call fixes the generic to one type, the result cannot be assigned to
+another:
+
+```typr compile_fail
+let id <- fn(a: T): T { a };
+let n: int <- id("hello");
+```
+
+The same name (`T`) always stands for the same type throughout one signature, so
+`fn(a: T, b: T)` requires two arguments of the same type, and the generated R is
+unchanged.
+
+You can also write an empty interface yourself (`type Any1 <- interface {};`); it is
+accepted by the parser and does not add any method requirement.
 
 ---
 

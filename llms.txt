@@ -119,6 +119,7 @@ Every page is listed below. Fetch a page's `.md` URL to get its full Markdown so
 - [Getting started](https://we-data-ch.github.io/typr.github.io/docs/intro.md): Learn TypR in about ten minutes by writing and running small typed programs, step by step.
 - [FAQ](https://we-data-ch.github.io/typr.github.io/docs/faq.md): Frequently asked questions about TypR for R users.
 - [Types for Beginners](https://we-data-ch.github.io/typr.github.io/docs/tutorials/typr-for-dummies.md): Why types are worth it, explained without jargon: what a type system remembers for you, and when it is overkill.
+- [The Whole Game](https://we-data-ch.github.io/typr.github.io/docs/tutorials/whole-game.md): A quick tour of TypR package development: scaffold, type-check, build, test, document, and install a toy package, in the spirit of Hadley Wickham's...
 - [Create your first TypR package](https://we-data-ch.github.io/typr.github.io/docs/tutorials/first-package.md): Build a complete R package with TypR, from an empty folder to an installable package with types, tests, and documentation.
 - [Migrate an existing R package](https://we-data-ch.github.io/typr.github.io/docs/tutorials/migrate-r-package.md): Add TypR to an R package you already have, one file at a time, without rewriting it.
 - [Model data with TypR types](https://we-data-ch.github.io/typr.github.io/docs/tutorials/typed-data-modeling.md): Model real data with records, unions, interfaces, and generics by building a small contact-list library.
@@ -126,6 +127,7 @@ Every page is listed below. Fetch a page's `.md` URL to get its full Markdown so
 - [Interop with R6/S4/RC](https://we-data-ch.github.io/typr.github.io/docs/howto/interop-r6-s4.md): Use R6, S4, and Reference Class objects from typed TypR code.
 - [Use dplyr/tidyr from TypR](https://we-data-ch.github.io/typr.github.io/docs/howto/use-dplyr-tidyr.md): Call dplyr, tidyr, and the rest of the tidyverse from typed TypR code.
 - [Build, test & document](https://we-data-ch.github.io/typr.github.io/docs/howto/build-and-test.md): The full development workflow of a TypR package: building, testing, and documenting it.
+- [Manage R dependencies with uvr](https://we-data-ch.github.io/typr.github.io/docs/howto/manage-r-dependencies.md): Declare, install and lock the R packages a TypR project depends on, using typr use and uvr.
 - [Use raw R blocks](https://we-data-ch.github.io/typr.github.io/docs/howto/r-raw-blocks.md): Write plain R from TypR with raw R blocks and the other escape hatches, and know when to reach for them.
 - [Declare S3/S4 generics](https://we-data-ch.github.io/typr.github.io/docs/howto/generics-signatures.md): Declare the types of R's S3 and S4 generic functions so TypR can check calls into R's object systems.
 - [Connect an AI assistant via MCP](https://we-data-ch.github.io/typr.github.io/docs/howto/mcp-server.md): Give Claude Code, Claude Desktop, Cursor or any MCP client direct access to the TypR compiler, so it checks its own generated code instead of guess...

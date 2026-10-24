@@ -373,7 +373,7 @@ That's designing, not just typing. In our [TypR philosophy](/docs/philosophy/int
 
 The automatic transmission was always coming to R. You just didn't notice the milestones:
 
-- **renv** locked your dependencies.
+- **renv** (and now **uvr**) locked your dependencies.
 - **lintr** and **Air** enforced style without being annoying about it.
 - **dplyr**, **purrr**, and **forcats** were letting you offload the rules about data shapes to the machine.
 
